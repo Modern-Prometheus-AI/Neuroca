@@ -1,0 +1,74 @@
+
+This file should be a PNG image containing a component diagram for the NeuroCognitive Architecture (NCA) system. Below are the specifications for creating this diagram:
+
+## Component Diagram Specifications
+
+The diagram should be created using a UML component diagram tool (such as PlantUML, draw.io, Lucidchart, or Enterprise Architect) with the following components and relationships:
+
+### Main Components
+
+1. **API Layer**
+   - REST API Controller
+   - GraphQL Endpoint
+   - WebSocket Service
+   - Authentication Service
+
+2. **Core Domain**
+   - Cognitive Engine
+   - Health Dynamics Manager
+   - Attention Mechanism
+   - Emotion Processor
+   - Decision Making System
+
+3. **Memory System**
+   - Working Memory
+   - Episodic Memory
+   - Semantic Memory
+   - Memory Consolidation Service
+   - Memory Retrieval Service
+
+4. **LLM Integration**
+   - LLM Connector
+   - Prompt Engineering Service
+   - Response Parser
+   - Model Selection Service
+   - Context Management
+
+5. **Infrastructure**
+   - Database Access Layer
+   - Caching Service
+   - Message Queue
+   - Logging Service
+   - Monitoring Service
+
+### Component Relationships
+
+1. The API Layer interfaces with external clients and communicates with the Core Domain
+2. The Core Domain orchestrates interactions between Memory System and LLM Integration
+3. The Memory System provides storage and retrieval capabilities to the Core Domain
+4. The LLM Integration connects to external LLM services and processes requests/responses
+5. The Infrastructure provides supporting services to all other components
+
+### Visual Style Guidelines
+
+- Use a consistent color scheme:
+  - API Layer: Light Blue
+  - Core Domain: Green
+  - Memory System: Purple
+  - LLM Integration: Orange
+  - Infrastructure: Gray
+
+- Include clear component boundaries with proper nesting
+- Show interfaces between components with connection points
+- Use directional arrows to indicate data/control flow
+- Include a legend explaining symbols and color coding
+- Use a clean, professional layout with proper spacing
+
+### Additional Notes
+
+- The diagram should be exported at 1920x1080 resolution with transparent background
+- Save as PNG format with appropriate compression
+- Include the title "NeuroCognitive Architecture - Component Diagram" at the top
+- Include a small version number and date in the bottom right corner
+
+This component diagram will serve as a key architectural artifact for understanding the system structure, component responsibilities, and their relationships.

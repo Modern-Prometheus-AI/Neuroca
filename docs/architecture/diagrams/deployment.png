@@ -1,0 +1,86 @@
+
+[This is a binary PNG file that cannot be directly represented in text. Below are instructions for creating this deployment diagram.]
+
+# NeuroCognitive Architecture (NCA) Deployment Diagram
+
+## How to Create This Diagram
+
+1. Use a diagramming tool such as:
+   - Draw.io (diagrams.net)
+   - Lucidchart
+   - Microsoft Visio
+   - PlantUML with the deployment diagram syntax
+
+2. Create a deployment diagram with the following components:
+
+## Diagram Content
+
+### Cloud Infrastructure Layer
+- **AWS Cloud** (or your preferred cloud provider)
+  - **VPC** with public and private subnets
+  - **Security Groups** for each component
+  
+### Compute Resources
+- **ECS/Kubernetes Cluster**
+  - **NCA Core Services** (containerized)
+    - Core API Service
+    - Memory Management Service
+    - Health Dynamics Service
+    - LLM Integration Service
+  - **Autoscaling Configuration**
+  
+- **Serverless Components**
+  - **Lambda Functions** for event-driven processing
+  - **API Gateway** for external API access
+
+### Data Storage
+- **Database Tier**
+  - **Primary Database** (PostgreSQL RDS)
+  - **Read Replicas** for scaling
+  - **ElastiCache** for in-memory caching
+  
+- **Object Storage**
+  - **S3 Buckets** for document and model storage
+  
+- **Memory Tiers**
+  - **Working Memory** (ElastiCache Redis)
+  - **Short-term Memory** (RDS with time-based policies)
+  - **Long-term Memory** (RDS + S3 with archiving)
+
+### Integration Layer
+- **LLM Integration**
+  - **API Connections** to external LLM providers
+  - **Local LLM Deployment** options
+  
+- **External Services**
+  - **Authentication** (Cognito/Auth0)
+  - **Monitoring** (CloudWatch/Prometheus/Grafana)
+  - **Logging** (CloudWatch Logs/ELK Stack)
+
+### Network Flow
+- Show data flow between components with arrows
+- Indicate synchronous vs asynchronous communications
+- Mark security boundaries and encryption points
+
+### Scaling & Redundancy
+- Show redundant components
+- Indicate auto-scaling groups
+- Mark load balancers and distribution points
+
+### Deployment Regions
+- Primary region deployment
+- Disaster recovery region (if applicable)
+- Edge locations for CDN (if applicable)
+
+## Styling Guidelines
+- Use consistent shapes for each component type
+- Color-code by component category
+- Include a legend explaining symbols and colors
+- Use dotted lines for optional components
+- Use solid lines for required components
+- Add annotations for important deployment considerations
+
+## Export Settings
+- Export as PNG with at least 300 DPI resolution
+- Use a white background for better readability
+- Ensure text is legible at both full size and when zoomed out

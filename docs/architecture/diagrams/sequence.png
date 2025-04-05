@@ -1,0 +1,123 @@
+```plantuml
+@startuml NeuroCognitive Architecture Sequence Diagram
+
+' Define participants with appropriate styling
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+' External systems
+actor User
+participant "External LLM API" as LLM
+
+' Main system components
+box "NeuroCognitive Architecture" #LightBlue
+    participant "API Gateway" as API
+    participant "Request Handler" as Handler
+    participant "Context Manager" as Context
+    participant "Memory System" as Memory
+    participant "Working Memory" as WorkingMem
+    participant "Episodic Memory" as EpisodicMem
+    participant "Semantic Memory" as SemanticMem
+    participant "Health Monitor" as Health
+    participant "LLM Integration" as Integration
+    participant "Response Formatter" as Formatter
+end box
+
+' Sequence flow
+== User Interaction ==
+User -> API: Submit query/request
+activate API
+API -> Handler: Process request
+activate Handler
+
+Handler -> Context: Initialize context
+activate Context
+Context --> Handler: Context initialized
+deactivate Context
+
+Handler -> Memory: Retrieve relevant memories
+activate Memory
+
+Memory -> WorkingMem: Check working memory
+activate WorkingMem
+WorkingMem --> Memory: Return active memories
+deactivate WorkingMem
+
+Memory -> EpisodicMem: Query episodic memory
+activate EpisodicMem
+EpisodicMem --> Memory: Return relevant episodes
+deactivate EpisodicMem
+
+Memory -> SemanticMem: Query semantic memory
+activate SemanticMem
+SemanticMem --> Memory: Return relevant knowledge
+deactivate SemanticMem
+
+Memory --> Handler: Combined memory context
+deactivate Memory
+
+== Health Dynamics ==
+Handler -> Health: Check system health
+activate Health
+Health --> Handler: Health status and constraints
+deactivate Health
+
+== LLM Processing ==
+Handler -> Integration: Prepare LLM request
+activate Integration
+Integration -> LLM: Send enriched prompt
+activate LLM
+LLM --> Integration: Raw LLM response
+deactivate LLM
+Integration --> Handler: Processed response
+deactivate Integration
+
+== Memory Update ==
+Handler -> Memory: Update with new information
+activate Memory
+Memory -> WorkingMem: Update working memory
+activate WorkingMem
+WorkingMem --> Memory: Confirmation
+deactivate WorkingMem
+
+Memory -> EpisodicMem: Store new episode
+activate EpisodicMem
+EpisodicMem --> Memory: Confirmation
+deactivate EpisodicMem
+
+Memory -> SemanticMem: Update knowledge if needed
+activate SemanticMem
+SemanticMem --> Memory: Confirmation
+deactivate SemanticMem
+Memory --> Handler: Update complete
+deactivate Memory
+
+== Response Delivery ==
+Handler -> Formatter: Format response
+activate Formatter
+Formatter --> Handler: Formatted response
+deactivate Formatter
+Handler --> API: Return processed response
+deactivate Handler
+API --> User: Deliver final response
+deactivate API
+
+@enduml
+```
+
+Note: This file provides PlantUML code that generates a sequence diagram for the NeuroCognitive Architecture. To generate the actual PNG file:
+
+1. Install PlantUML (https://plantuml.com/starting)
+2. Save this code to a file with .puml extension
+3. Run: `java -jar plantuml.jar filename.puml` to generate the PNG
+4. Alternatively, use an online PlantUML renderer or IDE plugin
+
+The diagram illustrates the flow of information through the NCA system:
+- User interaction with the system
+- Context initialization and memory retrieval across all three memory tiers
+- Health dynamics monitoring
+- LLM integration and processing
+- Memory updates with new information
+- Response formatting and delivery
+
+This sequence diagram should be updated as the architecture evolves to maintain accurate documentation of system interactions.

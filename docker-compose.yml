@@ -1,0 +1,295 @@
+# NeuroCognitive Architecture (NCA) Docker Compose Configuration
+# 
+# This file defines the multi-container Docker environment for the NeuroCognitive Architecture
+# system, supporting both development and production deployments with appropriate configurations.
+#
+# Usage:
+#   Development: docker-compose up
+#   Production:  docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Services include:
+# - API server (FastAPI)
+# - Memory services (working, episodic, semantic)
+# - Database (PostgreSQL)
+# - Redis for caching and pub/sub
+# - Vector database (Milvus)
+# - Monitoring stack (Prometheus, Grafana)
+# - Load balancer (Traefik)
+
+version: '3.8'
+
+services:
+  # API Service - Main application interface
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    image: neuroca/api:latest
+    container_name: neuroca-api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+      - milvus
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://neuroca:${POSTGRES_PASSWORD}@postgres:5432/neuroca
+      - REDIS_URL=redis://redis:6379/0
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - LOG_LEVEL=debug
+      - SECRET_KEY=${SECRET_KEY}
+      - LLM_API_KEY=${LLM_API_KEY}
+    volumes:
+      - ./:/app:delegated
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    networks:
+      - neuroca-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Working Memory Service
+  working-memory:
+    build:
+      context: .
+      dockerfile: ./memory/working/Dockerfile
+    image: neuroca/working-memory:latest
+    container_name: neuroca-working-memory
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379/1
+      - LOG_LEVEL=info
+    volumes:
+      - ./memory/working:/app/memory/working:delegated
+      - ./logs:/app/logs
+    networks:
+      - neuroca-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Episodic Memory Service
+  episodic-memory:
+    build:
+      context: .
+      dockerfile: ./memory/episodic/Dockerfile
+    image: neuroca/episodic-memory:latest
+    container_name: neuroca-episodic-memory
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - milvus
+    environment:
+      - DATABASE_URL=postgresql://neuroca:${POSTGRES_PASSWORD}@postgres:5432/neuroca
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - LOG_LEVEL=info
+    volumes:
+      - ./memory/episodic:/app/memory/episodic:delegated
+      - ./logs:/app/logs
+    networks:
+      - neuroca-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Semantic Memory Service
+  semantic-memory:
+    build:
+      context: .
+      dockerfile: ./memory/semantic/Dockerfile
+    image: neuroca/semantic-memory:latest
+    container_name: neuroca-semantic-memory
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - milvus
+    environment:
+      - DATABASE_URL=postgresql://neuroca:${POSTGRES_PASSWORD}@postgres:5432/neuroca
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - LOG_LEVEL=info
+    volumes:
+      - ./memory/semantic:/app/memory/semantic:delegated
+      - ./logs:/app/logs
+    networks:
+      - neuroca-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: neuroca-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=neuroca
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=neuroca
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - neuroca-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neuroca"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and pub/sub
+  redis:
+    image: redis:7-alpine
+    container_name: neuroca-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - neuroca-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Milvus Vector Database
+  milvus:
+    image: milvusdb/milvus:v2.3.1
+    container_name: neuroca-milvus
+    restart: unless-stopped
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+      - MINIO_ADDRESS=minio:9000
+    volumes:
+      - milvus-data:/var/lib/milvus
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    networks:
+      - neuroca-network
+    depends_on:
+      - etcd
+      - minio
+
+  # Etcd for Milvus
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    container_name: neuroca-etcd
+    restart: unless-stopped
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - etcd-data:/etcd
+    command: etcd --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    networks:
+      - neuroca-network
+
+  # MinIO for Milvus
+  minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    container_name: neuroca-minio
+    restart: unless-stopped
+    environment:
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    volumes:
+      - minio-data:/data
+    command: minio server /data
+    networks:
+      - neuroca-network
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:v2.44.0
+    container_name: neuroca-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - neuroca-network
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: neuroca-grafana
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    networks:
+      - neuroca-network
+    depends_on:
+      - prometheus
+
+  # Traefik load balancer
+  traefik:
+    image: traefik:v2.10
+    container_name: neuroca-traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik:/etc/traefik
+    networks:
+      - neuroca-network
+
+networks:
+  neuroca-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  milvus-data:
+  etcd-data:
+  minio-data:
+  prometheus-data:
+  grafana-data:

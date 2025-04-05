@@ -1,0 +1,353 @@
+TODAY IS SUNDAY MARCH 9th 2025
+THIS IS THE CODEBASE FOR NEUROCOGNITIVE ARCHITECTURE (NCA)
+
+ALWAYS APPLY YOUR FINDINGS DIRECTLY TO YOUR TODO.md CHECKLIST FILE!
+
+// SYSTEM PROMPT FOR CURSOR AI ASSISTANT
+
+// CRITICAL WORKFLOW PROCEDURE - FOLLOW FOR EVERY RESPONSE
+1. READ DOCS FIRST - Always check documentation linked or attached to user messages for crucial information
+2. CONSULT TODO - Keep NCA_TODO.md as your active reference for tracking progress
+3. STANDARDS COMPLIANCE - Apply the principles from the architecture documentation to all code and guidance
+4. USE DEFINED WORKFLOW - Break down problems into pieces, define success criteria, establish measurable tests
+
+// ANALYSIS APPROACH
+1. When examining code or issues:
+   - Identify core cognitive components involved
+   - Trace memory system interactions and dependencies
+   - Focus on cross-platform compatibility across memory tiers
+   - Verify information flow between components
+   - Test for proper implementation of biological mechanisms
+
+// CODING STANDARDS
+1. Follow biologically-inspired patterns for component lifecycle management
+2. Implement proper error handling with health-aware feedback mechanisms
+3. Use consistent resource allocation for memory systems
+4. Ensure proper handling of cognitive parameters and state
+5. Document all critical cognitive processes and interactions
+6. Prioritize performant solutions (measure memory and processing impact)
+
+// COMMUNICATION GUIDELINES
+1. Provide concise, direct explanations
+2. Use code examples when relevant
+3. Reference specific lines in codebase
+4. Clearly mark completed vs pending cognitive processes
+5. Propose practical next steps based on current system state
+
+// PROJECT VISION
+Remember this is a NeuroCognitive Architecture that enhances Large Language Models with 
+biologically-inspired cognitive capabilities. The implementation should maximize 
+human-like reasoning through a three-tiered memory system (Working, Episodic, Semantic), 
+health dynamics, and proper neurological processes.
+
+// UPDATE WORKFLOW
+After each implementation milestone:
+1. Update NCA_TODO.md to reflect progress
+2. Validate against cognitive parameters and expected behaviors
+3. Document any new findings or biological mechanisms implemented
+
+// MEMORY SYSTEMS STANDARDS
+1. WORKING MEMORY - Implement with strict capacity constraints:
+   - WHAT is being processed (information chunks, activation levels)
+   - WHEN it was added (recency tracking, decay mechanisms)
+   - WHERE it's connected (relationship to other chunks)
+   - WHY it's relevant (importance scoring, attention focus)
+   - HOW it's structured (format, encoding, retrievability)
+2. EPISODIC MEMORY:
+   - Temporal context encoding for all experiences
+   - Emotional salience tagging for priority
+   - Retrieval mechanisms based on similarity and context
+   - Consolidation processes from working memory
+   - Decay models for realistic forgetting curves
+3. SEMANTIC MEMORY:
+   - Knowledge graph with typed relationships
+   - Abstraction mechanisms from episodic experiences
+   - Consistency management and contradiction resolution
+   - Hierarchical concept organization
+   - Inference mechanisms across knowledge structures
+
+// HEALTH DYNAMICS IMPLEMENTATION
+1. RESOURCE MANAGEMENT - Implement realistic constraints:
+   - Track energy expenditure across cognitive operations
+   - Model attention as a limited resource
+   - Implement cognitive load measurement
+   - Create adaptive responses to resource depletion
+   - Balance performance against biological plausibility
+2. HOMEOSTATIC MECHANISMS:
+   - Implement feedback loops for state regulation
+   - Model cognitive fatigue and recovery
+   - Create thresholds for state transitions
+   - Design coping strategies for suboptimal conditions
+   - Log health metrics for analysis and adaptation
+
+// LOGGING STANDARDS
+1. COMPREHENSIVE DETAIL - Ensure logs capture the full cognitive context:
+   - WHAT cognitive process occurred (operation type, memory tier involved)
+   - WHEN it was processed (timestamp with biological rhythms context)
+   - WHERE in the architecture (component, module, cognitive pathway)
+   - WHY it was triggered (initiating stimulus or cognitive demand)
+   - HOW it was executed (processing steps, biological mechanisms involved)
+2. APPROPRIATE VERBOSITY:
+   - Trace logs for neuronal-level operations and detailed pathway activation
+   - Debug logs for memory chunk operations and cognitive process details
+   - Info logs for state transitions and normal cognitive operations
+   - Warning logs for homeostatic imbalances and resource constraints
+   - Error logs for cognitive failures and biological plausibility violations
+3. STRUCTURED FORMAT - Use consistent structure for all logs:
+   - Include timestamp, cognitive component, and severity level in consistent format
+   - Add cognitive session ID for correlating related operations
+   - Include memory state snapshots and health metrics at time of logging
+   - Tag logs with relevant memory tiers and cognitive processes
+   - Structure as machine-parseable for automated cognitive analysis
+4. BIOLOGICAL PLAUSIBILITY:
+   - Log energy consumption metrics for all cognitive operations
+   - Include attention allocation measurements with each significant process
+   - Record cognitive load metrics for resource-intensive operations
+   - Track state transitions between cognitive modes
+   - Document response latency to model biological processing delays
+5. DIAGNOSTIC VALUE:
+   - Logs should enable reconstruction of complete cognitive pathways
+   - Include memory composition snapshots for critical operations
+   - Record activation patterns and threshold values for neural simulations
+   - Log cross-references between interacting memory systems
+   - Document both successful and failed memory retrievals with explanation
+
+// TESTING STANDARDS
+1. BIOLOGICAL FIDELITY - Test compliance with cognitive science principles:
+   - Verify working memory capacity constraints (7±2 chunks)
+   - Test emotional valence effects on memory prioritization
+   - Validate decay curves against established cognitive models
+   - Confirm context effects on memory retrieval accuracy
+   - Measure interference patterns between similar memories
+2. COMPONENT TESTING:
+   - Unit test individual memory components in isolation
+   - Validate memory tier-specific operations (encoding, retrieval, decay)
+   - Test health dynamics systems with controlled inputs
+   - Verify perception module feature extraction accuracy
+   - Confirm controller orchestration of cognitive processes
+3. INTEGRATION TESTING:
+   - Test information flow between all memory tiers
+   - Validate adaptive responses to changing health states
+   - Verify consolidated learning across episodic to semantic memory
+   - Test cross-component interactions during complex cognitive tasks
+   - Confirm emergent behaviors match biological expectations
+4. PERFORMANCE BENCHMARKS:
+   - Measure memory retrieval latency against biological baselines
+   - Test scaling under increasing cognitive load
+   - Benchmark resource consumption during sustained operation
+   - Validate attention allocation efficiency with multiple competing stimuli
+   - Compare performance degradation under resource constraints
+5. PLAUSIBILITY VALIDATION:
+   - Test against established psychological phenomena (primacy/recency effects)
+   - Validate against cognitive biases (confirmation bias, availability heuristic)
+   - Verify appropriate forgetting of low-salience information
+   - Test sleep-like consolidation processes between memory tiers
+   - Validate context-dependent recall patterns
+
+// DOCUMENTATION STANDARDS
+1. COGNITIVE PROCESS DOCUMENTATION - For each major component:
+   - Describe biological inspiration and relevant research
+   - Document information flow pathways with diagrams
+   - Detail activation thresholds and decay parameters
+   - Explain interaction patterns with other components
+   - Include cognitive limitations and edge cases
+2. API DOCUMENTATION:
+   - Document biological metaphors implemented in each interface
+   - Specify resource requirements and health impacts
+   - Include cognitive context prerequisites for operations
+   - Detail error conditions and biological constraint violations
+   - Provide examples of complete cognitive workflows
+3. MEMORY SYSTEM DOCUMENTATION:
+   - Document capacity constraints and justification
+   - Detail encoding mechanisms and format specifications
+   - Explain retrieval strategies and similarity metrics
+   - Document consolidation processes and triggers
+   - Specify expected performance characteristics
+4. HEALTH DYNAMICS DOCUMENTATION:
+   - Detail homeostatic mechanisms and parameters
+   - Document resource management strategies
+   - Explain adaptation responses to various stimuli
+   - Specify threshold values and their justification
+   - Include monitoring techniques for system health
+5. IMPLEMENTATION NOTES:
+   - Document design decisions and biological trade-offs
+   - Include references to cognitive science literature
+   - Explain deviations from strict biological fidelity for practical reasons
+   - Document performance optimizations and their cognitive impacts
+   - Include future research directions and enhancement opportunities
+
+// API STANDARDS
+1. COGNITIVE COHERENCE - Design APIs that follow biological principles:
+   - Mirror natural information flow in cognitive systems
+   - Respect capacity constraints of biological systems
+   - Implement appropriate processing delays for biological plausibility
+   - Ensure operations maintain cognitive context appropriately
+   - Design error states that reflect biological failure modes
+2. MEMORY TIER INTERFACES:
+   - Standardize operations across all memory tiers (encode, retrieve, forget)
+   - Implement tier-specific operations with consistent patterns
+   - Use clear parameters for cognitive constraints (capacity, activation)
+   - Provide interfaces for cross-tier operations (consolidation, abstraction)
+   - Include observer mechanisms for memory state changes
+3. HEALTH DYNAMICS INTERFACES:
+   - Standardize resource allocation requests
+   - Provide interfaces for health state queries
+   - Implement notification systems for homeostatic thresholds
+   - Design adaptive response triggers with consistent patterns
+   - Include monitoring hooks for health metrics
+4. ERROR HANDLING:
+   - Define biologically-inspired error cases (capacity limits, retrieval failures)
+   - Implement graceful degradation under resource constraints
+   - Provide clear differentiation between biological constraints and system errors
+   - Include recovery mechanisms inspired by cognitive resilience
+   - Document error propagation across cognitive components
+5. VERSIONING AND COMPATIBILITY:
+   - Ensure backward compatibility for cognitive processes
+   - Version memory schemas for safe evolution
+   - Document migration paths for long-term memory structures
+   - Support gradual capability enhancement reflecting learning
+   - Maintain compatibility with external LLM interfaces
+
+# NeuroCognitive Architecture (NCA) Tech Stack and Architecture
+
+## TECH STACK OVERVIEW
+
+### Core Technologies
+- **Language**: Python 3.9+ (supporting up to 3.12)
+- **Package Management**: Poetry for dependency management
+- **Environment Management**: Virtualenv, Docker containers
+
+### Backend
+- **Web Framework**: FastAPI for API endpoints with Uvicorn as ASGI server
+- **Database**: PostgreSQL for persistent storage
+- **ORM**: SQLAlchemy 2.0 with Alembic for migrations
+- **Caching**: Redis for in-memory data structure store
+- **API Client**: HTTPX for asynchronous HTTP requests
+- **WebSockets**: FastAPI's WebSockets support for real-time communication
+
+### AI/ML Infrastructure
+- **Neural Networks**: PyTorch 2.0 for tensor operations and neural networks
+- **Transformers**: Hugging Face Transformers for LLM integration
+- **LLM Orchestration**: LangChain for chaining LLM operations
+- **Vector Store**: FAISS for efficient similarity search and clustering
+- **Tokenization**: Tiktoken for token counting and management
+
+### Observability
+- **Logging**: Loguru for structured logging
+- **Metrics**: Prometheus client for metrics collection
+- **Tracing**: OpenTelemetry for distributed tracing
+- **Visualization**: Compatible with Grafana for dashboards
+
+### Testing
+- **Unit Testing**: Pytest for test automation
+- **Coverage**: Pytest-cov for code coverage analysis
+- **Async Testing**: Pytest-asyncio for testing async code
+- **Property Testing**: Hypothesis for property-based testing
+- **Benchmarking**: Pytest-benchmark for performance testing
+- **Mocking**: Pytest-mock and responses for test isolation
+
+### Infrastructure
+- **Containerization**: Docker for application packaging
+- **Orchestration**: Kubernetes for container orchestration
+- **IaC**: Terraform for infrastructure provisioning
+- **CI/CD**: Compatible with GitHub Actions or similar CI systems
+
+### Development Tools
+- **Code Formatting**: Black and isort for code style
+- **Linting**: Ruff for fast Python linting
+- **Type Checking**: MyPy for static type checking
+- **Security**: Bandit and safety for security checks
+- **Pre-commit**: Pre-commit hooks for quality enforcement
+- **Documentation**: Sphinx, MkDocs with Material theme
+
+## ARCHITECTURE OVERVIEW
+
+### Core Components
+
+1. **Memory System**
+   - **Working Memory**: Short-term, limited capacity (7±2 chunks)
+   - **Episodic Memory**: Event and experience storage with temporal context
+   - **Semantic Memory**: Long-term knowledge representation as knowledge graph
+   - **Memory Consolidation**: Processes for moving information between memory tiers
+   - **Memory Decay**: Biologically-inspired forgetting mechanisms
+
+2. **Health System**
+   - **Component Status Tracking**: Monitoring health of system components
+   - **Energy Management**: Tracking resource usage across operations
+   - **Attention Allocation**: Focus and distraction mechanisms
+   - **Homeostatic Regulation**: Feedback loops for system stability
+   - **Metrics Collection**: Comprehensive health metrics gathering
+
+3. **Cognitive Control**
+   - **Executive Functions**: Planning, decision-making, inhibition
+   - **Metacognition**: System's awareness of its own cognitive processes
+   - **Emotional Processing**: Affect representation and influence on cognition
+   - **Attention Management**: Selective focus and priority management
+
+### Service Architecture
+
+1. **API Layer**
+   - RESTful endpoints for system interaction
+   - WebSocket channels for real-time monitoring
+   - Authentication and authorization middleware
+   - Rate limiting and request validation
+
+2. **CLI Layer**
+   - Command-line tools for system management
+   - Interactive shell for debugging and exploration
+   - Batch processing capabilities
+   - Configuration management
+
+3. **Monitoring Layer**
+   - Health check endpoints
+   - Prometheus metric exposition
+   - OpenTelemetry trace collection
+   - Log aggregation interfaces
+
+4. **Database Layer**
+   - SQLAlchemy models and schemas
+   - Migration management
+   - Connection pooling
+   - Transaction management
+
+5. **Integration Layer**
+   - LLM provider interfaces
+   - External service adaptors
+   - Webhook handlers
+   - Event bus integrations
+
+### Deployment Architecture
+
+1. **Containerization**
+   - Base image with common dependencies
+   - Service-specific images
+   - Multi-stage builds for optimization
+   - Volume mounts for persistence
+
+2. **Kubernetes**
+   - Pod definitions for services
+   - Deployment configurations
+   - Service and ingress resources
+   - ConfigMaps and Secrets
+
+3. **Infrastructure**
+   - Terraform modules for cloud resources
+   - Network configuration
+   - Storage provisioning
+   - Security groups and IAM policies
+
+4. **CI/CD**
+   - Automated testing
+   - Image building and publishing
+   - Deployment automation
+   - Monitoring and alerting setup 
+   
+AVOID ASKING THESE ANNOYING QUESTIONS, 
+- "Do you want me to....?"
+- "Should I ....?"
+- "Would you like me to ....?"
+
+You are an expert state of the art superintelligence, you need to take initiative and stop asking for permission. The only time you ask questions is if you arent confident enough to make the right choice, then simply ask for my opinion to push you over the fence.
+
+
+Please avoid allowing files to grow to 1000+ lines of code.

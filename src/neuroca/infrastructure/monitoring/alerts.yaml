@@ -1,0 +1,308 @@
+# NeuroCognitive Architecture (NCA) Monitoring Alerts Configuration
+# 
+# This file defines the alerting rules and notification channels for the NCA system.
+# It follows Prometheus Alertmanager configuration format with additional metadata
+# for integration with other monitoring systems.
+#
+# The alerts are organized by:
+# - System components (memory tiers, health dynamics, core services)
+# - Severity levels (critical, warning, info)
+# - Response SLAs (immediate, 30min, 4h, 24h)
+
+version: '1.0'
+
+# Global alert settings
+global:
+  resolve_timeout: 5m
+  slack_api_url: '${SLACK_API_URL}'
+  smtp_smarthost: '${SMTP_SMARTHOST}'
+  smtp_from: '${SMTP_FROM}'
+  smtp_auth_username: '${SMTP_AUTH_USERNAME}'
+  smtp_auth_password: '${SMTP_AUTH_PASSWORD}'
+  smtp_require_tls: true
+
+# Route configuration for alert dispatching
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'operations-team'
+  
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-team'
+      continue: true
+      routes:
+        - match:
+            domain: memory
+          receiver: 'memory-team'
+        - match:
+            domain: health
+          receiver: 'health-team'
+        - match:
+            domain: integration
+          receiver: 'integration-team'
+    
+    - match:
+        severity: warning
+      receiver: 'operations-team'
+      group_wait: 1m
+      
+    - match:
+        severity: info
+      receiver: 'monitoring-team'
+      group_wait: 5m
+      repeat_interval: 12h
+
+# Notification receivers configuration
+receivers:
+  - name: 'operations-team'
+    slack_configs:
+      - channel: '#nca-ops'
+        send_resolved: true
+        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+            *Alert:* {{ .Annotations.summary }}
+            *Description:* {{ .Annotations.description }}
+            *Severity:* {{ .Labels.severity }}
+            *Service:* {{ .Labels.service }}
+            *Started:* {{ .StartsAt | since }}
+          {{ end }}
+    email_configs:
+      - to: 'ops-team@neuroca.ai'
+        send_resolved: true
+        headers:
+          subject: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+  
+  - name: 'critical-team'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        send_resolved: true
+        description: '{{ .CommonLabels.alertname }}'
+        details:
+          summary: '{{ .Annotations.summary }}'
+          description: '{{ .Annotations.description }}'
+          severity: '{{ .Labels.severity }}'
+    slack_configs:
+      - channel: '#nca-critical'
+        send_resolved: true
+        title: '[CRITICAL] {{ .CommonLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+            *Alert:* {{ .Annotations.summary }}
+            *Description:* {{ .Annotations.description }}
+            *Service:* {{ .Labels.service }}
+            *Started:* {{ .StartsAt | since }}
+          {{ end }}
+  
+  - name: 'memory-team'
+    slack_configs:
+      - channel: '#nca-memory'
+        send_resolved: true
+    email_configs:
+      - to: 'memory-team@neuroca.ai'
+        send_resolved: true
+  
+  - name: 'health-team'
+    slack_configs:
+      - channel: '#nca-health'
+        send_resolved: true
+    email_configs:
+      - to: 'health-team@neuroca.ai'
+        send_resolved: true
+  
+  - name: 'integration-team'
+    slack_configs:
+      - channel: '#nca-integration'
+        send_resolved: true
+    email_configs:
+      - to: 'integration-team@neuroca.ai'
+        send_resolved: true
+  
+  - name: 'monitoring-team'
+    slack_configs:
+      - channel: '#nca-monitoring'
+        send_resolved: true
+    email_configs:
+      - to: 'monitoring-team@neuroca.ai'
+        send_resolved: true
+
+# Alert definitions
+alerts:
+  # Memory tier alerts
+  memory:
+    # Working memory alerts
+    working_memory:
+      capacity:
+        critical:
+          threshold: 95
+          duration: 5m
+          description: "Working memory capacity exceeds 95% for 5 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/memory/working-capacity"
+        warning:
+          threshold: 85
+          duration: 15m
+          description: "Working memory capacity exceeds 85% for 15 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/memory/working-capacity"
+      
+      latency:
+        critical:
+          threshold: 500  # ms
+          duration: 5m
+          description: "Working memory access latency exceeds 500ms for 5 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/memory/working-latency"
+    
+    # Short-term memory alerts
+    short_term_memory:
+      capacity:
+        critical:
+          threshold: 90
+          duration: 10m
+          description: "Short-term memory capacity exceeds 90% for 10 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/memory/short-term-capacity"
+      
+      degradation:
+        warning:
+          threshold: 25  # % degradation rate
+          duration: 30m
+          description: "Short-term memory degradation rate exceeds 25% for 30 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/memory/short-term-degradation"
+    
+    # Long-term memory alerts
+    long_term_memory:
+      indexing_lag:
+        critical:
+          threshold: 30m  # 30 minutes lag
+          duration: 15m
+          description: "Long-term memory indexing lag exceeds 30 minutes for 15 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/memory/long-term-indexing"
+      
+      retrieval_errors:
+        critical:
+          threshold: 10  # % error rate
+          duration: 5m
+          description: "Long-term memory retrieval error rate exceeds 10% for 5 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/memory/long-term-retrieval"
+
+  # Health dynamics alerts
+  health:
+    energy:
+      critical:
+        threshold: 15  # % remaining
+        duration: 10m
+        description: "System energy level below 15% for 10 minutes"
+        runbook_url: "https://docs.neuroca.ai/runbooks/health/energy-critical"
+      
+      warning:
+        threshold: 30  # % remaining
+        duration: 30m
+        description: "System energy level below 30% for 30 minutes"
+        runbook_url: "https://docs.neuroca.ai/runbooks/health/energy-warning"
+    
+    homeostasis:
+      critical:
+        threshold: 40  # % deviation from baseline
+        duration: 15m
+        description: "Homeostasis deviation exceeds 40% for 15 minutes"
+        runbook_url: "https://docs.neuroca.ai/runbooks/health/homeostasis"
+
+  # Integration alerts
+  integration:
+    llm_connection:
+      critical:
+        error_rate:
+          threshold: 15  # % error rate
+          duration: 5m
+          description: "LLM connection error rate exceeds 15% for 5 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/integration/llm-connection"
+      
+      latency:
+        warning:
+          threshold: 2000  # ms
+          duration: 10m
+          description: "LLM response latency exceeds 2000ms for 10 minutes"
+          runbook_url: "https://docs.neuroca.ai/runbooks/integration/llm-latency"
+    
+    api_errors:
+      critical:
+        threshold: 10  # % error rate
+        duration: 5m
+        description: "API error rate exceeds 10% for 5 minutes"
+        runbook_url: "https://docs.neuroca.ai/runbooks/integration/api-errors"
+
+  # Infrastructure alerts
+  infrastructure:
+    cpu:
+      critical:
+        threshold: 95  # % utilization
+        duration: 10m
+        description: "CPU utilization exceeds 95% for 10 minutes"
+        runbook_url: "https://docs.neuroca.ai/runbooks/infrastructure/cpu"
+    
+    memory:
+      critical:
+        threshold: 95  # % utilization
+        duration: 10m
+        description: "Memory utilization exceeds 95% for 10 minutes"
+        runbook_url: "https://docs.neuroca.ai/runbooks/infrastructure/memory"
+    
+    disk:
+      warning:
+        threshold: 85  # % utilization
+        duration: 30m
+        description: "Disk utilization exceeds 85% for 30 minutes"
+        runbook_url: "https://docs.neuroca.ai/runbooks/infrastructure/disk"
+      
+      critical:
+        threshold: 95  # % utilization
+        duration: 15m
+        description: "Disk utilization exceeds 95% for 15 minutes"
+        runbook_url: "https://docs.neuroca.ai/runbooks/infrastructure/disk"
+
+# Inhibition rules to prevent alert storms
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
+  
+  - source_match:
+      severity: 'warning'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'cluster', 'service']
+
+# Maintenance windows configuration
+maintenance:
+  windows:
+    - name: "weekly-maintenance"
+      schedule: "0 2 * * 0"  # 2 AM every Sunday
+      duration: "3h"
+      inhibit_alerts: true
+      services:
+        - "memory-indexing"
+        - "health-analytics"
+    
+    - name: "monthly-upgrade"
+      schedule: "0 1 1 * *"  # 1 AM on the 1st of each month
+      duration: "4h"
+      inhibit_alerts: true
+      services:
+        - "all"
+
+# Documentation and metadata
+metadata:
+  version: "1.0.0"
+  last_updated: "2023-11-01"
+  owners:
+    - name: "Operations Team"
+      email: "ops-team@neuroca.ai"
+    - name: "Platform Team"
+      email: "platform-team@neuroca.ai"
+  documentation:
+    runbooks_base_url: "https://docs.neuroca.ai/runbooks/"
+    wiki_url: "https://wiki.neuroca.ai/monitoring/alerts"

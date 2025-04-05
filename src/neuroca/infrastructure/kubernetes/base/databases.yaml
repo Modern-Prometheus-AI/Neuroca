@@ -1,0 +1,383 @@
+---
+# PostgreSQL StatefulSet for persistent relational data storage
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+    component: database
+    part-of: neuroca
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: database
+        part-of: neuroca
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15.3
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: password
+        - name: POSTGRES_DB
+          value: neuroca
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2
+            memory: 4Gi
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: standard
+      resources:
+        requests:
+          storage: 50Gi
+---
+# PostgreSQL Service for internal cluster access
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+    component: database
+    part-of: neuroca
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: postgres
+  type: ClusterIP
+---
+# Redis StatefulSet for caching and working memory
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  labels:
+    app: redis
+    component: cache
+    part-of: neuroca
+spec:
+  serviceName: redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        component: cache
+        part-of: neuroca
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.0-alpine
+        imagePullPolicy: IfNotPresent
+        command:
+        - redis-server
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        - --appendonly
+        - "yes"
+        ports:
+        - containerPort: 6379
+          name: redis
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: password
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1
+            memory: 2Gi
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - redis-cli -a $REDIS_PASSWORD ping | grep PONG
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - redis-cli -a $REDIS_PASSWORD ping | grep PONG
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: standard
+      resources:
+        requests:
+          storage: 20Gi
+---
+# Redis Service for internal cluster access
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis
+    component: cache
+    part-of: neuroca
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  selector:
+    app: redis
+  type: ClusterIP
+---
+# MongoDB StatefulSet for document storage (episodic memory)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  labels:
+    app: mongodb
+    component: database
+    part-of: neuroca
+spec:
+  serviceName: mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+        component: database
+        part-of: neuroca
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:6.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: password
+        - name: MONGO_INITDB_DATABASE
+          value: neuroca
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2
+            memory: 4Gi
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        livenessProbe:
+          exec:
+            command:
+            - mongo
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - mongo
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: standard
+      resources:
+        requests:
+          storage: 50Gi
+---
+# MongoDB Service for internal cluster access
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  labels:
+    app: mongodb
+    component: database
+    part-of: neuroca
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+    name: mongodb
+  selector:
+    app: mongodb
+  type: ClusterIP
+---
+# Secret for PostgreSQL credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+  labels:
+    app: postgres
+    component: database
+    part-of: neuroca
+type: Opaque
+data:
+  # These are placeholder base64 encoded values - replace with actual secrets in a secure way
+  username: cG9zdGdyZXM=  # "postgres" in base64
+  password: Y2hhbmdlbWU=  # "changeme" in base64
+---
+# Secret for Redis credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-credentials
+  labels:
+    app: redis
+    component: cache
+    part-of: neuroca
+type: Opaque
+data:
+  # These are placeholder base64 encoded values - replace with actual secrets in a secure way
+  password: Y2hhbmdlbWU=  # "changeme" in base64
+---
+# Secret for MongoDB credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-credentials
+  labels:
+    app: mongodb
+    component: database
+    part-of: neuroca
+type: Opaque
+data:
+  # These are placeholder base64 encoded values - replace with actual secrets in a secure way
+  username: YWRtaW4=      # "admin" in base64
+  password: Y2hhbmdlbWU=  # "changeme" in base64
+---
+# ConfigMap for database initialization scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-init-scripts
+  labels:
+    component: database
+    part-of: neuroca
+data:
+  postgres-init.sql: |
+    -- Create schemas for different memory tiers
+    CREATE SCHEMA IF NOT EXISTS semantic_memory;
+    CREATE SCHEMA IF NOT EXISTS episodic_memory;
+    CREATE SCHEMA IF NOT EXISTS procedural_memory;
+    
+    -- Create extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pgvector";
+    
+    -- Grant permissions
+    GRANT ALL ON SCHEMA semantic_memory TO postgres;
+    GRANT ALL ON SCHEMA episodic_memory TO postgres;
+    GRANT ALL ON SCHEMA procedural_memory TO postgres;
+  
+  mongodb-init.js: |
+    // Create collections for different memory components
+    db = db.getSiblingDB('neuroca');
+    
+    db.createCollection('episodic_memories');
+    db.createCollection('semantic_knowledge');
+    db.createCollection('health_metrics');
+    
+    // Create indexes for efficient querying
+    db.episodic_memories.createIndex({ "timestamp": 1 });
+    db.episodic_memories.createIndex({ "tags": 1 });
+    db.semantic_knowledge.createIndex({ "concept": 1 });
+    db.health_metrics.createIndex({ "timestamp": 1 });

@@ -1,0 +1,184 @@
+# Prometheus Configuration for NeuroCognitive Architecture (NCA)
+# This configuration file defines the Prometheus monitoring setup for the NCA system,
+# including scrape configurations, alerting rules, and storage settings.
+
+global:
+  scrape_interval: 15s     # Default scrape interval for all jobs
+  evaluation_interval: 15s # How frequently to evaluate rules
+  scrape_timeout: 10s      # Timeout for scrape requests
+
+  # External labels attached to any time series or alerts
+  external_labels:
+    environment: ${ENVIRONMENT:-production}
+    region: ${REGION:-us-west-1}
+    service: neuroca
+
+# Rule files specifies a list of files from which rules are read
+rule_files:
+  - "rules/memory_tier_alerts.yml"
+  - "rules/api_alerts.yml"
+  - "rules/integration_alerts.yml"
+  - "rules/system_alerts.yml"
+  - "rules/health_dynamics_alerts.yml"
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - "alertmanager:9093"
+      scheme: http
+      timeout: 10s
+      api_version: v2
+
+# Scrape configurations
+scrape_configs:
+  # Self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Core NCA services
+  - job_name: 'neuroca-api'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['api:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.*):.*'
+        replacement: '$1'
+
+  # Memory tier monitoring
+  - job_name: 'memory-services'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    static_configs:
+      - targets: 
+        - 'working-memory:8001'
+        - 'episodic-memory:8002'
+        - 'semantic-memory:8003'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: memory_tier
+        regex: '(.*):.*'
+        replacement: '$1'
+
+  # LLM integration monitoring
+  - job_name: 'llm-integration'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['llm-integration:8010']
+
+  # Health dynamics monitoring
+  - job_name: 'health-dynamics'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['health-dynamics:8020']
+
+  # Database monitoring
+  - job_name: 'database'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['db-exporter:9187']
+
+  # Node exporter for host metrics
+  - job_name: 'node'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Cadvisor for container metrics
+  - job_name: 'cadvisor'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Redis monitoring (for caching and message queues)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # Kafka monitoring (for event streaming)
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+
+  # Blackbox exporter for endpoint probing
+  - job_name: 'blackbox'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['blackbox-exporter:9115']
+  
+  # API endpoint monitoring
+  - job_name: 'api-probes'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Use the http_2xx module
+    static_configs:
+      - targets:
+        - 'http://api:8000/health'
+        - 'http://api:8000/readiness'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus
+    retention:
+      time: 15d
+      size: 50GB
+    # Enable exemplars storage
+    exemplars:
+      max_exemplars: 100000
+
+# Remote write configuration for long-term storage
+remote_write:
+  - url: "${REMOTE_WRITE_URL:-}"
+    remote_timeout: 30s
+    queue_config:
+      capacity: 10000
+      max_shards: 200
+      min_shards: 1
+      max_samples_per_send: 1000
+      batch_send_deadline: 5s
+      min_backoff: 30ms
+      max_backoff: 5s
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'go_.*'
+        action: drop
+
+# Remote read configuration
+remote_read:
+  - url: "${REMOTE_READ_URL:-}"
+    read_recent: true
+    remote_timeout: 30s
+
+# Tracing configuration
+tracing:
+  endpoint: "${TRACING_ENDPOINT:-}"
+  sampling_fraction: 0.1
+  insecure: false
+
+# Web configuration
+web:
+  listen_address: 0.0.0.0:9090
+  external_url: "${PROMETHEUS_URL:-http://localhost:9090}"
+  page_title: "NeuroCognitive Architecture Monitoring"
+  cors:
+    cors_origin: ".*"
+  
+  # Basic authentication
+  basic_auth_users:
+    ${PROMETHEUS_USERNAME:-admin}: ${PROMETHEUS_PASSWORD_HASH:-$2y$10$DwAZGiU3ChXBn1xvU/8MnehBR8JPqRVdAjYUKF1Iy.Cd3M7c7b.Sy}

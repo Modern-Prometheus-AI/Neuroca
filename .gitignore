@@ -1,0 +1,196 @@
+# NeuroCognitive Architecture (NCA) - .gitignore
+# Comprehensive .gitignore for Python ML/AI project with web components
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+.venv
+env.bak/
+venv.bak/
+pythonenv*
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+
+### Project Specific ###
+# Model files and data
+*.h5
+*.pkl
+*.model
+*.joblib
+*.bin
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.pb
+models/
+!models/.gitkeep
+
+# Large data files
+data/
+!data/.gitkeep
+*.csv
+*.json
+*.jsonl
+*.parquet
+*.feather
+*.arrow
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Documentation build
+docs/_build/
+docs/site/
+site/
+
+# Docker
+.docker/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# API keys and secrets
+.secrets/
+secrets/
+credentials/
+*.pem
+*.key
+
+# Node modules (for web components)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Compiled frontend assets
+static/dist/
+public/dist/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Memory dumps and cache
+.memory_cache/
+.cache/
+memory_dumps/
+
+# Experiment tracking
+mlruns/
+runs/
+wandb/
+.neptune/
+lightning_logs/
+
+# Profiling results
+prof/
+*.prof
+*.profile
+
+# Local configuration overrides
+config/local/
+**/config/local/
+config.local.yaml
+config.local.yml
+config.local.json
+
+# Backup files
+*.bak
+*.backup
+*~
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore all .pyc files in all folders
+**/*.pyc
+
+# Ignore all __pycache__ directories
+**/__pycache__/
+
+# Ignore all .pytest_cache directories
+**/.pytest_cache/
+
+# Ignore all .mypy_cache directories
+**/.mypy_cache/

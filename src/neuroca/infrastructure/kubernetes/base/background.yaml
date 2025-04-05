@@ -1,0 +1,276 @@
+---
+# Background processing deployment for NeuroCognitive Architecture (NCA)
+# This manifest defines the background processing components that handle
+# asynchronous tasks, memory consolidation, and other non-interactive processes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuroca-background
+  labels:
+    app: neuroca
+    component: background
+    part-of: neuroca-system
+  annotations:
+    description: "Background processing services for NeuroCognitive Architecture"
+spec:
+  replicas: 2  # Default replica count, can be overridden in environment-specific overlays
+  selector:
+    matchLabels:
+      app: neuroca
+      component: background
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: neuroca
+        component: background
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: background-processor
+        image: ${NEUROCA_REGISTRY}/neuroca-background:${NEUROCA_VERSION}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+        env:
+        - name: LOG_LEVEL
+          value: "info"
+        - name: MEMORY_TIER_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              name: neuroca-config
+              key: memory-tier-config.json
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: neuroca-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: neuroca-secrets
+              key: redis-url
+        - name: LLM_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: neuroca-secrets
+              key: llm-api-key
+        ports:
+        - containerPort: 9090
+          name: metrics
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 9090
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 2
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: tmp-volume
+          mountPath: /tmp
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+      
+      # Memory consolidation worker - handles long-term memory operations
+      - name: memory-consolidation
+        image: ${NEUROCA_REGISTRY}/neuroca-memory-worker:${NEUROCA_VERSION}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "300m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+        env:
+        - name: LOG_LEVEL
+          value: "info"
+        - name: WORKER_TYPE
+          value: "consolidation"
+        - name: MEMORY_TIER_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              name: neuroca-config
+              key: memory-tier-config.json
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: neuroca-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: neuroca-secrets
+              key: redis-url
+        ports:
+        - containerPort: 9091
+          name: metrics
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 9091
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 9091
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: tmp-volume
+          mountPath: /tmp
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+      
+      volumes:
+      - name: config-volume
+        configMap:
+          name: neuroca-config
+      - name: tmp-volume
+        emptyDir: {}
+      
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - background
+              topologyKey: "kubernetes.io/hostname"
+      
+      # Ensure pods are distributed across nodes
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: "kubernetes.io/hostname"
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            component: background
+
+---
+# Horizontal Pod Autoscaler for background processing
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: neuroca-background-hpa
+  labels:
+    app: neuroca
+    component: background-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neuroca-background
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+
+---
+# Service for background processing metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuroca-background-metrics
+  labels:
+    app: neuroca
+    component: background
+  annotations:
+    prometheus.io/scrape: "true"
+spec:
+  selector:
+    app: neuroca
+    component: background
+  ports:
+  - name: metrics-processor
+    port: 9090
+    targetPort: 9090
+  - name: metrics-memory
+    port: 9091
+    targetPort: 9091
+  type: ClusterIP
+
+---
+# PodDisruptionBudget to ensure high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: neuroca-background-pdb
+  labels:
+    app: neuroca
+    component: background
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: neuroca
+      component: background

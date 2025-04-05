@@ -1,0 +1,122 @@
+# NeuroCognitive Architecture (NCA) - EditorConfig
+# https://editorconfig.org/
+
+# top-most EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# Python specific settings
+[*.py]
+indent_style = space
+indent_size = 4
+# Configuration to match PEP 8 guidelines
+max_line_length = 88  # Black formatter default
+
+# JavaScript, TypeScript, JSON settings
+[*.{js,ts,jsx,tsx,json}]
+indent_style = space
+indent_size = 2
+
+# YAML files
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# HTML, CSS, SCSS files
+[*.{html,css,scss}]
+indent_style = space
+indent_size = 2
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+
+# Makefile - requires tabs
+[Makefile]
+indent_style = tab
+
+# Docker related files
+[{Dockerfile,docker-compose.yml}]
+indent_style = space
+indent_size = 2
+
+# Configuration files
+[*.{ini,toml,cfg}]
+indent_style = space
+indent_size = 2
+
+# Database migration files
+[*/migrations/*.py]
+indent_size = 4
+
+# Documentation files
+[docs/**]
+max_line_length = 80
+
+# Test files
+[tests/**]
+indent_size = 4
+
+# Protobuf files
+[*.proto]
+indent_style = space
+indent_size = 2
+
+# XML files
+[*.xml]
+indent_style = space
+indent_size = 2
+
+# Batch files
+[*.bat]
+end_of_line = crlf
+
+# Go files
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# Rust files
+[*.rs]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# C/C++ files
+[*.{c,cpp,h,hpp}]
+indent_style = space
+indent_size = 2
+
+# Java files
+[*.java]
+indent_style = space
+indent_size = 4
+
+# Jupyter notebooks
+[*.ipynb]
+indent_size = 4
+
+# Don't apply editorconfig to generated files and dependencies
+[{dist,build,node_modules,venv,env,**/.venv/**,**/.env/**}/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset

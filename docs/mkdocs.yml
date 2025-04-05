@@ -1,0 +1,206 @@
+# NeuroCognitive Architecture (NCA) Documentation
+# 
+# This configuration file defines the structure and settings for the NCA project documentation.
+# It uses MkDocs with the Material theme and various plugins to create a comprehensive,
+# searchable, and navigable documentation site.
+
+site_name: NeuroCognitive Architecture (NCA)
+site_description: A biological-inspired cognitive architecture for large language models
+site_author: NCA Team
+site_url: https://neuroca.ai/docs/
+repo_url: https://github.com/neuroca/neuroca
+repo_name: neuroca/neuroca
+edit_uri: edit/main/docs/
+
+# Copyright information
+copyright: Copyright &copy; 2023 NeuroCognitive Architecture Team
+
+# Documentation source directory
+docs_dir: src
+
+# Theme configuration
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+  logo: assets/images/logo.png
+  favicon: assets/images/favicon.png
+  language: en
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - attr_list
+  - codehilite:
+      guess_lang: false
+  - def_list
+  - footnotes
+  - md_in_html
+  - meta
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+# Plugins
+plugins:
+  - search
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true
+  - git-revision-date-localized:
+      type: date
+      fallback_to_build_date: true
+      enable_creation_date: true
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          selection:
+            docstring_style: google
+          rendering:
+            show_source: true
+            show_root_heading: true
+  - social
+  - tags
+  - redirects:
+      redirect_maps:
+        'changelog.md': 'about/changelog.md'
+        'contributing.md': 'development/contributing.md'
+  - awesome-pages
+  - macros
+
+# Additional JavaScript and CSS for analytics and custom styling
+extra_javascript:
+  - assets/js/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - assets/js/analytics.js
+  - assets/js/consent.js
+
+extra_css:
+  - assets/css/custom.css
+
+# Additional variables and settings
+extra:
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/neuroca/neuroca
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/neuroca
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/company/neuroca
+  version:
+    provider: mike
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+
+# Navigation structure
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Configuration: getting-started/configuration.md
+    - Examples: getting-started/examples.md
+  - Core Concepts:
+    - Overview: concepts/overview.md
+    - Cognitive Architecture: concepts/cognitive-architecture.md
+    - Memory System: concepts/memory-system.md
+    - Health Dynamics: concepts/health-dynamics.md
+    - Biological Components: concepts/biological-components.md
+  - Components:
+    - API: components/api.md
+    - Memory Tiers:
+      - Working Memory: components/memory/working-memory.md
+      - Episodic Memory: components/memory/episodic-memory.md
+      - Semantic Memory: components/memory/semantic-memory.md
+    - Health System: components/health-system.md
+    - LLM Integration: components/llm-integration.md
+  - Tutorials:
+    - Basic Usage: tutorials/basic-usage.md
+    - Advanced Configuration: tutorials/advanced-configuration.md
+    - Custom Extensions: tutorials/custom-extensions.md
+  - API Reference:
+    - Core: api-reference/core.md
+    - Memory: api-reference/memory.md
+    - Health: api-reference/health.md
+    - Integration: api-reference/integration.md
+  - Development:
+    - Contributing: development/contributing.md
+    - Code Style: development/code-style.md
+    - Testing: development/testing.md
+    - Documentation: development/documentation.md
+  - About:
+    - Roadmap: about/roadmap.md
+    - Changelog: about/changelog.md
+    - License: about/license.md
+    - Team: about/team.md
+  - FAQ: faq.md

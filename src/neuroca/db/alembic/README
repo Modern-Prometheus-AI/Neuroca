@@ -1,0 +1,130 @@
+# Alembic Database Migrations for NeuroCognitive Architecture (NCA)
+
+## Overview
+
+This directory contains database migration scripts managed by Alembic for the NeuroCognitive Architecture (NCA) system. Alembic provides a lightweight database migration tool that works with SQLAlchemy, enabling version control for your database schema.
+
+## Purpose
+
+The migration system serves several critical functions:
+- Tracks database schema changes over time
+- Enables consistent database state across all environments
+- Supports upgrading and downgrading between versions
+- Provides an audit trail of schema modifications
+- Facilitates collaborative development with database changes
+
+## Directory Structure
+
+```
+alembic/
+├── versions/             # Migration script files
+├── env.py                # Environment configuration
+├── README                # This documentation file
+├── script.py.mako        # Template for migration files
+└── alembic.ini           # Alembic configuration file
+```
+
+## Usage Instructions
+
+### Setup
+
+1. Ensure your database connection string is properly configured in `alembic.ini` or through environment variables
+2. Verify that all SQLAlchemy models are properly imported in `env.py`
+
+### Common Commands
+
+```bash
+# Generate a new migration (automatic)
+alembic revision --autogenerate -m "Description of changes"
+
+# Generate a new empty migration
+alembic revision -m "Description of changes"
+
+# Upgrade to the latest version
+alembic upgrade head
+
+# Upgrade to a specific version
+alembic upgrade <revision_id>
+
+# Downgrade to a previous version
+alembic downgrade <revision_id>
+
+# Downgrade one version
+alembic downgrade -1
+
+# View migration history
+alembic history
+
+# View current version
+alembic current
+
+# Show SQL that would be executed for a migration
+alembic upgrade <revision_id> --sql
+```
+
+### Best Practices
+
+1. **Descriptive Messages**: Use clear, descriptive commit messages for migrations
+2. **Small, Focused Migrations**: Create small, focused migrations rather than large ones
+3. **Test Migrations**: Test both upgrade and downgrade paths before committing
+4. **Review Generated Migrations**: Always review auto-generated migrations for accuracy
+5. **Version Control**: Commit migration scripts to version control
+6. **Data Migrations**: For data migrations, consider using `offline` mode or separate scripts
+7. **Avoid Manual Edits**: Don't manually edit migration files after they've been applied to any database
+
+## Integration with NCA Components
+
+The database schema managed by these migrations supports:
+
+- **Memory Tiers**: Tables for working, episodic, and semantic memory
+- **Health Dynamics**: Structures for tracking cognitive health metrics
+- **Biological Components**: Schema for neurotransmitter simulation and other biological models
+- **LLM Integration**: Connection points between database and LLM components
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Migration Conflicts**: If multiple developers create migrations simultaneously, conflicts may occur. Resolve by:
+   - Communicating with team members before creating migrations
+   - Using descriptive migration names to identify purpose
+   - Carefully merging conflicting migrations
+
+2. **Failed Migrations**: If a migration fails partway through:
+   - Check the database logs for specific errors
+   - Fix the underlying issue
+   - Use `alembic upgrade head` to continue
+
+3. **Inconsistent Database State**: If the database is in an inconsistent state:
+   - Use `alembic current` to identify the current version
+   - Consider using `alembic stamp <revision_id>` to mark a known good state
+   - Proceed with upgrades from there
+
+### Getting Help
+
+For assistance with database migrations:
+1. Consult the [Alembic documentation](https://alembic.sqlalchemy.org/)
+2. Review the SQLAlchemy models in the `neuroca/db/models` directory
+3. Contact the database administrator or lead developer
+
+## Security Considerations
+
+- **Connection Strings**: Never commit database credentials to version control
+- **Sensitive Data**: Be cautious when migrating tables with sensitive data
+- **Backup**: Always backup production databases before applying migrations
+- **Permissions**: Ensure the database user has appropriate permissions for schema changes
+
+## Additional Resources
+
+- [Alembic Documentation](https://alembic.sqlalchemy.org/)
+- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
+- Project-specific database documentation in `neuroca/docs/database.md`
+
+## Contribution Guidelines
+
+When contributing new migrations:
+1. Ensure your local schema is up-to-date (`alembic upgrade head`)
+2. Create a new branch for your changes
+3. Generate and test your migration
+4. Submit a pull request with a clear description of the changes
+5. Include any necessary data migration steps in the PR description
