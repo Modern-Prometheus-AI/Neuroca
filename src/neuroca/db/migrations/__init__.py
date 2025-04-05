@@ -32,11 +32,10 @@ import importlib
 import logging
 import os
 import re
-import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Any, Callable
+from typing import Any, Optional, Union
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -101,10 +100,10 @@ class Migration:
             self.module = importlib.import_module(module_path)
             
             # Validate that the module has the required functions
-            if not hasattr(self.module, 'upgrade') or not callable(getattr(self.module, 'upgrade')):
+            if not hasattr(self.module, 'upgrade') or not callable(self.module.upgrade):
                 raise MigrationError(f"Migration {self.name} is missing the 'upgrade' function")
                 
-            if not hasattr(self.module, 'downgrade') or not callable(getattr(self.module, 'downgrade')):
+            if not hasattr(self.module, 'downgrade') or not callable(self.module.downgrade):
                 raise MigrationError(f"Migration {self.name} is missing the 'downgrade' function")
                 
         except ImportError as e:
@@ -190,7 +189,7 @@ class MigrationManager:
         else:
             self.migrations_dir = Path(migrations_dir)
             
-        self.migrations: Dict[int, Migration] = {}
+        self.migrations: dict[int, Migration] = {}
         self._ensure_migration_table()
         self._discover_migrations()
     
@@ -210,14 +209,6 @@ class MigrationManager:
             
             # Example SQL for creating a migration tracking table
             # This should be replaced with the appropriate implementation for the actual database
-            create_table_sql = """
-            CREATE TABLE IF NOT EXISTS migration_history (
-                version BIGINT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                applied_at TIMESTAMP NOT NULL,
-                execution_time FLOAT NOT NULL
-            )
-            """
             
             # Execute the SQL (implementation depends on the database driver)
             # For example, with SQLAlchemy:
@@ -279,9 +270,6 @@ class MigrationManager:
             
             # Example SQL for retrieving the current version
             # This should be replaced with the appropriate implementation for the actual database
-            query = """
-            SELECT MAX(version) FROM migration_history
-            """
             
             # Execute the query (implementation depends on the database driver)
             # For example, with SQLAlchemy:
@@ -296,7 +284,7 @@ class MigrationManager:
             logger.error(f"Failed to determine current migration version: {str(e)}")
             raise MigrationError(f"Failed to determine current migration version: {str(e)}") from e
     
-    def get_pending_migrations(self) -> List[Migration]:
+    def get_pending_migrations(self) -> list[Migration]:
         """
         Get a list of pending migrations that need to be applied.
         
@@ -327,7 +315,7 @@ class MigrationManager:
             MigrationError: If migrations cannot be applied
         """
         try:
-            current_version = self.get_current_version()
+            self.get_current_version()
             pending = self.get_pending_migrations()
             
             if not pending:
@@ -402,7 +390,7 @@ class MigrationManager:
             logger.error(f"Rollback failed: {str(e)}")
             raise MigrationError(f"Rollback failed: {str(e)}") from e
     
-    def _get_applied_versions(self) -> List[int]:
+    def _get_applied_versions(self) -> list[int]:
         """
         Get a list of applied migration versions.
         
@@ -419,9 +407,6 @@ class MigrationManager:
             
             # Example SQL for retrieving applied versions
             # This should be replaced with the appropriate implementation for the actual database
-            query = """
-            SELECT version FROM migration_history ORDER BY version
-            """
             
             # Execute the query (implementation depends on the database driver)
             # For example, with SQLAlchemy:
@@ -454,10 +439,6 @@ class MigrationManager:
             
             # Example SQL for recording a migration
             # This should be replaced with the appropriate implementation for the actual database
-            insert_sql = """
-            INSERT INTO migration_history (version, name, applied_at, execution_time)
-            VALUES (?, ?, ?, ?)
-            """
             
             # Execute the SQL (implementation depends on the database driver)
             # For example, with SQLAlchemy:
@@ -485,9 +466,6 @@ class MigrationManager:
             
             # Example SQL for removing a migration record
             # This should be replaced with the appropriate implementation for the actual database
-            delete_sql = """
-            DELETE FROM migration_history WHERE version = ?
-            """
             
             # Execute the SQL (implementation depends on the database driver)
             # For example, with SQLAlchemy:
@@ -520,10 +498,7 @@ def create_migration(name: str, migrations_dir: Optional[Union[str, Path]] = Non
         # Generate version timestamp (YYYYMMDDHHMMSS)
         version = datetime.now().strftime("%Y%m%d%H%M%S")
         
-        if migrations_dir is None:
-            migrations_dir = Path(__file__).parent
-        else:
-            migrations_dir = Path(migrations_dir)
+        migrations_dir = Path(__file__).parent if migrations_dir is None else Path(migrations_dir)
             
         if not migrations_dir.exists():
             migrations_dir.mkdir(parents=True, exist_ok=True)

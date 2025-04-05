@@ -30,11 +30,10 @@ import inspect
 import logging
 import threading
 import time
-import traceback
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, Optional, Union
 
 # Setup module logger
 logger = logging.getLogger(__name__)
@@ -61,7 +60,7 @@ class Event:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = field(default_factory=datetime.now)
     source: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Validate event after initialization."""
@@ -141,7 +140,7 @@ class EventHandler(abc.ABC):
     
     Defines the interface that all event handlers must implement.
     """
-    def __init__(self, event_types: Union[Type[Event], List[Type[Event]]], 
+    def __init__(self, event_types: Union[type[Event], list[type[Event]]], 
                  priority: EventPriority = EventPriority.NORMAL,
                  name: Optional[str] = None):
         """Initialize the event handler.
@@ -199,7 +198,7 @@ class FunctionEventHandler(EventHandler):
     Allows using functions as event handlers without creating a full class.
     """
     def __init__(self, func: Callable[[Event, EventContext], Any], 
-                 event_types: Union[Type[Event], List[Type[Event]]],
+                 event_types: Union[type[Event], list[type[Event]]],
                  priority: EventPriority = EventPriority.NORMAL,
                  name: Optional[str] = None):
         """Initialize the function event handler.
@@ -245,8 +244,8 @@ class EventBus:
     """
     def __init__(self):
         """Initialize the event bus."""
-        self._handlers: Dict[Type[Event], List[EventHandler]] = {}
-        self._all_handlers: Set[EventHandler] = set()
+        self._handlers: dict[type[Event], list[EventHandler]] = {}
+        self._all_handlers: set[EventHandler] = set()
         self._lock = threading.RLock()
         
     def register_handler(self, handler: EventHandler) -> None:
@@ -305,7 +304,7 @@ class EventBus:
                         
         logger.debug(f"Unregistered handler {handler.id}")
     
-    def get_handlers_for_event(self, event: Event) -> List[EventHandler]:
+    def get_handlers_for_event(self, event: Event) -> list[EventHandler]:
         """Get all handlers that can process the given event.
         
         Args:
@@ -406,7 +405,7 @@ class EventBus:
 event_bus = EventBus()
 
 
-def register_handler(event_types: Union[Type[Event], List[Type[Event]]], 
+def register_handler(event_types: Union[type[Event], list[type[Event]]], 
                      priority: EventPriority = EventPriority.NORMAL):
     """Decorator to register a function as an event handler.
     
@@ -482,7 +481,7 @@ class EventBusWithMiddleware(EventBus):
     def __init__(self):
         """Initialize the event bus with middleware support."""
         super().__init__()
-        self._middleware: List[EventMiddleware] = []
+        self._middleware: list[EventMiddleware] = []
         
     def add_middleware(self, middleware: EventMiddleware) -> None:
         """Add middleware to the event bus.

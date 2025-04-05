@@ -32,14 +32,14 @@ Usage:
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
-import time
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 import aiofiles
 import aiofiles.os
@@ -47,12 +47,11 @@ from pydantic import BaseModel, Field, ValidationError
 
 from neuroca.config.settings import get_settings
 from neuroca.core.exceptions import (
-    StorageError,
     ItemNotFoundError,
     StorageInitializationError,
     StorageOperationError,
 )
-from neuroca.core.models.memory import MemoryItem, MemoryItemCreate, MemoryItemUpdate
+from neuroca.core.models.memory import MemoryItem
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -103,7 +102,7 @@ class STMStorage:
                    default configuration will be used.
         """
         self.config = config or STMStorageConfig()
-        self._index: Dict[str, Dict[str, Any]] = {}
+        self._index: dict[str, dict[str, Any]] = {}
         self._lock = asyncio.Lock()
         self._cleanup_task: Optional[asyncio.Task] = None
         
@@ -157,10 +156,9 @@ class STMStorage:
             # Cancel cleanup task if running
             if self._cleanup_task and not self._cleanup_task.done():
                 self._cleanup_task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await self._cleanup_task
-                except asyncio.CancelledError:
-                    pass
+
                 logger.debug("Cancelled STM storage cleanup task")
             
             # Persist index
@@ -175,7 +173,7 @@ class STMStorage:
     async def store(
         self, 
         content: Any, 
-        metadata: Optional[Dict[str, Any]] = None, 
+        metadata: Optional[dict[str, Any]] = None, 
         ttl: Optional[int] = None
     ) -> str:
         """
@@ -247,10 +245,10 @@ class STMStorage:
     async def retrieve(
         self,
         item_id: Optional[str] = None,
-        filter_criteria: Optional[Dict[str, Any]] = None,
+        filter_criteria: Optional[dict[str, Any]] = None,
         limit: int = 100,
         include_expired: bool = False
-    ) -> Union[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
+    ) -> Union[Optional[dict[str, Any]], list[dict[str, Any]]]:
         """
         Retrieve memory items from storage.
         
@@ -361,9 +359,9 @@ class STMStorage:
     async def update(
         self, 
         item_id: str, 
-        updates: Dict[str, Any],
+        updates: dict[str, Any],
         extend_ttl: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Update an existing memory item.
         

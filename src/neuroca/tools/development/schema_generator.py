@@ -34,12 +34,10 @@ import json
 import logging
 import os
 import sys
-import typing
 from abc import ABC, abstractmethod
 from dataclasses import is_dataclass
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Type, Union
+from typing import Any, Optional, Union
 
 # Configure logging
 logging.basicConfig(
@@ -89,7 +87,7 @@ class SchemaFormatter(ABC):
     """Base class for schema formatters."""
     
     @abstractmethod
-    def format(self, schema_data: Dict[str, Any]) -> str:
+    def format(self, schema_data: dict[str, Any]) -> str:
         """Format the schema data into the target format."""
         pass
     
@@ -102,7 +100,7 @@ class SchemaFormatter(ABC):
 class JsonSchemaFormatter(SchemaFormatter):
     """Formatter for JSON Schema format."""
     
-    def format(self, schema_data: Dict[str, Any]) -> str:
+    def format(self, schema_data: dict[str, Any]) -> str:
         """Format the schema data as JSON."""
         try:
             return json.dumps(schema_data, indent=2)
@@ -118,7 +116,7 @@ class JsonSchemaFormatter(SchemaFormatter):
 class YamlSchemaFormatter(SchemaFormatter):
     """Formatter for YAML Schema format."""
     
-    def format(self, schema_data: Dict[str, Any]) -> str:
+    def format(self, schema_data: dict[str, Any]) -> str:
         """Format the schema data as YAML."""
         try:
             import yaml
@@ -138,7 +136,7 @@ class YamlSchemaFormatter(SchemaFormatter):
 class ProtobufSchemaFormatter(SchemaFormatter):
     """Formatter for Protocol Buffer format."""
     
-    def format(self, schema_data: Dict[str, Any]) -> str:
+    def format(self, schema_data: dict[str, Any]) -> str:
         """Format the schema data as Protocol Buffer definition."""
         try:
             # This is a simplified implementation
@@ -211,7 +209,7 @@ class SchemaGenerator:
         output_format: SchemaFormat,
         output_path: Optional[str] = None,
         namespace: Optional[str] = None,
-    ) -> Union[str, Dict[str, Any]]:
+    ) -> Union[str, dict[str, Any]]:
         """
         Generate a schema from the given source.
         
@@ -304,7 +302,7 @@ class SchemaGenerator:
             logger.error(f"Failed to write schema to {output_path}: {e}")
             raise SchemaGenerationError(f"Failed to write schema: {e}")
     
-    def _handle_pydantic(self, source: Any, namespace: Optional[str] = None) -> Dict[str, Any]:
+    def _handle_pydantic(self, source: Any, namespace: Optional[str] = None) -> dict[str, Any]:
         """
         Generate schema data from a Pydantic model.
         
@@ -338,7 +336,7 @@ class SchemaGenerator:
             # If source is a module, find all Pydantic models in it
             if inspect.ismodule(source):
                 models = []
-                for name, obj in inspect.getmembers(source):
+                for _name, obj in inspect.getmembers(source):
                     if inspect.isclass(obj) and issubclass(obj, BaseModel) and obj != BaseModel:
                         models.append(obj)
                 
@@ -375,7 +373,7 @@ class SchemaGenerator:
                 raise SchemaGenerationError(f"Pydantic schema generation failed: {e}")
             raise
     
-    def _handle_dataclass(self, source: Any, namespace: Optional[str] = None) -> Dict[str, Any]:
+    def _handle_dataclass(self, source: Any, namespace: Optional[str] = None) -> dict[str, Any]:
         """
         Generate schema data from a dataclass.
         
@@ -401,7 +399,7 @@ class SchemaGenerator:
             # If source is a module, find all dataclasses in it
             if inspect.ismodule(source):
                 dataclasses = []
-                for name, obj in inspect.getmembers(source):
+                for _name, obj in inspect.getmembers(source):
                     if inspect.isclass(obj) and is_dataclass(obj):
                         dataclasses.append(obj)
                 
@@ -437,7 +435,7 @@ class SchemaGenerator:
                 raise SchemaGenerationError(f"Dataclass schema generation failed: {e}")
             raise
     
-    def _dataclass_to_schema(self, dataclass_obj: Type) -> Dict[str, Any]:
+    def _dataclass_to_schema(self, dataclass_obj: type) -> dict[str, Any]:
         """Convert a dataclass to a JSON schema."""
         from dataclasses import fields
         
@@ -461,7 +459,7 @@ class SchemaGenerator:
         
         return schema
     
-    def _python_type_to_json_schema(self, py_type: Type) -> Dict[str, Any]:
+    def _python_type_to_json_schema(self, py_type: type) -> dict[str, Any]:
         """Convert a Python type to a JSON schema type definition."""
         # This is a simplified implementation
         if py_type == str:
@@ -472,9 +470,9 @@ class SchemaGenerator:
             return {"type": "number"}
         elif py_type == bool:
             return {"type": "boolean"}
-        elif py_type == list or py_type == List:
+        elif py_type in (list, list):
             return {"type": "array", "items": {}}
-        elif py_type == dict or py_type == Dict:
+        elif py_type in (dict, dict):
             return {"type": "object"}
         elif hasattr(py_type, "__origin__") and py_type.__origin__ == list:
             # Handle List[X]
@@ -496,7 +494,7 @@ class SchemaGenerator:
             # Default to string for complex types
             return {"type": "string"}
     
-    def _handle_sqlalchemy(self, source: Any, namespace: Optional[str] = None) -> Dict[str, Any]:
+    def _handle_sqlalchemy(self, source: Any, namespace: Optional[str] = None) -> dict[str, Any]:
         """
         Generate schema data from SQLAlchemy models.
         
@@ -530,7 +528,7 @@ class SchemaGenerator:
             # If source is a module, find all SQLAlchemy models in it
             if inspect.ismodule(source):
                 models = []
-                for name, obj in inspect.getmembers(source):
+                for _name, obj in inspect.getmembers(source):
                     if inspect.isclass(obj) and isinstance(obj, DeclarativeMeta):
                         models.append(obj)
                 
@@ -566,9 +564,8 @@ class SchemaGenerator:
                 raise SchemaGenerationError(f"SQLAlchemy schema generation failed: {e}")
             raise
     
-    def _sqlalchemy_to_schema(self, model: Type) -> Dict[str, Any]:
+    def _sqlalchemy_to_schema(self, model: type) -> dict[str, Any]:
         """Convert a SQLAlchemy model to a JSON schema."""
-        import sqlalchemy as sa
         
         schema = {
             "type": "object",
@@ -593,7 +590,7 @@ class SchemaGenerator:
         
         return schema
     
-    def _sqlalchemy_type_to_json_schema(self, sa_type: Any) -> Dict[str, Any]:
+    def _sqlalchemy_type_to_json_schema(self, sa_type: Any) -> dict[str, Any]:
         """Convert a SQLAlchemy type to a JSON schema type definition."""
         import sqlalchemy as sa
         
@@ -619,7 +616,7 @@ class SchemaGenerator:
             # Default to string for complex types
             return {"type": "string"}
     
-    def _handle_dict(self, source: Dict[str, Any], namespace: Optional[str] = None) -> Dict[str, Any]:
+    def _handle_dict(self, source: dict[str, Any], namespace: Optional[str] = None) -> dict[str, Any]:
         """
         Generate schema data from a dictionary.
         
@@ -649,7 +646,7 @@ class SchemaGenerator:
         
         return schema_data
     
-    def _infer_type(self, value: Any) -> Dict[str, Any]:
+    def _infer_type(self, value: Any) -> dict[str, Any]:
         """Infer JSON schema type from a Python value."""
         if value is None:
             return {"type": "null"}
@@ -677,7 +674,7 @@ class SchemaGenerator:
             # Default to string for complex types
             return {"type": "string"}
     
-    def _handle_class(self, source: Any, namespace: Optional[str] = None) -> Dict[str, Any]:
+    def _handle_class(self, source: Any, namespace: Optional[str] = None) -> dict[str, Any]:
         """
         Generate schema data from a Python class.
         
@@ -703,7 +700,7 @@ class SchemaGenerator:
             # If source is a module, find all classes in it
             if inspect.ismodule(source):
                 classes = []
-                for name, obj in inspect.getmembers(source):
+                for _name, obj in inspect.getmembers(source):
                     if inspect.isclass(obj) and obj.__module__ == source.__name__:
                         classes.append(obj)
                 
@@ -739,7 +736,7 @@ class SchemaGenerator:
                 raise SchemaGenerationError(f"Class schema generation failed: {e}")
             raise
     
-    def _class_to_schema(self, cls: Type) -> Dict[str, Any]:
+    def _class_to_schema(self, cls: type) -> dict[str, Any]:
         """Convert a Python class to a JSON schema."""
         schema = {
             "type": "object",
@@ -763,7 +760,7 @@ class SchemaGenerator:
         
         return schema
     
-    def _handle_json(self, source: Any, namespace: Optional[str] = None) -> Dict[str, Any]:
+    def _handle_json(self, source: Any, namespace: Optional[str] = None) -> dict[str, Any]:
         """
         Generate schema data from JSON.
         
@@ -781,7 +778,7 @@ class SchemaGenerator:
             # If source is a string that looks like a file path
             if isinstance(source, str) and (os.path.exists(source) or source.startswith("./") or source.startswith("/")):
                 try:
-                    with open(source, 'r') as f:
+                    with open(source) as f:
                         data = json.load(f)
                 except Exception as e:
                     raise InvalidSourceError(f"Failed to load JSON from file {source}: {e}")

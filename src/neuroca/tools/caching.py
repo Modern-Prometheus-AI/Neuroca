@@ -10,20 +10,18 @@ The caching system is biologically inspired, mimicking the way the brain optimiz
 frequently used neural pathways and reuses recently computed results.
 """
 
-import time
 import functools
 import hashlib
-import pickle
 import json
 import logging
+import pickle
 import threading
-import os
-from typing import Any, Dict, List, Optional, Tuple, Callable, Union, TypeVar, cast
+import time
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Callable, Optional, TypeVar, Union, cast
 
 try:
     import redis
@@ -36,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 # Type for decorated functions
 T = TypeVar('T')
-CacheKey = Union[str, Tuple[Any, ...]]
+CacheKey = Union[str, tuple[Any, ...]]
 
 
 @dataclass
@@ -108,7 +106,7 @@ class CacheBackend(ABC):
         pass
     
     @abstractmethod
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the cache.
         
@@ -136,7 +134,7 @@ class InMemoryCache(CacheBackend):
             eviction_policy: Policy to use when evicting entries ('lru', 'lfu', 'fifo')
             eviction_threshold: Threshold at which to start evicting entries (0.0-1.0)
         """
-        self._cache: Dict[str, CacheEntry] = {}
+        self._cache: dict[str, CacheEntry] = {}
         self._max_size = max_size
         self._eviction_policy = eviction_policy.lower()
         self._eviction_threshold = eviction_threshold
@@ -218,7 +216,7 @@ class InMemoryCache(CacheBackend):
         with self._lock:
             self._cache.clear()
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the cache.
         
@@ -317,12 +315,12 @@ class FileCache(CacheBackend):
         """Load hit/miss statistics from disk."""
         if self._hit_miss_path.exists():
             try:
-                with open(self._hit_miss_path, 'r') as f:
+                with open(self._hit_miss_path) as f:
                     stats = json.load(f)
                     self._hits = stats.get('hits', 0)
                     self._misses = stats.get('misses', 0)
                     self._evictions = stats.get('evictions', 0)
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 logger.warning(f"Failed to load cache hit/miss stats: {e}")
     
     def _save_hit_miss_stats(self) -> None:
@@ -334,7 +332,7 @@ class FileCache(CacheBackend):
                     'misses': self._misses,
                     'evictions': self._evictions
                 }, f)
-        except IOError as e:
+        except OSError as e:
             logger.warning(f"Failed to save cache hit/miss stats: {e}")
     
     def _get_cache_path(self, key: str) -> Path:
@@ -454,7 +452,7 @@ class FileCache(CacheBackend):
             except OSError as e:
                 logger.warning(f"Failed to delete cache file {cache_file}: {e}")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the cache.
         
@@ -665,7 +663,7 @@ class RedisCache(CacheBackend):
         except redis.RedisError as e:
             logger.warning(f"Failed to clear cache: {e}")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the cache.
         
@@ -785,7 +783,7 @@ class Cache:
             self.set(key, value, ttl or self._default_ttl)
         return value
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the cache.
         
@@ -883,7 +881,7 @@ def timed_lru_cache(maxsize: int = 128, ttl: float = 300, typed: bool = False):
         cached_func = functools.lru_cache(maxsize=maxsize, typed=typed)(func)
         
         # Create a dictionary to store timestamps
-        timestamps: Dict[CacheKey, float] = {}
+        timestamps: dict[CacheKey, float] = {}
         lock = threading.RLock()
         
         @functools.wraps(func)

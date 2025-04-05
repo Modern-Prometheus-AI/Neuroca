@@ -30,17 +30,15 @@ import asyncio
 import json
 import logging
 import os
-import time
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 import aiofiles
-import numpy as np
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from neuroca.config.settings import get_settings
 from neuroca.core.exceptions import (
@@ -152,10 +150,10 @@ class StorageBackend(ABC):
     async def search(
         self, 
         query: str, 
-        filters: Optional[Dict[str, Any]] = None, 
+        filters: Optional[dict[str, Any]] = None, 
         limit: int = 10,
         offset: int = 0
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Search for memory items.
         
@@ -203,7 +201,7 @@ class FileSystemBackend(StorageBackend):
         self.index_path = self.base_path / "index"
         self.metadata_path = self.base_path / "metadata.json"
         self._lock = asyncio.Lock()
-        self._metadata: Dict[str, Dict[str, Any]] = {}
+        self._metadata: dict[str, dict[str, Any]] = {}
     
     async def initialize(self) -> None:
         """
@@ -408,10 +406,10 @@ class FileSystemBackend(StorageBackend):
     async def search(
         self, 
         query: str, 
-        filters: Optional[Dict[str, Any]] = None, 
+        filters: Optional[dict[str, Any]] = None, 
         limit: int = 10,
         offset: int = 0
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Search for memory items in the file system.
         
@@ -536,7 +534,7 @@ class FileSystemBackend(StorageBackend):
         self, 
         memory_item: MemoryItem, 
         query: str, 
-        filters: Dict[str, Any]
+        filters: dict[str, Any]
     ) -> bool:
         """
         Check if a memory item matches the search criteria.
@@ -597,7 +595,7 @@ class LTMStorage:
     def __init__(
         self,
         backend_type: Union[StorageBackendType, str] = StorageBackendType.FILE_SYSTEM,
-        backend_config: Optional[Dict[str, Any]] = None,
+        backend_config: Optional[dict[str, Any]] = None,
     ):
         """
         Initialize the LTM Storage Manager.
@@ -780,10 +778,10 @@ class LTMStorage:
     async def search(
         self, 
         query: str, 
-        filters: Optional[Dict[str, Any]] = None, 
+        filters: Optional[dict[str, Any]] = None, 
         limit: int = 10,
         offset: int = 0
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Search for memory items.
         
@@ -912,7 +910,7 @@ class LTMStorage:
             logger.error(error_msg, exc_info=True)
             raise LTMStorageError(error_msg) from e
     
-    async def bulk_store(self, memory_items: List[MemoryItem]) -> List[str]:
+    async def bulk_store(self, memory_items: list[MemoryItem]) -> list[str]:
         """
         Store multiple memory items in a batch.
         

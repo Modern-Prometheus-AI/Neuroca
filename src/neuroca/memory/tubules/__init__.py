@@ -39,7 +39,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -259,7 +259,7 @@ class Tubule:
         self.connection.active = True
         logger.info(f"Tubule activated: {self.connection.id}")
     
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Get performance metrics for this tubule.
         
@@ -291,9 +291,9 @@ class TubuleNetwork:
     
     def __init__(self) -> None:
         """Initialize a new tubule network."""
-        self._tubules: Dict[str, Tubule] = {}
-        self._connections_by_source: Dict[str, Set[str]] = {}
-        self._connections_by_destination: Dict[str, Set[str]] = {}
+        self._tubules: dict[str, Tubule] = {}
+        self._connections_by_source: dict[str, set[str]] = {}
+        self._connections_by_destination: dict[str, set[str]] = {}
         logger.info("Initialized tubule network")
     
     def add_tubule(
@@ -409,7 +409,7 @@ class TubuleNetwork:
         self, 
         source: Optional[str] = None, 
         destination: Optional[str] = None
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Find tubules matching the given source and/or destination.
         
@@ -525,7 +525,7 @@ class TubuleNetwork:
         logger.error(f"All tubule transfers failed: {source} -> {destination}")
         return False
     
-    def get_network_metrics(self) -> Dict[str, Any]:
+    def get_network_metrics(self) -> dict[str, Any]:
         """
         Get comprehensive metrics for the entire tubule network.
         

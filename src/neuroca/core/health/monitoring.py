@@ -5,12 +5,12 @@ This module provides health checking and monitoring capabilities to track
 system health and detect degradation or failures.
 """
 
-from typing import Dict, List, Any, Optional, Callable
-from enum import Enum
-import time
-import threading
 import logging
+import threading
+import time
 from datetime import datetime
+from enum import Enum
+from typing import Any, Callable
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class HealthCheck:
     """Represents a health check that can be executed to verify system functionality."""
     
     def __init__(self, name: str, check_func: Callable[[], HealthStatus], 
-                description: str = "", dependencies: List[str] = None):
+                description: str = "", dependencies: list[str] = None):
         """
         Initialize a health check.
         
@@ -81,7 +81,7 @@ class HealthCheck:
             logger.warning(f"Health check '{self.name}' failed with error: {str(e)}")
             return HealthStatus.UNHEALTHY
             
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert health check to a dictionary.
         
@@ -110,7 +110,7 @@ class HealthMonitor:
         Args:
             check_interval: How often to run health checks (in seconds)
         """
-        self.checks: Dict[str, HealthCheck] = {}
+        self.checks: dict[str, HealthCheck] = {}
         self.check_interval = check_interval
         self.monitoring_thread = None
         self.is_monitoring = False
@@ -128,7 +128,7 @@ class HealthMonitor:
             logger.info(f"Registered health check: {check.name}")
             
     def register_simple_check(self, name: str, check_func: Callable[[], bool], 
-                             description: str = "", dependencies: List[str] = None) -> None:
+                             description: str = "", dependencies: list[str] = None) -> None:
         """
         Register a simple boolean health check function.
         
@@ -152,7 +152,7 @@ class HealthMonitor:
             dependencies=dependencies
         ))
             
-    def check_all(self) -> Dict[str, Any]:
+    def check_all(self) -> dict[str, Any]:
         """
         Execute all registered health checks.
         
@@ -233,7 +233,7 @@ class HealthMonitor:
 # Create a singleton instance for global use
 health_monitor = HealthMonitor()
 
-def get_health_report() -> Dict[str, Any]:
+def get_health_report() -> dict[str, Any]:
     """
     Get a comprehensive health report of the system.
     
@@ -244,7 +244,7 @@ def get_health_report() -> Dict[str, Any]:
 
 
 def register_health_check(name: str, check_func: Callable[[], bool], 
-                         description: str = "", dependencies: List[str] = None) -> None:
+                         description: str = "", dependencies: list[str] = None) -> None:
     """
     Register a new health check with the system.
     

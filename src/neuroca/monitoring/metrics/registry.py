@@ -30,15 +30,14 @@ Usage:
     memory_metrics = registry.get_metrics_by_tags({"component": "memory"})
 """
 
+import json
 import logging
 import threading
 import time
+import uuid
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict, List, Optional, Set, Union, Any, Callable
-import uuid
-import json
-import weakref
+from typing import Any, Callable, Optional, Union
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -76,7 +75,7 @@ class Metric(ABC):
     and implement its abstract methods.
     """
     
-    def __init__(self, name: str, description: str, tags: Optional[Dict[str, str]] = None):
+    def __init__(self, name: str, description: str, tags: Optional[dict[str, str]] = None):
         """
         Initialize a new metric.
         
@@ -146,7 +145,7 @@ class Metric(ABC):
             raise MetricValidationError("Metric description too long (max 1000 chars)")
     
     @staticmethod
-    def _validate_tags(tags: Optional[Dict[str, str]]) -> None:
+    def _validate_tags(tags: Optional[dict[str, str]]) -> None:
         """
         Validate the metric tags.
         
@@ -199,7 +198,7 @@ class Metric(ABC):
         """
         pass
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the metric to a dictionary representation.
         
@@ -229,7 +228,7 @@ class Counter(Metric):
     Counters are typically used for counting events or operations.
     """
     
-    def __init__(self, name: str, description: str, tags: Optional[Dict[str, str]] = None):
+    def __init__(self, name: str, description: str, tags: Optional[dict[str, str]] = None):
         """
         Initialize a new counter metric.
         
@@ -283,7 +282,7 @@ class Gauge(Metric):
     Gauges are typically used for measured values like temperatures or current memory usage.
     """
     
-    def __init__(self, name: str, description: str, tags: Optional[Dict[str, str]] = None):
+    def __init__(self, name: str, description: str, tags: Optional[dict[str, str]] = None):
         """
         Initialize a new gauge metric.
         
@@ -367,8 +366,8 @@ class Histogram(Metric):
         self, 
         name: str, 
         description: str, 
-        buckets: Optional[List[float]] = None,
-        tags: Optional[Dict[str, str]] = None
+        buckets: Optional[list[float]] = None,
+        tags: Optional[dict[str, str]] = None
     ):
         """
         Initialize a new histogram metric.
@@ -402,7 +401,7 @@ class Histogram(Metric):
         self._max = float('-inf')
     
     @staticmethod
-    def _validate_buckets(buckets: List[float]) -> None:
+    def _validate_buckets(buckets: list[float]) -> None:
         """
         Validate histogram buckets.
         
@@ -432,7 +431,7 @@ class Histogram(Metric):
         """Get the metric type."""
         return MetricType.HISTOGRAM
     
-    def get_value(self) -> Dict[str, Any]:
+    def get_value(self) -> dict[str, Any]:
         """
         Get the current histogram value.
         
@@ -503,7 +502,7 @@ class Timer(Metric):
     Timers are typically used for measuring the time taken by operations.
     """
     
-    def __init__(self, name: str, description: str, tags: Optional[Dict[str, str]] = None):
+    def __init__(self, name: str, description: str, tags: Optional[dict[str, str]] = None):
         """
         Initialize a new timer metric.
         
@@ -525,7 +524,7 @@ class Timer(Metric):
         """Get the metric type."""
         return MetricType.TIMER
     
-    def get_value(self) -> Dict[str, Any]:
+    def get_value(self) -> dict[str, Any]:
         """
         Get the current timer value.
         
@@ -612,7 +611,7 @@ class MetricsRegistry:
         """Create a new singleton instance if one doesn't exist."""
         with cls._lock:
             if cls._instance is None:
-                cls._instance = super(MetricsRegistry, cls).__new__(cls)
+                cls._instance = super().__new__(cls)
                 cls._instance._initialized = False
         return cls._instance
     
@@ -622,12 +621,12 @@ class MetricsRegistry:
             if self._initialized:
                 return
             
-            self._metrics: Dict[str, Metric] = {}
-            self._metrics_by_name: Dict[str, Metric] = {}
-            self._metrics_by_type: Dict[MetricType, Set[str]] = {
+            self._metrics: dict[str, Metric] = {}
+            self._metrics_by_name: dict[str, Metric] = {}
+            self._metrics_by_type: dict[MetricType, set[str]] = {
                 metric_type: set() for metric_type in MetricType
             }
-            self._metrics_by_tag: Dict[str, Dict[str, Set[str]]] = {}
+            self._metrics_by_tag: dict[str, dict[str, set[str]]] = {}
             self._initialized = True
             logger.info("Metrics registry initialized")
     
@@ -745,7 +744,7 @@ class MetricsRegistry:
             
             return self._metrics_by_name[name]
     
-    def get_metrics_by_type(self, metric_type: MetricType) -> List[Metric]:
+    def get_metrics_by_type(self, metric_type: MetricType) -> list[Metric]:
         """
         Get all metrics of a specific type.
         
@@ -758,7 +757,7 @@ class MetricsRegistry:
         with self._lock:
             return [self._metrics[metric_id] for metric_id in self._metrics_by_type[metric_type]]
     
-    def get_metrics_by_tag(self, tag_key: str, tag_value: str) -> List[Metric]:
+    def get_metrics_by_tag(self, tag_key: str, tag_value: str) -> list[Metric]:
         """
         Get all metrics with a specific tag key and value.
         
@@ -775,7 +774,7 @@ class MetricsRegistry:
             
             return [self._metrics[metric_id] for metric_id in self._metrics_by_tag[tag_key][tag_value]]
     
-    def get_metrics_by_tags(self, tags: Dict[str, str]) -> List[Metric]:
+    def get_metrics_by_tags(self, tags: dict[str, str]) -> list[Metric]:
         """
         Get all metrics that match all the specified tags.
         
@@ -802,7 +801,7 @@ class MetricsRegistry:
             
             return [self._metrics[metric_id] for metric_id in result_ids]
     
-    def get_all_metrics(self) -> List[Metric]:
+    def get_all_metrics(self) -> list[Metric]:
         """
         Get all registered metrics.
         
@@ -812,7 +811,7 @@ class MetricsRegistry:
         with self._lock:
             return list(self._metrics.values())
     
-    def create_counter(self, name: str, description: str, tags: Optional[Dict[str, str]] = None) -> Counter:
+    def create_counter(self, name: str, description: str, tags: Optional[dict[str, str]] = None) -> Counter:
         """
         Create and register a new counter metric.
         
@@ -831,7 +830,7 @@ class MetricsRegistry:
         self.register_metric(counter)
         return counter
     
-    def create_gauge(self, name: str, description: str, tags: Optional[Dict[str, str]] = None) -> Gauge:
+    def create_gauge(self, name: str, description: str, tags: Optional[dict[str, str]] = None) -> Gauge:
         """
         Create and register a new gauge metric.
         
@@ -854,8 +853,8 @@ class MetricsRegistry:
         self, 
         name: str, 
         description: str, 
-        buckets: Optional[List[float]] = None,
-        tags: Optional[Dict[str, str]] = None
+        buckets: Optional[list[float]] = None,
+        tags: Optional[dict[str, str]] = None
     ) -> Histogram:
         """
         Create and register a new histogram metric.
@@ -876,7 +875,7 @@ class MetricsRegistry:
         self.register_metric(histogram)
         return histogram
     
-    def create_timer(self, name: str, description: str, tags: Optional[Dict[str, str]] = None) -> Timer:
+    def create_timer(self, name: str, description: str, tags: Optional[dict[str, str]] = None) -> Timer:
         """
         Create and register a new timer metric.
         
@@ -919,7 +918,7 @@ class MetricsRegistry:
         """Reset all metrics to their initial state."""
         with self._lock:
             for metric in self._metrics.values():
-                if hasattr(metric, 'reset') and callable(getattr(metric, 'reset')):
+                if hasattr(metric, 'reset') and callable(metric.reset):
                     metric.reset()
             
             logger.info("All metrics have been reset")

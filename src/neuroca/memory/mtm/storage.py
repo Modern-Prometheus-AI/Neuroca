@@ -33,15 +33,14 @@ Usage:
 import json
 import logging
 import os
-import time
 import uuid
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, auto
 from pathlib import Path
 from threading import Lock
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional
 
 import aiofiles
 from pydantic import BaseModel, Field, ValidationError
@@ -105,21 +104,21 @@ class MTMMemory(BaseModel):
     Represents a single memory entry in the Medium-Term Memory system.
     """
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    content: Dict[str, Any]
+    content: dict[str, Any]
     created_at: datetime = Field(default_factory=datetime.now)
     last_accessed: datetime = Field(default_factory=datetime.now)
     access_count: int = Field(default=0)
     priority: MemoryPriority = Field(default=MemoryPriority.MEDIUM)
     status: MemoryStatus = Field(default=MemoryStatus.ACTIVE)
-    tags: List[str] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     
     def increment_access(self) -> None:
         """Increment the access count and update the last accessed timestamp."""
         self.access_count += 1
         self.last_accessed = datetime.now()
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the memory to a dictionary."""
         result = self.dict()
         result["priority"] = self.priority.value
@@ -210,7 +209,7 @@ class StorageBackend(ABC):
         pass
     
     @abstractmethod
-    async def list_all(self) -> List[MTMMemory]:
+    async def list_all(self) -> list[MTMMemory]:
         """
         List all memories in the backend.
         
@@ -241,7 +240,7 @@ class InMemoryStorageBackend(StorageBackend):
     
     def __init__(self):
         """Initialize the in-memory storage backend."""
-        self._memories: Dict[str, MTMMemory] = {}
+        self._memories: dict[str, MTMMemory] = {}
         self._lock = Lock()
         logger.debug("Initialized in-memory storage backend")
     
@@ -311,7 +310,7 @@ class InMemoryStorageBackend(StorageBackend):
             logger.error(error_msg)
             raise StorageOperationError(error_msg) from e
     
-    async def list_all(self) -> List[MTMMemory]:
+    async def list_all(self) -> list[MTMMemory]:
         """List all memories in the backend."""
         try:
             with self._lock:
@@ -361,7 +360,7 @@ class FileStorageBackend(StorageBackend):
         """
         self.storage_dir = Path(storage_dir)
         self.index_file = self.storage_dir / "index.json"
-        self._index: Dict[str, Dict[str, Any]] = {}
+        self._index: dict[str, dict[str, Any]] = {}
         self._lock = Lock()
         logger.debug(f"Initialized file storage backend with directory {storage_dir}")
     
@@ -529,7 +528,7 @@ class FileStorageBackend(StorageBackend):
             logger.error(error_msg)
             raise StorageOperationError(error_msg) from e
     
-    async def list_all(self) -> List[MTMMemory]:
+    async def list_all(self) -> list[MTMMemory]:
         """List all memories in the backend."""
         try:
             memories = []
@@ -565,7 +564,7 @@ class FileStorageBackend(StorageBackend):
                 
                 # Calculate total size
                 total_size = 0
-                for memory_id, info in self._index.items():
+                for _memory_id, info in self._index.items():
                     path = Path(info["path"])
                     if path.exists():
                         total_size += path.stat().st_size
@@ -637,9 +636,9 @@ class MTMStorage:
             logger.error(error_msg)
             raise StorageInitializationError(error_msg) from e
     
-    async def store(self, content: Dict[str, Any], tags: List[str] = None, 
+    async def store(self, content: dict[str, Any], tags: list[str] = None, 
                    priority: MemoryPriority = MemoryPriority.MEDIUM,
-                   metadata: Dict[str, Any] = None) -> str:
+                   metadata: dict[str, Any] = None) -> str:
         """
         Store a new memory.
         
@@ -703,9 +702,9 @@ class MTMStorage:
             logger.error(error_msg)
             raise StorageOperationError(error_msg) from e
     
-    async def update(self, memory_id: str, content: Optional[Dict[str, Any]] = None,
-                    tags: Optional[List[str]] = None, priority: Optional[MemoryPriority] = None,
-                    status: Optional[MemoryStatus] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
+    async def update(self, memory_id: str, content: Optional[dict[str, Any]] = None,
+                    tags: Optional[list[str]] = None, priority: Optional[MemoryPriority] = None,
+                    status: Optional[MemoryStatus] = None, metadata: Optional[dict[str, Any]] = None) -> None:
         """
         Update a memory.
         
@@ -770,7 +769,7 @@ class MTMStorage:
             logger.error(error_msg)
             raise StorageOperationError(error_msg) from e
     
-    async def list_all(self) -> List[MTMMemory]:
+    async def list_all(self) -> list[MTMMemory]:
         """
         List all memories.
         
@@ -789,8 +788,8 @@ class MTMStorage:
             logger.error(error_msg)
             raise StorageOperationError(error_msg) from e
     
-    async def search(self, query: str = None, tags: List[str] = None, 
-                    status: MemoryStatus = None, min_priority: MemoryPriority = None) -> List[MTMMemory]:
+    async def search(self, query: str = None, tags: list[str] = None, 
+                    status: MemoryStatus = None, min_priority: MemoryPriority = None) -> list[MTMMemory]:
         """
         Search for memories based on criteria.
         
@@ -927,7 +926,7 @@ class MTMStorage:
             logger.error(error_msg)
             raise StorageOperationError(error_msg) from e
     
-    async def cleanup(self, max_age_days: int = 30, statuses_to_remove: List[MemoryStatus] = None) -> int:
+    async def cleanup(self, max_age_days: int = 30, statuses_to_remove: list[MemoryStatus] = None) -> int:
         """
         Clean up old or forgotten memories.
         

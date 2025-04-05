@@ -34,7 +34,7 @@ import os
 from datetime import datetime
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -84,7 +84,7 @@ class MemoryVisualizer:
         self, 
         memory_system: Any,
         default_output_dir: Optional[Union[str, Path]] = None,
-        color_scheme: Optional[Dict[str, str]] = None
+        color_scheme: Optional[dict[str, str]] = None
     ):
         """
         Initialize the memory visualizer.
@@ -228,13 +228,13 @@ class MemoryVisualizer:
             logger.info(f"Saved visualization to {output_path}")
         except Exception as e:
             logger.error(f"Failed to save figure: {e}")
-            raise IOError(f"Failed to save figure to {output_path}: {e}")
+            raise OSError(f"Failed to save figure to {output_path}: {e}")
 
     def create_structure_graph(
         self, 
         output_path: Optional[Union[str, Path]] = None,
         include_connections: bool = True,
-        highlight_nodes: Optional[List[str]] = None
+        highlight_nodes: Optional[list[str]] = None
     ) -> Path:
         """
         Create a graph visualization of the memory structure.
@@ -378,8 +378,8 @@ class MemoryVisualizer:
     def create_usage_heatmap(
         self, 
         output_path: Optional[Union[str, Path]] = None,
-        time_range: Optional[Tuple[datetime, datetime]] = None,
-        memory_types: Optional[List[str]] = None
+        time_range: Optional[tuple[datetime, datetime]] = None,
+        memory_types: Optional[list[str]] = None
     ) -> Path:
         """
         Create a heatmap visualization of memory usage.
@@ -420,7 +420,7 @@ class MemoryVisualizer:
             sns.set(style="whitegrid")
             
             # Create heatmap
-            ax = sns.heatmap(
+            sns.heatmap(
                 df.pivot("component", "time", "usage"),
                 cmap="YlOrRd",
                 linewidths=0.5,
@@ -452,8 +452,8 @@ class MemoryVisualizer:
     def create_access_pattern_visualization(
         self, 
         output_path: Optional[Union[str, Path]] = None,
-        time_range: Optional[Tuple[datetime, datetime]] = None,
-        memory_components: Optional[List[str]] = None,
+        time_range: Optional[tuple[datetime, datetime]] = None,
+        memory_components: Optional[list[str]] = None,
         interactive: bool = True
     ) -> Path:
         """
@@ -729,9 +729,9 @@ class MemoryVisualizer:
     def create_memory_timeline(
         self, 
         output_path: Optional[Union[str, Path]] = None,
-        time_range: Optional[Tuple[datetime, datetime]] = None,
-        memory_components: Optional[List[str]] = None,
-        event_types: Optional[List[str]] = None,
+        time_range: Optional[tuple[datetime, datetime]] = None,
+        memory_components: Optional[list[str]] = None,
+        event_types: Optional[list[str]] = None,
         interactive: bool = True
     ) -> Path:
         """
@@ -786,12 +786,12 @@ class MemoryVisualizer:
                         y=[component] * len(events["times"]),
                         mode='markers',
                         name=component,
-                        marker=dict(
-                            symbol='circle',
-                            size=12,
-                            color=[self.color_scheme.get(event_type, "#999999") 
+                        marker={
+                            "symbol": 'circle',
+                            "size": 12,
+                            "color": [self.color_scheme.get(event_type, "#999999") 
                                   for event_type in events["types"]]
-                        ),
+                        },
                         text=events["descriptions"],
                         hovertemplate='%{text}<br>Time: %{x}<extra></extra>'
                     ))
@@ -843,11 +843,11 @@ class MemoryVisualizer:
                                 textcoords="offset points",
                                 ha="center",
                                 fontsize=8,
-                                bbox=dict(
-                                    boxstyle="round,pad=0.3",
-                                    fc="white",
-                                    alpha=0.8
-                                )
+                                bbox={
+                                    "boxstyle": "round,pad=0.3",
+                                    "fc": "white",
+                                    "alpha": 0.8
+                                }
                             )
                 
                 # Set y-ticks to component names
@@ -891,7 +891,7 @@ class MemoryVisualizer:
             logger.error(f"Failed to create memory timeline visualization: {e}")
             raise ValueError(f"Failed to create memory timeline visualization: {e}")
 
-    def _extract_memory_structure(self) -> Dict[str, Any]:
+    def _extract_memory_structure(self) -> dict[str, Any]:
         """
         Extract memory structure data from the memory system.
         
@@ -950,9 +950,9 @@ class MemoryVisualizer:
 
     def _extract_memory_usage(
         self, 
-        time_range: Optional[Tuple[datetime, datetime]] = None,
-        memory_types: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
+        time_range: Optional[tuple[datetime, datetime]] = None,
+        memory_types: Optional[list[str]] = None
+    ) -> list[dict[str, Any]]:
         """
         Extract memory usage data from the memory system.
         
@@ -1058,9 +1058,9 @@ class MemoryVisualizer:
 
     def _extract_memory_access_patterns(
         self, 
-        time_range: Optional[Tuple[datetime, datetime]] = None,
-        memory_components: Optional[List[str]] = None
-    ) -> Dict[str, Dict[str, List[Any]]]:
+        time_range: Optional[tuple[datetime, datetime]] = None,
+        memory_components: Optional[list[str]] = None
+    ) -> dict[str, dict[str, list[Any]]]:
         """
         Extract memory access pattern data from the memory system.
         
@@ -1145,7 +1145,7 @@ class MemoryVisualizer:
         self, 
         focus_component: Optional[str] = None,
         depth: int = 2
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extract memory relationship data from the memory system.
         
@@ -1228,10 +1228,10 @@ class MemoryVisualizer:
 
     def _extract_memory_timeline(
         self, 
-        time_range: Optional[Tuple[datetime, datetime]] = None,
-        memory_components: Optional[List[str]] = None,
-        event_types: Optional[List[str]] = None
-    ) -> Dict[str, Dict[str, List[Any]]]:
+        time_range: Optional[tuple[datetime, datetime]] = None,
+        memory_components: Optional[list[str]] = None,
+        event_types: Optional[list[str]] = None
+    ) -> dict[str, dict[str, list[Any]]]:
         """
         Extract memory timeline data from the memory system.
         
@@ -1346,9 +1346,9 @@ class MemoryVisualizer:
                     elif event_type == "retrieval":
                         desc = f"Information retrieval: Query {i+1}"
                     elif event_type == "consolidation":
-                        desc = f"Memory consolidation: Strengthening connections"
+                        desc = "Memory consolidation: Strengthening connections"
                     elif event_type == "forgetting":
-                        desc = f"Forgetting: Removing outdated information"
+                        desc = "Forgetting: Removing outdated information"
                     else:
                         desc = f"Memory event: {event_type}"
                     

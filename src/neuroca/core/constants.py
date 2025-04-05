@@ -18,8 +18,8 @@ Note:
 
 import os
 from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Dict, List, Final, Tuple
+from typing import Final
+
 
 # System Constants
 @dataclass(frozen=True)
@@ -117,7 +117,7 @@ class HealthConstants:
     HEALTH_CHECK_INTERVAL: Final[int] = 300  # 5 minutes
     
     # Health attribute weights (must sum to 1.0)
-    ATTRIBUTE_WEIGHTS: Final[Dict[str, float]] = {
+    ATTRIBUTE_WEIGHTS: Final[dict[str, float]] = {
         "energy": 0.25,
         "stability": 0.25,
         "coherence": 0.25,
@@ -138,7 +138,7 @@ class LLMConstants:
     PROVIDER_LOCAL: Final[str] = "local"
     
     # Default models by provider
-    DEFAULT_MODELS: Final[Dict[str, str]] = {
+    DEFAULT_MODELS: Final[dict[str, str]] = {
         "openai": "gpt-4",
         "anthropic": "claude-2",
         "cohere": "command",
@@ -147,7 +147,7 @@ class LLMConstants:
     }
     
     # Token limits by model (approximate)
-    TOKEN_LIMITS: Final[Dict[str, int]] = {
+    TOKEN_LIMITS: Final[dict[str, int]] = {
         "gpt-3.5-turbo": 4096,
         "gpt-4": 8192,
         "gpt-4-32k": 32768,
@@ -218,7 +218,7 @@ class LoggingConstants:
     LOG_LEVEL_CRITICAL: Final[str] = "CRITICAL"
     
     # Default log level by environment
-    DEFAULT_LOG_LEVELS: Final[Dict[str, str]] = {
+    DEFAULT_LOG_LEVELS: Final[dict[str, str]] = {
         "development": "DEBUG",
         "testing": "INFO",
         "production": "WARNING"
@@ -237,7 +237,7 @@ class LoggingConstants:
     ERROR_UNAUTHORIZED: Final[int] = 1006
     
     # Error messages
-    ERROR_MESSAGES: Final[Dict[int, str]] = {
+    ERROR_MESSAGES: Final[dict[int, str]] = {
         1001: "Memory capacity exceeded",
         1002: "System health is in critical state",
         1003: "Failed to connect to LLM provider",

@@ -37,9 +37,9 @@ import json
 import logging
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Callable, Optional, Union
 
-from fastapi import WebSocket, WebSocketDisconnect, status
+from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ValidationError
 
 # Configure logging
@@ -66,7 +66,7 @@ class WebSocketMessage(BaseModel):
     type: WebSocketMessageType
     timestamp: float = time.time()
     message_id: str
-    payload: Dict[str, Any] = {}
+    payload: dict[str, Any] = {}
 
 
 class WebSocketError(Exception):
@@ -102,8 +102,8 @@ class ConnectionManager:
     Handles connection lifecycle, client tracking, and message broadcasting.
     """
     def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
-        self.client_info: Dict[str, Dict[str, Any]] = {}
+        self.active_connections: dict[str, WebSocket] = {}
+        self.client_info: dict[str, dict[str, Any]] = {}
         self.connection_lock = asyncio.Lock()
         
     async def connect(self, websocket: WebSocket, client_id: str) -> None:
@@ -155,7 +155,7 @@ class ConnectionManager:
                         logger.info(f"Client {client_id} disconnected after {duration:.2f} seconds")
                         del self.client_info[client_id]
     
-    async def send_message(self, client_id: str, message: Union[str, Dict, WebSocketMessage]) -> None:
+    async def send_message(self, client_id: str, message: Union[str, dict, WebSocketMessage]) -> None:
         """
         Send a message to a specific client.
         
@@ -191,7 +191,7 @@ class ConnectionManager:
             await self.disconnect(client_id, code=1011, reason="Internal server error")
             raise WebSocketError(f"Failed to send message: {str(e)}")
     
-    async def broadcast(self, message: Union[str, Dict, WebSocketMessage], exclude: Optional[Set[str]] = None) -> None:
+    async def broadcast(self, message: Union[str, dict, WebSocketMessage], exclude: Optional[set[str]] = None) -> None:
         """
         Broadcast a message to all connected clients, with optional exclusions.
         
@@ -232,8 +232,8 @@ class RateLimiter:
                  max_connections_per_ip: int = 5):
         self.max_messages_per_minute = max_messages_per_minute
         self.max_connections_per_ip = max_connections_per_ip
-        self.message_counts: Dict[str, List[float]] = {}
-        self.ip_connections: Dict[str, Set[str]] = {}
+        self.message_counts: dict[str, list[float]] = {}
+        self.ip_connections: dict[str, set[str]] = {}
         self.limiter_lock = asyncio.Lock()
     
     async def check_connection_limit(self, client_id: str, ip_address: str) -> None:
@@ -319,7 +319,7 @@ class WebSocketEventHandler:
     def __init__(self):
         self.connection_manager = ConnectionManager()
         self.rate_limiter = RateLimiter()
-        self.event_handlers: Dict[WebSocketMessageType, List[Callable]] = {
+        self.event_handlers: dict[WebSocketMessageType, list[Callable]] = {
             message_type: [] for message_type in WebSocketMessageType
         }
         

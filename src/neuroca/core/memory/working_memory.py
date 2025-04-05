@@ -8,10 +8,10 @@ This module implements a biologically-inspired working memory system with:
 - Displacement of least active items when capacity is reached
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional, TypeVar, Generic
-import uuid
 import time
+import uuid
+from datetime import datetime
+from typing import Any, Optional, TypeVar
 
 from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem
 
@@ -20,7 +20,7 @@ T = TypeVar('T')
 class WorkingMemoryChunk(MemoryChunk[T]):
     """Concrete implementation of a memory chunk for working memory."""
     
-    def __init__(self, content: T, metadata: Dict[str, Any] = None):
+    def __init__(self, content: T, metadata: dict[str, Any] = None):
         self._id = str(uuid.uuid4())
         self._content = content
         self._activation = 1.0  # Start with full activation
@@ -49,7 +49,7 @@ class WorkingMemoryChunk(MemoryChunk[T]):
         return self._last_accessed
     
     @property
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         return self._metadata
     
     def update_activation(self, value: Optional[float] = None) -> None:
@@ -75,7 +75,7 @@ class WorkingMemory(MemorySystem):
         
         self._name = "working_memory"
         self._capacity = capacity
-        self._chunks: Dict[str, WorkingMemoryChunk] = {}
+        self._chunks: dict[str, WorkingMemoryChunk] = {}
         self._decay_rate = 0.1  # Activation decays by 10% per time unit
         self._last_decay_time = time.time()
     
@@ -109,7 +109,7 @@ class WorkingMemory(MemorySystem):
         self._chunks[chunk.id] = chunk
         return chunk.id
     
-    def retrieve(self, query: Any, limit: int = 10, **parameters) -> List[MemoryChunk]:
+    def retrieve(self, query: Any, limit: int = 10, **parameters) -> list[MemoryChunk]:
         """
         Retrieve chunks from working memory based on the query.
         
@@ -153,7 +153,7 @@ class WorkingMemory(MemorySystem):
         """Clear all chunks from working memory."""
         self._chunks.clear()
     
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get statistics about the working memory state."""
         return {
             "name": self.name,
@@ -163,7 +163,7 @@ class WorkingMemory(MemorySystem):
             "average_activation": sum(c.activation for c in self._chunks.values()) / len(self._chunks) if self._chunks else 0,
         }
     
-    def dump(self) -> List[Dict[str, Any]]:
+    def dump(self) -> list[dict[str, Any]]:
         """Dump all chunks for inspection."""
         return [
             {

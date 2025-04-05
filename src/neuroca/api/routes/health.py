@@ -16,32 +16,48 @@ Security:
     in production environments. Consider implementing authentication for detailed health checks.
 """
 
+import asyncio
+import datetime as dt  # Use alias to avoid conflict
 import logging
 import os
 import platform
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Union, Set, Callable
-import asyncio
+from typing import Callable, Optional
 
 import psutil
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from pydantic import BaseModel, Field
-import datetime as dt # Use alias to avoid conflict
+
+from neuroca.api.schemas.health import (
+    DetailedComponentHealthSchema,
+    HealthEventSchema,
+    HealthParameterSchema,
+    HealthState,  # Import HealthState enum for validation
+)
 
 # Import dynamics manager and new schemas
 from neuroca.config import settings
-from neuroca.core.auth import get_optional_api_key, verify_api_key_ws # Add WS verification if needed
-from neuroca.db.connection import get_db_status # Keep for basic DB check if needed
-# from neuroca.memory import memory_manager # Remove if health manager tracks memory
-from neuroca.monitoring.metrics import get_system_metrics # Keep for resource usage
-from neuroca.core.health.dynamics import get_health_dynamics, ComponentHealth as CoreComponentHealth, HealthParameter, HealthEvent, HealthDynamicsManager
-from neuroca.api.schemas.health import (
-    DetailedComponentHealthSchema,
-    HealthParameterSchema,
-    HealthEventSchema,
-    HealthState, # Import HealthState enum for validation
+from neuroca.core.auth import (  # Add WS verification if needed
+    get_optional_api_key,
 )
+from neuroca.core.health.dynamics import ComponentHealth as CoreComponentHealth
+from neuroca.core.health.dynamics import (
+    HealthEvent,
+    get_health_dynamics,
+)
+from neuroca.db.connection import get_db_status  # Keep for basic DB check if needed
+
+# from neuroca.memory import memory_manager # Remove if health manager tracks memory
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -56,7 +72,7 @@ class AdjustParameterRequest(BaseModel):
 # --- End Pydantic Models ---
 
 # Active WebSocket connections for health events
-active_connections: Set[WebSocket] = set()
+active_connections: set[WebSocket] = set()
 # Listener function reference to allow removal
 health_event_listener: Optional[Callable] = None
 
@@ -84,7 +100,7 @@ class MemoryTierHealth(BaseModel):
     capacity: int = Field(..., description="Maximum capacity in bytes")
     usage_percent: float = Field(..., description="Usage percentage")
     access_latency_ms: Optional[float] = Field(None, description="Access latency in milliseconds")
-    details: Optional[Dict] = Field(None, description="Additional tier-specific details")
+    details: Optional[dict] = Field(None, description="Additional tier-specific details")
 
 
 class ResourceUtilization(BaseModel):
@@ -93,7 +109,7 @@ class ResourceUtilization(BaseModel):
     cpu_percent: float = Field(..., description="CPU utilization percentage")
     memory_percent: float = Field(..., description="Memory utilization percentage")
     disk_percent: float = Field(..., description="Disk utilization percentage")
-    network_io: Dict[str, int] = Field(..., description="Network IO statistics")
+    network_io: dict[str, int] = Field(..., description="Network IO statistics")
     process_count: int = Field(..., description="Number of running processes")
 
 
@@ -105,10 +121,10 @@ class DetailedHealthResponse(BaseModel):
     environment: str = Field(..., description="Deployment environment")
     uptime_seconds: int = Field(..., description="System uptime in seconds")
     timestamp: dt.datetime = Field(..., description="Current timestamp") # Use alias dt
-    components: List[DetailedComponentHealthSchema] = Field(..., description="Detailed health status of system components") # Use new schema
+    components: list[DetailedComponentHealthSchema] = Field(..., description="Detailed health status of system components") # Use new schema
     # memory_tiers: List[MemoryTierHealth] = Field(..., description="Health status of memory tiers") # Keep or integrate into components
     resources: ResourceUtilization = Field(..., description="System resource utilization")
-    host_info: Dict = Field(..., description="Host system information")
+    host_info: dict = Field(..., description="Host system information")
 
 
 @router.get(
@@ -121,7 +137,7 @@ class DetailedHealthResponse(BaseModel):
         503: {"description": "Service is unhealthy or starting up"},
     },
 )
-async def health_check(request: Request) -> Dict[str, str]:
+async def health_check(request: Request) -> dict[str, str]:
     """
     Basic health check endpoint that returns a simple status response.
     
@@ -214,7 +230,7 @@ async def detailed_health_check(
         # metrics = get_system_metrics() # This function doesn't seem to be used later
         
         # Fetch detailed component health from HealthDynamicsManager
-        component_health_details: List[DetailedComponentHealthSchema] = []
+        component_health_details: list[DetailedComponentHealthSchema] = []
         all_component_ids = list(health_dynamics._components.keys()) # Access internal dict for now
         
         for component_id in all_component_ids:
@@ -342,7 +358,7 @@ async def detailed_health_check(
         503: {"description": "Service is not ready"},
     },
 )
-async def readiness_probe(request: Request) -> Dict[str, str]:
+async def readiness_probe(request: Request) -> dict[str, str]:
     """
     Readiness probe endpoint for Kubernetes and other orchestration systems.
     
@@ -411,7 +427,7 @@ async def force_component_state(
     component_id: str,
     request_body: ForceStateRequest,
     api_key: Optional[str] = Depends(get_optional_api_key), # Reuse auth logic
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Manually forces a registered component into a specified health state.
     Requires appropriate authentication, especially in production.
@@ -457,7 +473,7 @@ async def adjust_component_parameter(
     component_id: str,
     request_body: AdjustParameterRequest,
     api_key: Optional[str] = Depends(get_optional_api_key), # Reuse auth logic
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Manually adjusts the value of a specific health parameter for a component.
     Requires appropriate authentication.
@@ -472,7 +488,7 @@ async def adjust_component_parameter(
         new_value = request_body.new_value
 
         # Use the manager's update method which handles locking and event notification
-        event = health_dynamics.update_parameter(component_id, param_name, new_value)
+        health_dynamics.update_parameter(component_id, param_name, new_value)
 
         # Check if the parameter exists (update_parameter raises KeyError if component missing,
         # but ComponentHealth.update_parameter raises if param missing - catch that here implicitly)
@@ -572,7 +588,7 @@ async def websocket_health_events(websocket: WebSocket):
         503: {"description": "Service is not functioning properly"},
     },
 )
-async def liveness_probe() -> Dict[str, str]:
+async def liveness_probe() -> dict[str, str]:
     """
     Liveness probe endpoint for Kubernetes and other orchestration systems.
     

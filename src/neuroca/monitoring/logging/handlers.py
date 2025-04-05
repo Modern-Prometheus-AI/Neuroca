@@ -46,10 +46,8 @@ import queue
 import re
 import shutil
 import threading
-import time
 import traceback
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, Set, Tuple, Union
+from typing import Any, Optional
 
 # Constants for common configuration
 DEFAULT_MAX_BYTES = 10 * 1024 * 1024  # 10MB
@@ -75,7 +73,7 @@ class JsonFormatter(logging.Formatter):
     def __init__(
         self,
         include_stack_info: bool = False,
-        additional_fields: Optional[Dict[str, Any]] = None,
+        additional_fields: Optional[dict[str, Any]] = None,
         timestamp_format: str = "%Y-%m-%dT%H:%M:%S.%fZ",
     ):
         """
@@ -166,7 +164,7 @@ class JsonFileHandler(logging.handlers.RotatingFileHandler):
         compress_logs: bool = True,
         compression_level: int = 6,
         include_stack_info: bool = False,
-        additional_fields: Optional[Dict[str, Any]] = None,
+        additional_fields: Optional[dict[str, Any]] = None,
     ):
         """
         Initialize the JSON file handler.
@@ -389,8 +387,8 @@ class SensitiveDataFilter(logging.Filter):
     
     def __init__(
         self,
-        patterns: Optional[List[Tuple[str, str]]] = None,
-        fields_to_check: Optional[List[str]] = None,
+        patterns: Optional[list[tuple[str, str]]] = None,
+        fields_to_check: Optional[list[str]] = None,
     ):
         """
         Initialize the sensitive data filter.
@@ -471,7 +469,7 @@ class ContextAwareHandler(logging.Handler):
     def __init__(
         self,
         target_handler: logging.Handler,
-        context_providers: Optional[List[callable]] = None,
+        context_providers: Optional[list[callable]] = None,
     ):
         """
         Initialize the context-aware handler.

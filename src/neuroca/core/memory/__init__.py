@@ -13,8 +13,8 @@ It also includes memory operations:
 """
 
 # Import key components for easier access
-from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem
 from neuroca.core.memory.factory import create_memory_system
+from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem
 
 __all__ = [
     'MemoryChunk',

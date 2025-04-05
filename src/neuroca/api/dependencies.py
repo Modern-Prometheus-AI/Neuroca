@@ -25,27 +25,27 @@ Usage:
 """
 
 import logging
-from typing import AsyncGenerator, Generator, Optional, Dict, Any, Union
-from datetime import datetime, timedelta
+from collections.abc import AsyncGenerator, Generator
+from datetime import datetime
 
-from fastapi import Depends, HTTPException, status, Request, Security
+from fastapi import Depends, HTTPException, Request, Security, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import JWTError, jwt
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from neuroca.config.settings import get_settings, Settings
+from neuroca.config.settings import Settings, get_settings
+from neuroca.core.exceptions import ServiceUnavailableError
 from neuroca.core.models.user import User
-from neuroca.core.schemas.auth import TokenData, UserInDB
+from neuroca.core.schemas.auth import TokenData
 from neuroca.core.schemas.health import SystemHealth
-from neuroca.db.session import get_db_session, get_async_db_session
-from neuroca.memory.working_memory import WorkingMemoryManager
-from neuroca.memory.episodic_memory import EpisodicMemoryManager
-from neuroca.memory.semantic_memory import SemanticMemoryManager
 from neuroca.core.services.health_monitor import HealthMonitor
 from neuroca.core.services.llm_service import LLMService
-from neuroca.core.exceptions import ServiceUnavailableError, AuthenticationError
+from neuroca.db.session import get_async_db_session, get_db_session
+from neuroca.memory.episodic_memory import EpisodicMemoryManager
+from neuroca.memory.semantic_memory import SemanticMemoryManager
+from neuroca.memory.working_memory import WorkingMemoryManager
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -409,7 +409,7 @@ async def get_request_id(request: Request) -> str:
     import uuid
     return str(uuid.uuid4())
 
-async def get_client_info(request: Request) -> Dict[str, str]:
+async def get_client_info(request: Request) -> dict[str, str]:
     """
     Extracts client information from the request.
     

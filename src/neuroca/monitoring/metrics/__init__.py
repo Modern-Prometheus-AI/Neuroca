@@ -43,7 +43,7 @@ import time
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union, cast
+from typing import Any, Callable, Optional, TypeVar, Union, cast
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 # Type definitions
 T = TypeVar('T')
 MetricValue = Union[int, float]
-TagsType = Dict[str, str]
+TagsType = dict[str, str]
 
 
 class MetricType(Enum):
@@ -222,7 +222,7 @@ class Histogram(MetricBase):
     """A histogram metric that tracks the distribution of values."""
     
     def __init__(self, name: str, description: str = "", tags: Optional[TagsType] = None, 
-                 buckets: Optional[List[float]] = None):
+                 buckets: Optional[list[float]] = None):
         """Initialize a new histogram metric.
         
         Args:
@@ -232,7 +232,7 @@ class Histogram(MetricBase):
             buckets: Optional list of bucket boundaries for the histogram
         """
         super().__init__(name, description, tags)
-        self._values: List[float] = []
+        self._values: list[float] = []
         self._buckets = buckets or [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
         self._count = 0
         self._sum = 0.0
@@ -275,13 +275,13 @@ class Histogram(MetricBase):
         """
         return self._sum
     
-    def get_buckets(self) -> Dict[float, int]:
+    def get_buckets(self) -> dict[float, int]:
         """Get the histogram buckets.
         
         Returns:
             A dictionary mapping bucket upper bounds to counts
         """
-        result: Dict[float, int] = {b: 0 for b in self._buckets}
+        result: dict[float, int] = {b: 0 for b in self._buckets}
         for value in self._values:
             for bucket in self._buckets:
                 if value <= bucket:
@@ -346,7 +346,7 @@ class Timer(MetricBase):
 
 
 # Global registry for metrics
-_metrics_registry: Dict[str, MetricBase] = {}
+_metrics_registry: dict[str, MetricBase] = {}
 
 
 def register_metric(metric: MetricBase) -> MetricBase:

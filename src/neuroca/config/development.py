@@ -21,10 +21,10 @@ Note:
     - Local overrides can be placed in a .env file (not committed to version control).
 """
 
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 # Base project paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -282,10 +282,7 @@ def get_config_value(path: str, default: Any = None) -> Any:
     try:
         value = globals()
         for key in path.split('.'):
-            if isinstance(value, dict):
-                value = value.get(key)
-            else:
-                value = getattr(value, key, None)
+            value = value.get(key) if isinstance(value, dict) else getattr(value, key, None)
             
             if value is None:
                 return default

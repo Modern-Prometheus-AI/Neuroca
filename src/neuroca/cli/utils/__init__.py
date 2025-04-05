@@ -30,18 +30,19 @@ Usage:
                 progress.update(10)
 """
 
+import json
+import logging
 import os
 import sys
-import json
-import yaml
-import logging
 import time
 import traceback
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Callable, TypeVar, cast
-from functools import wraps
 from contextlib import contextmanager
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Optional, TypeVar
+
 import click
+import yaml
 from tqdm import tqdm
 
 # Type variables for generic functions
@@ -113,7 +114,7 @@ def setup_logging(
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(logging.Formatter(log_format))
             logger.addHandler(file_handler)
-        except (IOError, PermissionError) as e:
+        except (OSError, PermissionError) as e:
             logger.warning(f"Could not set up log file at {log_file}: {str(e)}")
     
     return logger
@@ -121,7 +122,7 @@ def setup_logging(
 def load_config(
     config_path: Optional[str] = None,
     required: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Load configuration from a YAML or JSON file.
     
@@ -150,7 +151,7 @@ def load_config(
     
     for path in paths_to_try:
         try:
-            with open(path, 'r') as f:
+            with open(path) as f:
                 if path.endswith(('.yaml', '.yml')):
                     config = yaml.safe_load(f)
                 elif path.endswith('.json'):
@@ -168,7 +169,7 @@ def load_config(
             logger.error(msg)
             if required:
                 raise ConfigError(msg) from e
-        except (IOError, PermissionError) as e:
+        except (OSError, PermissionError) as e:
             msg = f"Error reading configuration file {path}: {str(e)}"
             logger.error(msg)
             if required:
@@ -480,7 +481,7 @@ def confirm_action(
         click.echo("\nOperation aborted.")
         sys.exit(1)
 
-def get_terminal_size() -> Dict[str, int]:
+def get_terminal_size() -> dict[str, int]:
     """
     Get the current terminal size.
     

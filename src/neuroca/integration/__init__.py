@@ -33,11 +33,11 @@ Usage:
 This module is thread-safe and designed for both synchronous and asynchronous usage.
 """
 
-import logging
-from typing import Dict, List, Optional, Union, Any
 import importlib
+import logging
 import pkgutil
 from pathlib import Path
+from typing import Any
 
 # Set up module-level logger
 logger = logging.getLogger(__name__)
@@ -79,31 +79,18 @@ def _import_providers():
 
 # Import core components
 try:
-    from .manager import LLMIntegrationManager
-    from .models import (
-        LLMRequest, 
-        LLMResponse, 
-        LLMProvider, 
-        LLMError,
-        ProviderConfig,
-        TokenUsage
-    )
     from .exceptions import (
-        LLMIntegrationError,
-        ProviderNotFoundError,
         AuthenticationError,
-        RateLimitError,
         ContextLengthExceededError,
+        InvalidRequestError,
+        LLMIntegrationError,
         ModelNotAvailableError,
-        InvalidRequestError
+        ProviderNotFoundError,
+        RateLimitError,
     )
-    from .utils import (
-        count_tokens,
-        format_prompt,
-        parse_response,
-        sanitize_input,
-        create_embedding
-    )
+    from .manager import LLMIntegrationManager
+    from .models import LLMError, LLMProvider, LLMRequest, LLMResponse, ProviderConfig, TokenUsage
+    from .utils import count_tokens, create_embedding, format_prompt, parse_response, sanitize_input
     
     # Initialize provider modules
     _import_providers()
@@ -158,7 +145,7 @@ def get_version() -> str:
     """
     return __version__
 
-def get_supported_providers() -> List[str]:
+def get_supported_providers() -> list[str]:
     """
     Returns a list of all supported LLM providers.
     
@@ -167,7 +154,7 @@ def get_supported_providers() -> List[str]:
     """
     return SUPPORTED_PROVIDERS.copy()
 
-def get_provider_info(provider_name: str) -> Dict[str, Any]:
+def get_provider_info(provider_name: str) -> dict[str, Any]:
     """
     Get detailed information about a specific provider.
     

@@ -12,9 +12,10 @@ focusing on:
 import pytest
 from datetime import datetime
 
-from neuroca.core.memory.semantic_memory import (
-    SemanticMemory, Concept, Relationship, RelationshipType
-)
+# Import the concrete implementation from the correct location
+from neuroca.memory.semantic_memory import SemanticMemory 
+# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
+from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType 
 
 
 @pytest.fixture
@@ -422,4 +423,4 @@ def test_dictionary_query_filtering(populated_semantic_memory):
     rel_sources = [c.content.source_id for c in rel_results]
     rel_targets = [c.content.target_id for c in rel_results]
     assert "dog" in rel_sources
-    assert "mammal" in rel_targets 
+    assert "mammal" in rel_targets

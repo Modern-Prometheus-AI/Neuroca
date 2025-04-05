@@ -28,9 +28,8 @@ variables or secure vaults in the environment-specific configuration files.
 """
 
 import os
-import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Union
+from typing import Any
 
 # Base directories
 BASE_DIR = Path(__file__).parent.parent.absolute()

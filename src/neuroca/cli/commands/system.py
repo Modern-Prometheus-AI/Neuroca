@@ -31,17 +31,16 @@ Examples:
     $ neuroca system backup --path /path/to/backups/
 """
 
-import os
-import sys
-import json
-import time
-import logging
-import shutil
 import datetime
+import json
+import os
 import platform
+import shutil
 import subprocess
+import sys
+import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Any, Optional
 
 import click
 import psutil
@@ -49,15 +48,10 @@ import yaml
 from tabulate import tabulate
 
 from neuroca.config import settings
-from neuroca.core.exceptions import (
-    ConfigurationError,
-    SystemOperationError,
-    BackupRestoreError
-)
+from neuroca.core.exceptions import BackupRestoreError, ConfigurationError
 from neuroca.core.utils.logging import configure_logger
-from neuroca.db.connection import get_db_connection
 from neuroca.memory import memory_manager
-from neuroca.monitoring.health import run_health_checks, HealthStatus
+from neuroca.monitoring.health import HealthStatus, run_health_checks
 
 # Configure logger for this module
 logger = configure_logger(__name__)
@@ -228,7 +222,7 @@ def logs_command(level: Optional[str], component: Optional[str], tail: int,
             try:
                 since_timestamp = datetime.datetime.fromisoformat(since)
             except ValueError:
-                click.echo(f"Error: Invalid timestamp format. Use YYYY-MM-DD[THH:MM:SS]")
+                click.echo("Error: Invalid timestamp format. Use YYYY-MM-DD[THH:MM:SS]")
                 sys.exit(1)
         
         # Build the log filtering command
@@ -457,7 +451,7 @@ def version_command():
         version_info = _get_version_info()
         
         # Display version information
-        click.echo(f"NeuroCognitive Architecture (NCA) System")
+        click.echo("NeuroCognitive Architecture (NCA) System")
         click.echo(f"Version: {version_info['version']}")
         click.echo(f"Build: {version_info['build']}")
         click.echo(f"Python: {version_info['python']}")
@@ -475,7 +469,7 @@ def version_command():
 
 # Helper functions
 
-def _collect_system_status() -> Dict[str, Any]:
+def _collect_system_status() -> dict[str, Any]:
     """
     Collect comprehensive system status information.
     
@@ -511,7 +505,7 @@ def _collect_system_status() -> Dict[str, Any]:
     return status_data
 
 
-def _display_formatted_status(status_data: Dict[str, Any]):
+def _display_formatted_status(status_data: dict[str, Any]):
     """
     Display system status in a human-readable format.
     
@@ -525,7 +519,7 @@ def _display_formatted_status(status_data: Dict[str, Any]):
         "unhealthy": "red"
     }.get(status_data["overall_status"], "white")
     
-    click.echo(f"System Status: ", nl=False)
+    click.echo("System Status: ", nl=False)
     click.secho(f"{status_data['overall_status'].upper()}", fg=status_color, bold=True)
     click.echo(f"Timestamp: {status_data['timestamp']}")
     click.echo(f"Uptime: {status_data['uptime']}")
@@ -555,7 +549,7 @@ def _display_formatted_status(status_data: Dict[str, Any]):
     click.echo(tabulate(component_table, headers=["Component", "Status", "Message"], tablefmt="simple"))
 
 
-def _determine_overall_health(health_results: Dict[str, Dict[str, Any]]) -> HealthStatus:
+def _determine_overall_health(health_results: dict[str, dict[str, Any]]) -> HealthStatus:
     """
     Determine the overall health status based on component health checks.
     
@@ -582,7 +576,7 @@ def _determine_overall_health(health_results: Dict[str, Dict[str, Any]]) -> Heal
         return HealthStatus.HEALTHY
 
 
-def _display_formatted_health(health_data: Dict[str, Any], verbose: bool):
+def _display_formatted_health(health_data: dict[str, Any], verbose: bool):
     """
     Display health check results in a human-readable format.
     
@@ -597,7 +591,7 @@ def _display_formatted_health(health_data: Dict[str, Any], verbose: bool):
         "unhealthy": "red"
     }.get(health_data["overall_status"], "white")
     
-    click.echo(f"Overall Health: ", nl=False)
+    click.echo("Overall Health: ", nl=False)
     click.secho(f"{health_data['overall_status'].upper()}", fg=status_color, bold=True)
     click.echo(f"Timestamp: {health_data['timestamp']}")
     
@@ -691,7 +685,7 @@ def _load_configuration_from_file(file_path: str):
         file_path: Path to configuration file (YAML or JSON)
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             if file_path.endswith('.yaml') or file_path.endswith('.yml'):
                 config_data = yaml.safe_load(f)
             elif file_path.endswith('.json'):
@@ -958,13 +952,13 @@ def _restore_system_from_backup(backup_path: str) -> bool:
                 zipf.extractall(temp_dir)
             
             # Read metadata
-            with open(os.path.join(temp_dir, "backup_metadata.json"), 'r') as f:
+            with open(os.path.join(temp_dir, "backup_metadata.json")) as f:
                 metadata = json.load(f)
             
             # Restore configuration
             config_file = os.path.join(temp_dir, "config/settings.yaml")
             if os.path.exists(config_file):
-                with open(config_file, 'r') as f:
+                with open(config_file) as f:
                     config_data = yaml.safe_load(f)
                 
                 # Update configuration
@@ -1155,7 +1149,7 @@ def _restore_memory_data(input_dir: str):
 
 
 def _cleanup_directory(directory: str, cutoff_date: datetime.datetime, 
-                      pattern: str = "*", dry_run: bool = False) -> Tuple[int, int]:
+                      pattern: str = "*", dry_run: bool = False) -> tuple[int, int]:
     """
     Clean up old files in a directory.
     
@@ -1228,7 +1222,7 @@ def _get_system_uptime() -> str:
         return "Unknown"
 
 
-def _get_version_info() -> Dict[str, Any]:
+def _get_version_info() -> dict[str, Any]:
     """
     Get version information for the system and its components.
     

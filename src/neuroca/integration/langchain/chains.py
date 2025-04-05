@@ -27,27 +27,27 @@ Usage:
 
 import logging
 import time
-from typing import Any, Dict, List, Optional, Union, Callable, Type, TypeVar
+from typing import Any, Optional, TypeVar
+
+from langchain.callbacks.base import BaseCallbackHandler, Callbacks
+from langchain.chains import LLMChain, SequentialChain
 
 # LangChain imports
 from langchain.chains.base import Chain
-from langchain.chains import LLMChain, SequentialChain, ConversationChain
-from langchain.chains.conversation.memory import ConversationBufferMemory
-from langchain.schema import BaseMemory, BaseLanguageModel
 from langchain.prompts import PromptTemplate
-from langchain.callbacks.base import BaseCallbackHandler, Callbacks
+from langchain.schema import BaseLanguageModel, BaseMemory
+
+from neuroca.core.exceptions import (
+    CognitiveOverloadException,
+    HealthConstraintException,
+    MemoryAccessException,
+    NCAChainException,
+)
+from neuroca.core.health import HealthMonitor
 
 # NeuroCognitive Architecture imports
-from neuroca.core.models import CognitiveState, HealthMetrics
 from neuroca.memory.manager import MemoryManager
 from neuroca.memory.models import MemoryItem, MemoryTier
-from neuroca.core.health import HealthMonitor
-from neuroca.core.exceptions import (
-    NCAChainException, 
-    MemoryAccessException,
-    HealthConstraintException,
-    CognitiveOverloadException
-)
 
 # Set up module logger
 logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ class NCACallbackHandler(BaseCallbackHandler):
         self.total_tokens = 0
         
     def on_chain_start(
-        self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any
+        self, serialized: dict[str, Any], inputs: dict[str, Any], **kwargs: Any
     ) -> None:
         """Log the start of chain execution and initialize metrics."""
         self.start_time = time.time()
@@ -89,7 +89,7 @@ class NCACallbackHandler(BaseCallbackHandler):
         logger.log(self.log_level, f"Starting chain execution: {chain_type}")
         
     def on_chain_end(
-        self, outputs: Dict[str, Any], **kwargs: Any
+        self, outputs: dict[str, Any], **kwargs: Any
     ) -> None:
         """
         Log the end of chain execution and update health metrics.
@@ -159,11 +159,11 @@ class NCAMemoryAdapter(BaseMemory):
         self.tier_preference = tier_preference
         
     @property
-    def memory_variables(self) -> List[str]:
+    def memory_variables(self) -> list[str]:
         """Return the memory variables that this memory adapter makes available."""
         return [self.memory_key]
     
-    def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def load_memory_variables(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """
         Load memory variables from the NCA memory system.
         
@@ -202,7 +202,7 @@ class NCAMemoryAdapter(BaseMemory):
             logger.error(f"Memory access error: {str(e)}", exc_info=True)
             raise MemoryAccessException(f"Failed to load memories: {str(e)}") from e
     
-    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, Any]) -> None:
+    def save_context(self, inputs: dict[str, Any], outputs: dict[str, Any]) -> None:
         """
         Save the context of this interaction to the NCA memory system.
         
@@ -281,12 +281,12 @@ class NCACognitiveChain(Chain):
         arbitrary_types_allowed = True
     
     @property
-    def input_keys(self) -> List[str]:
+    def input_keys(self) -> list[str]:
         """Return the input keys for this chain."""
         return [k for k in self.prompt.input_variables if k != self.memory_key]
     
     @property
-    def output_keys(self) -> List[str]:
+    def output_keys(self) -> list[str]:
         """Return the output keys for this chain."""
         return [self.output_key]
     
@@ -314,7 +314,7 @@ class NCACognitiveChain(Chain):
                 
             # Check other health constraints
             if not health_status.is_operational:
-                logger.warning(f"System health below operational threshold")
+                logger.warning("System health below operational threshold")
                 raise HealthConstraintException(
                     f"System health constraints prevent execution: {health_status.status_message}"
                 )
@@ -327,7 +327,7 @@ class NCACognitiveChain(Chain):
             tier_preference=MemoryTier.WORKING
         )
     
-    def _get_callbacks(self, callbacks: Callbacks = None) -> List[BaseCallbackHandler]:
+    def _get_callbacks(self, callbacks: Callbacks = None) -> list[BaseCallbackHandler]:
         """Get callbacks for this chain execution, including NCA-specific handlers."""
         # Start with any provided callbacks
         cb_list = callbacks or []
@@ -339,7 +339,7 @@ class NCACognitiveChain(Chain):
         
         return cb_list
     
-    def _call(self, inputs: Dict[str, Any], run_manager=None) -> Dict[str, Any]:
+    def _call(self, inputs: dict[str, Any], run_manager=None) -> dict[str, Any]:
         """
         Execute the cognitive chain with NCA integration.
         
@@ -384,7 +384,7 @@ class NCACognitiveChain(Chain):
             
             return outputs
             
-        except (HealthConstraintException, CognitiveOverloadException) as e:
+        except (HealthConstraintException, CognitiveOverloadException):
             # Re-raise health-related exceptions
             raise
             
@@ -404,7 +404,7 @@ class NCAReflectiveChain(NCACognitiveChain):
     reflection_prompt: PromptTemplate
     reflection_threshold: float = 0.7  # Threshold for when to trigger reflection
     
-    def _should_reflect(self, inputs: Dict[str, Any], outputs: Dict[str, Any]) -> bool:
+    def _should_reflect(self, inputs: dict[str, Any], outputs: dict[str, Any]) -> bool:
         """
         Determine if reflection should be triggered based on inputs and outputs.
         
@@ -422,7 +422,7 @@ class NCAReflectiveChain(NCACognitiveChain):
         # Additional heuristics could be implemented here
         return False
     
-    def _reflect(self, inputs: Dict[str, Any], outputs: Dict[str, Any], run_manager=None) -> Dict[str, Any]:
+    def _reflect(self, inputs: dict[str, Any], outputs: dict[str, Any], run_manager=None) -> dict[str, Any]:
         """
         Perform reflection on the chain's processing.
         
@@ -467,7 +467,7 @@ class NCAReflectiveChain(NCACognitiveChain):
         logger.info("Performed chain reflection")
         return reflection_result
     
-    def _call(self, inputs: Dict[str, Any], run_manager=None) -> Dict[str, Any]:
+    def _call(self, inputs: dict[str, Any], run_manager=None) -> dict[str, Any]:
         """
         Execute the reflective cognitive chain.
         
@@ -504,7 +504,7 @@ class NCASequentialChain(SequentialChain):
     health_monitor: Optional[HealthMonitor] = None
     memory_manager: Optional[MemoryManager] = None
     
-    def _get_callbacks(self, callbacks: Callbacks = None) -> List[BaseCallbackHandler]:
+    def _get_callbacks(self, callbacks: Callbacks = None) -> list[BaseCallbackHandler]:
         """Get callbacks for this chain execution, including NCA-specific handlers."""
         # Start with any provided callbacks
         cb_list = callbacks or []
@@ -536,12 +536,12 @@ class NCASequentialChain(SequentialChain):
                 
             # Check other health constraints
             if not health_status.is_operational:
-                logger.warning(f"System health below operational threshold")
+                logger.warning("System health below operational threshold")
                 raise HealthConstraintException(
                     f"System health constraints prevent execution: {health_status.status_message}"
                 )
     
-    def __call__(self, inputs: Dict[str, Any], return_only_outputs: bool = False, callbacks: Callbacks = None) -> Dict[str, Any]:
+    def __call__(self, inputs: dict[str, Any], return_only_outputs: bool = False, callbacks: Callbacks = None) -> dict[str, Any]:
         """
         Execute the sequential chain with NCA integration.
         
@@ -572,7 +572,7 @@ class NCASequentialChain(SequentialChain):
                 callbacks=nca_callbacks
             )
             
-        except (HealthConstraintException, CognitiveOverloadException) as e:
+        except (HealthConstraintException, CognitiveOverloadException):
             # Re-raise health-related exceptions
             raise
             

@@ -26,18 +26,17 @@ Usage:
     migrator.rollback_to_version("1.1.0")
 """
 
-import os
+import hashlib
+import importlib.util
+import json
+import logging
 import re
 import sys
-import json
 import time
-import logging
-import importlib.util
-from typing import Dict, List, Optional, Tuple, Union, Any, Callable
 from datetime import datetime
-from pathlib import Path
 from enum import Enum
-import hashlib
+from pathlib import Path
+from typing import Any, Callable, Optional
 
 # Database adapters - import as needed based on configuration
 try:
@@ -91,7 +90,7 @@ class MigrationExecutionError(MigrationError):
 class DatabaseAdapter:
     """Abstract base class for database adapters."""
     
-    def __init__(self, connection_params: Dict[str, Any]):
+    def __init__(self, connection_params: dict[str, Any]):
         """
         Initialize the database adapter.
         
@@ -109,7 +108,7 @@ class DatabaseAdapter:
         """Close the database connection."""
         raise NotImplementedError("Subclasses must implement disconnect()")
     
-    def execute(self, query: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def execute(self, query: str, params: Optional[dict[str, Any]] = None) -> Any:
         """
         Execute a query on the database.
         
@@ -183,7 +182,7 @@ class PostgresAdapter(DatabaseAdapter):
             self.connection = None
             logger.info("Disconnected from PostgreSQL database")
     
-    def execute(self, query: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def execute(self, query: str, params: Optional[dict[str, Any]] = None) -> Any:
         """Execute a query on PostgreSQL."""
         if not self.connection:
             self.connect()
@@ -294,7 +293,7 @@ class SQLiteAdapter(DatabaseAdapter):
             self.connection = None
             logger.info("Disconnected from SQLite database")
     
-    def execute(self, query: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def execute(self, query: str, params: Optional[dict[str, Any]] = None) -> Any:
         """Execute a query on SQLite."""
         if not self.connection:
             self.connect()
@@ -408,7 +407,7 @@ class MongoDBAdapter(DatabaseAdapter):
             delattr(self, 'db')
             logger.info("Disconnected from MongoDB database")
     
-    def execute(self, query: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def execute(self, query: str, params: Optional[dict[str, Any]] = None) -> Any:
         """
         Execute a MongoDB operation.
         
@@ -550,11 +549,11 @@ class Migration:
             with open(self.path, 'rb') as f:
                 content = f.read()
                 return hashlib.sha256(content).hexdigest()
-        except IOError as e:
+        except OSError as e:
             logger.error(f"Failed to read migration file {self.path}: {e}")
             raise MigrationFileError(f"Failed to read migration file {self.path}: {e}")
     
-    def load(self) -> Dict[str, Callable]:
+    def load(self) -> dict[str, Callable]:
         """
         Load the migration module.
         
@@ -602,7 +601,7 @@ class SchemaMigrator:
     keep the database schema in sync with the application code.
     """
     
-    def __init__(self, db_config: Dict[str, Any], migration_dir: str = "migrations"):
+    def __init__(self, db_config: dict[str, Any], migration_dir: str = "migrations"):
         """
         Initialize the schema migrator.
         
@@ -677,7 +676,7 @@ class SchemaMigrator:
         
         logger.info(f"Loaded {len(self.migrations)} migrations")
     
-    def _sort_versions(self, versions: List[str]) -> List[str]:
+    def _sort_versions(self, versions: list[str]) -> list[str]:
         """
         Sort version strings in semantic versioning order.
         
@@ -693,7 +692,7 @@ class SchemaMigrator:
         return sorted(versions, key=version_key)
     
     def _get_migrations_to_apply(self, target_version: Optional[str], 
-                                current_version: Optional[str]) -> List[Tuple[str, MigrationDirection]]:
+                                current_version: Optional[str]) -> list[tuple[str, MigrationDirection]]:
         """
         Determine which migrations need to be applied to reach the target version.
         
@@ -927,7 +926,7 @@ class SchemaMigrator:
             logger.error(f"Failed to apply {direction.value} migration to version {version}: {e}")
             raise MigrationExecutionError(f"Failed to apply {direction.value} migration to version {version}: {e}")
     
-    def get_migration_history(self) -> List[Dict[str, Any]]:
+    def get_migration_history(self) -> list[dict[str, Any]]:
         """
         Get the migration history.
         
@@ -955,7 +954,7 @@ class SchemaMigrator:
         finally:
             self.adapter.disconnect()
     
-    def validate_migrations(self) -> List[str]:
+    def validate_migrations(self) -> list[str]:
         """
         Validate all migrations for consistency.
         
@@ -970,7 +969,7 @@ class SchemaMigrator:
         errors = []
         
         # Check for version sequence gaps
-        all_versions = self._sort_versions(list(self.migrations.keys()))
+        self._sort_versions(list(self.migrations.keys()))
         
         # Connect to database to check applied migrations
         self.adapter.connect()
@@ -1049,7 +1048,7 @@ if __name__ == "__main__":
     
     # Load configuration
     try:
-        with open(args.config, 'r') as f:
+        with open(args.config) as f:
             db_config = json.load(f)
     except Exception as e:
         logger.error(f"Failed to load configuration file: {e}")

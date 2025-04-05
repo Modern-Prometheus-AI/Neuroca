@@ -33,17 +33,17 @@ Usage:
 This module is thread-safe and should be imported and used as a singleton.
 """
 
-import os
-import sys
-import json
-import yaml
-import logging
-import threading
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Callable, TypeVar, cast
-from dataclasses import dataclass
 import importlib.resources
+import json
+import logging
+import os
 import re
+import threading
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Optional, TypeVar, Union, cast
+
+import yaml
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ CONFIG_EXTENSION_PATTERN = r"\.(yaml|yml|json)$"
 class ConfigSource:
     """Represents a source of configuration data with priority information."""
     name: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     priority: int
     mutable: bool = False
 
@@ -96,11 +96,11 @@ class ConfigurationManager:
     
     def __init__(self):
         """Initialize the configuration manager with empty configuration."""
-        self._sources: List[ConfigSource] = []
+        self._sources: list[ConfigSource] = []
         self._lock = threading.RLock()
         self._initialized = False
-        self._validators: Dict[str, Callable[[Any], bool]] = {}
-        self._type_converters: Dict[str, Callable[[Any], Any]] = {
+        self._validators: dict[str, Callable[[Any], bool]] = {}
+        self._type_converters: dict[str, Callable[[Any], Any]] = {
             'int': self._convert_int,
             'float': self._convert_float,
             'bool': self._convert_bool,
@@ -174,7 +174,7 @@ class ConfigurationManager:
                 
             try:
                 config_name = file_path.stem
-                with open(file_path, 'r') as f:
+                with open(file_path) as f:
                     if file_path.suffix.lower() in ('.yaml', '.yml'):
                         config_data = yaml.safe_load(f)
                     elif file_path.suffix.lower() == '.json':
@@ -217,7 +217,7 @@ class ConfigurationManager:
             self.add_source("environment", env_config, priority=100, mutable=True)
             logger.debug(f"Loaded {len(env_config)} configuration values from environment variables")
     
-    def add_source(self, name: str, data: Dict[str, Any], priority: int, mutable: bool = False) -> None:
+    def add_source(self, name: str, data: dict[str, Any], priority: int, mutable: bool = False) -> None:
         """
         Add a new configuration source with the specified priority.
         
@@ -275,7 +275,7 @@ class ConfigurationManager:
             if not profile_path or not profile_path.exists():
                 raise ConfigurationError(f"Configuration profile '{profile_name}' not found")
                 
-            with open(profile_path, 'r') as f:
+            with open(profile_path) as f:
                 if profile_path.suffix.lower() in ('.yaml', '.yml'):
                     profile_data = yaml.safe_load(f)
                 elif profile_path.suffix.lower() == '.json':
@@ -325,11 +325,11 @@ class ConfigurationManager:
         """Get a configuration value as a boolean."""
         return self._get_typed_value('bool', key, default)
     
-    def get_list(self, key: str, default: Optional[List[Any]] = None) -> List[Any]:
+    def get_list(self, key: str, default: Optional[list[Any]] = None) -> list[Any]:
         """Get a configuration value as a list."""
         return self._get_typed_value('list', key, default)
     
-    def get_dict(self, key: str, default: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def get_dict(self, key: str, default: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """Get a configuration value as a dictionary."""
         return self._get_typed_value('dict', key, default)
     
@@ -437,7 +437,7 @@ class ConfigurationManager:
             current = mutable_source.data
             
             # Navigate and create nested dictionaries as needed
-            for i, part in enumerate(key_parts[:-1]):
+            for _i, part in enumerate(key_parts[:-1]):
                 if part not in current or not isinstance(current[part], dict):
                     current[part] = {}
                 current = current[part]
@@ -503,14 +503,14 @@ class ConfigurationManager:
             except ConfigNotFoundError:
                 raise ConfigValidationError(f"Cannot validate non-existent key: {key}")
     
-    def export(self) -> Dict[str, Any]:
+    def export(self) -> dict[str, Any]:
         """
         Export the complete merged configuration as a dictionary.
         
         Returns:
             A dictionary containing all configuration values
         """
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         
         # Start with the lowest priority and override with higher priorities
         with self._lock:
@@ -519,7 +519,7 @@ class ConfigurationManager:
                 
         return result
     
-    def _deep_merge(self, target: Dict[str, Any], source: Dict[str, Any]) -> None:
+    def _deep_merge(self, target: dict[str, Any], source: dict[str, Any]) -> None:
         """
         Recursively merge source dictionary into target dictionary.
         
@@ -568,7 +568,7 @@ class ConfigurationManager:
                 return False
         raise ConfigTypeError(f"Cannot convert to bool: {value}")
     
-    def _convert_list(self, value: Any) -> List[Any]:
+    def _convert_list(self, value: Any) -> list[Any]:
         """Convert value to list."""
         if isinstance(value, list):
             return value
@@ -581,7 +581,7 @@ class ConfigurationManager:
                 return [item.strip() for item in value.split(',')]
         raise ConfigTypeError(f"Cannot convert to list: {value}")
     
-    def _convert_dict(self, value: Any) -> Dict[str, Any]:
+    def _convert_dict(self, value: Any) -> dict[str, Any]:
         """Convert value to dict."""
         if isinstance(value, dict):
             return value

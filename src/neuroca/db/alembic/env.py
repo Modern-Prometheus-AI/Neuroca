@@ -30,9 +30,9 @@ from sqlalchemy import engine_from_config, pool
 sys.path.insert(0, str(Path(__file__).parents[3]))
 
 # Import the SQLAlchemy metadata object that should contain all models
-from neuroca.db.models.base import Base  # noqa: E402
 from neuroca.config.settings import get_settings  # noqa: E402
 from neuroca.core.logging import get_logger  # noqa: E402
+from neuroca.db.models.base import Base  # noqa: E402
 
 # Initialize logger
 logger = get_logger(__name__)

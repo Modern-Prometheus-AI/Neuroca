@@ -17,13 +17,15 @@ Key functionalities:
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Set
-from enum import Enum, auto
 import time
+from enum import Enum, auto
+from typing import Any, Optional
+
+from neuroca.core.health.dynamics import (  # Example for context checking
+    HealthState,
+)
 
 # Import necessary components for potential integration
-from neuroca.memory.manager import MEMORY_MANAGER_COMPONENT_ID # Import the constant
-from neuroca.core.health.dynamics import HealthState, HealthDynamicsManager # Example for context checking
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -48,7 +50,7 @@ class Goal:
         self.description = description
         self.priority = priority # Lower number means higher priority (e.g., 1-10)
         self.status = GoalStatus.PENDING
-        self.sub_goals: List['Goal'] = []
+        self.sub_goals: list['Goal'] = []
         self.parent_goal = parent_goal
         self.activation = 0.0 # How strongly the goal is currently driving behavior
         
@@ -58,12 +60,12 @@ class Goal:
         self.activated_at = None  # When the goal was last activated
         self.completion_rate = 0.0  # Progress towards completion (0.0-1.0)
         self.emotional_salience = 0.5  # How emotionally important this goal is (0.0-1.0)
-        self.dependencies: Set[str] = set()  # IDs of goals that must be completed before this one
+        self.dependencies: set[str] = set()  # IDs of goals that must be completed before this one
         self.resource_requirements = {
             "attention": 0.2,  # Default attention requirement
             "energy": 0.2,     # Default energy requirement
         }
-        self.tags: List[str] = []  # Semantic tags for goal categorization
+        self.tags: list[str] = []  # Semantic tags for goal categorization
         
         # Learning-related attributes
         self.success_probability = 0.5  # Initial estimate of success probability
@@ -71,9 +73,9 @@ class Goal:
         self.previous_successes = 0  # Number of successful completions
         
         # Conflict detection attributes
-        self._incompatible_with: Set[str] = set()  # IDs of goals this goal conflicts with
+        self._incompatible_with: set[str] = set()  # IDs of goals this goal conflicts with
         
-    def activate(self, context: Optional[Dict[str, Any]] = None):
+    def activate(self, context: Optional[dict[str, Any]] = None):
         """
         Activate the goal, potentially adjusting activation based on context.
         
@@ -101,7 +103,7 @@ class Goal:
                 
         logger.info(f"Goal activated: '{self.description}' (Priority: {self.priority}, Activation: {self.activation:.2f})")
 
-    def update_status(self, status: GoalStatus, context: Optional[Dict[str, Any]] = None):
+    def update_status(self, status: GoalStatus, context: Optional[dict[str, Any]] = None):
         """
         Update the goal's status and related properties.
         
@@ -209,7 +211,7 @@ class Goal:
             self.activation = max(0.1, self.activation * (1 - decay_rate))
             logger.debug(f"Goal '{self.description}' activation decayed to {self.activation:.2f}.")
     
-    def can_be_activated(self, active_goals: List[str], completed_goals: List[str]) -> bool:
+    def can_be_activated(self, active_goals: list[str], completed_goals: list[str]) -> bool:
         """
         Check if the goal can be activated based on dependencies.
         
@@ -256,13 +258,13 @@ class GoalManager:
             health_manager: Optional instance of HealthDynamicsManager.
             memory_manager: Optional instance of MemoryManager.
         """
-        self.goals: Dict[str, Goal] = {} # Store all goals by ID
-        self.active_goals: Set[str] = set() # IDs of currently active goals
-        self.completed_goals: Set[str] = set() # IDs of completed goals
-        self.failed_goals: Set[str] = set() # IDs of failed goals
+        self.goals: dict[str, Goal] = {} # Store all goals by ID
+        self.active_goals: set[str] = set() # IDs of currently active goals
+        self.completed_goals: set[str] = set() # IDs of completed goals
+        self.failed_goals: set[str] = set() # IDs of failed goals
         
         # Track goal status history for learning
-        self.goal_history: Dict[str, List[Dict[str, Any]]] = {}
+        self.goal_history: dict[str, list[dict[str, Any]]] = {}
         
         # Dependencies and resources
         self.health_manager = health_manager
@@ -294,7 +296,7 @@ class GoalManager:
         
         logger.info("GoalManager initialized.")
 
-    def add_goal(self, description: str, priority: int = 5, parent_goal_id: Optional[str] = None, context: Optional[Dict[str, Any]] = None) -> Optional[Goal]:
+    def add_goal(self, description: str, priority: int = 5, parent_goal_id: Optional[str] = None, context: Optional[dict[str, Any]] = None) -> Optional[Goal]:
         """
         Add a new goal to the system, potentially adjusting priority based on context.
 
@@ -349,7 +351,7 @@ class GoalManager:
         # For now, activation is separate.
         return goal
 
-    def activate_goal(self, goal_id: str, context: Optional[Dict[str, Any]] = None):
+    def activate_goal(self, goal_id: str, context: Optional[dict[str, Any]] = None):
         """
         Activate a specific goal, checking context first.
 
@@ -393,7 +395,7 @@ class GoalManager:
         else:
             logger.warning(f"Cannot update status for goal: ID '{goal_id}' not found.")
 
-    def get_active_goals(self, sorted_by_priority: bool = True) -> List[Goal]:
+    def get_active_goals(self, sorted_by_priority: bool = True) -> list[Goal]:
         """
         Get a list of currently active goals.
 
@@ -418,7 +420,7 @@ class GoalManager:
         active = self.get_active_goals(sorted_by_priority=True)
         return active[0] if active else None
 
-    def update_goal_status(self, goal_id: str, status: GoalStatus, context: Optional[Dict[str, Any]] = None):
+    def update_goal_status(self, goal_id: str, status: GoalStatus, context: Optional[dict[str, Any]] = None):
         """
         Update the status of a specific goal with context awareness.
 
@@ -495,7 +497,7 @@ class GoalManager:
             return  # Only completed goals affect dependencies
             
         # Find all goals that have this goal as a dependency
-        for dependent_id, dependent_goal in self.goals.items():
+        for _dependent_id, dependent_goal in self.goals.items():
             if goal_id in dependent_goal.dependencies:
                 logger.debug(f"Goal '{dependent_goal.description}' dependency '{goal_id}' completed")
                 
@@ -511,7 +513,7 @@ class GoalManager:
                     # Could auto-activate here, or just mark as eligible
                     # For now, we'll leave it pending but could be modified based on system design
     
-    def activate_goal(self, goal_id: str, context: Optional[Dict[str, Any]] = None):
+    def activate_goal(self, goal_id: str, context: Optional[dict[str, Any]] = None):
         """
         Activate a specific goal with comprehensive context checking.
 
@@ -599,7 +601,7 @@ class GoalManager:
                 
         return lowest
     
-    def _get_current_health_state(self, context: Optional[Dict[str, Any]] = None) -> HealthState:
+    def _get_current_health_state(self, context: Optional[dict[str, Any]] = None) -> HealthState:
         """
         Get the current health state from either context or health manager.
         
@@ -622,7 +624,7 @@ class GoalManager:
         # Default
         return HealthState.NORMAL
     
-    def _record_goal_activation(self, goal: Goal, context: Dict[str, Any]):
+    def _record_goal_activation(self, goal: Goal, context: dict[str, Any]):
         """
         Record goal activation in memory for learning.
         
@@ -847,10 +849,8 @@ class GoalManager:
             resource_limits["energy"] = 0.4
         
         # Check for resource overallocation
-        resource_overallocated = False
         for resource, total in total_resources_required.items():
             if total > resource_limits[resource]:
-                resource_overallocated = True
                 logger.info(f"Resource overallocation detected: {resource.capitalize()} required {total:.2f}, limit {resource_limits[resource]:.2f}")
                 
                 # Suspend lowest priority goals until resources are within limits
@@ -869,7 +869,7 @@ class GoalManager:
             # In critical health, keep only the highest priority goal active
             active_goals = self.get_active_goals(sorted_by_priority=True)
             if len(active_goals) > 1:
-                highest_priority = active_goals[0]
+                active_goals[0]
                 for goal in active_goals[1:]:
                     logger.info(f"Suspending goal '{goal.description}' due to CRITICAL health state (keeping only highest priority)")
                     self.update_goal_status(goal.id, GoalStatus.SUSPENDED)
@@ -900,7 +900,7 @@ class GoalManager:
                     logger.info(f"Goal '{goal.description}' activation fell below threshold, suspending")
                     self.update_goal_status(goal_id, GoalStatus.SUSPENDED)
     
-    def suggest_next_goal(self, context: Optional[Dict[str, Any]] = None) -> Optional[Goal]:
+    def suggest_next_goal(self, context: Optional[dict[str, Any]] = None) -> Optional[Goal]:
         """
         Suggest the next goal to activate based on priorities, dependencies, and context.
         

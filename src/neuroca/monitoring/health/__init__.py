@@ -33,13 +33,13 @@ import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable
 
 # Configure module logger
 logger = logging.getLogger(__name__)
 
 # Registry to store components that can be health-checked
-_component_registry: Dict[str, Any] = {}
+_component_registry: dict[str, Any] = {}
 
 
 class HealthStatus(enum.Enum):
@@ -76,10 +76,10 @@ class HealthResult:
     status: HealthStatus
     details: str = ""
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    dependencies: Dict[str, 'HealthResult'] = field(default_factory=dict)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    dependencies: dict[str, 'HealthResult'] = field(default_factory=dict)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the health result to a dictionary representation."""
         result = {
             "component_id": self.component_id,
@@ -110,11 +110,11 @@ class SystemHealthSummary:
         details: Additional details about the system health
     """
     status: HealthStatus
-    component_results: Dict[str, HealthResult]
+    component_results: dict[str, HealthResult]
     timestamp: datetime = field(default_factory=datetime.utcnow)
     details: str = ""
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the system health summary to a dictionary representation."""
         return {
             "status": self.status.value,
@@ -180,7 +180,7 @@ def unregister_component(component_id: str) -> bool:
     return False
 
 
-def get_registered_components() -> Set[str]:
+def get_registered_components() -> set[str]:
     """
     Get the set of all registered component IDs.
     
@@ -303,7 +303,7 @@ class HealthCheck:
             details=details
         )
     
-    def _determine_overall_status(self, component_results: Dict[str, HealthResult]) -> HealthStatus:
+    def _determine_overall_status(self, component_results: dict[str, HealthResult]) -> HealthStatus:
         """
         Determine the overall system health status based on component health results.
         
@@ -340,7 +340,7 @@ class HealthCheck:
     def _generate_system_health_details(
         self, 
         overall_status: HealthStatus, 
-        component_results: Dict[str, HealthResult]
+        component_results: dict[str, HealthResult]
     ) -> str:
         """
         Generate a detailed description of the system health.

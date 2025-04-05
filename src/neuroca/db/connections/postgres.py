@@ -24,30 +24,27 @@ Usage:
         results = await conn.execute_query("SELECT * FROM memory_items WHERE id = %s", [item_id])
 """
 
-import os
-import time
-import logging
-import contextlib
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
-from urllib.parse import quote_plus
-import ssl
-import socket
 import json
+import logging
+import ssl
+import time
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Optional, Union
+from urllib.parse import quote_plus
+
+import asyncpg
 
 # Third-party imports
 import psycopg2
-import psycopg2.pool
-import psycopg2.extras
 import psycopg2.extensions
-from psycopg2 import sql
-from psycopg2.errors import OperationalError, InterfaceError
-import asyncpg
+import psycopg2.extras
+import psycopg2.pool
+from psycopg2.errors import InterfaceError, OperationalError
 
 # Project imports
 from neuroca.config.settings import get_settings
-from neuroca.core.exceptions import DatabaseError, ConnectionError, QueryError
+from neuroca.core.exceptions import ConnectionError, DatabaseError, QueryError
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -120,7 +117,7 @@ class PostgresConfig:
             f"&statement_timeout={self.statement_timeout}"
         )
     
-    def get_dsn(self) -> Dict[str, Any]:
+    def get_dsn(self) -> dict[str, Any]:
         """Generate a DSN dictionary for psycopg2."""
         return {
             "host": self.host,
@@ -307,9 +304,9 @@ class PostgresConnection:
     def execute_query(
         self, 
         query: str, 
-        params: Optional[Union[List, Dict[str, Any]]] = None,
+        params: Optional[Union[list, dict[str, Any]]] = None,
         fetch_all: bool = True
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute a SQL query and return the results.
         
@@ -353,7 +350,7 @@ class PostgresConnection:
     def execute_batch(
         self, 
         query: str, 
-        params_list: List[Union[List, Dict[str, Any]]]
+        params_list: list[Union[list, dict[str, Any]]]
     ) -> int:
         """
         Execute a batch of SQL commands with the same query but different parameters.
@@ -391,7 +388,7 @@ class PostgresConnection:
     
     def execute_transaction(
         self, 
-        queries: List[Tuple[str, Optional[Union[List, Dict[str, Any]]]]]
+        queries: list[tuple[str, Optional[Union[list, dict[str, Any]]]]]
     ) -> bool:
         """
         Execute multiple queries as a single transaction.
@@ -446,7 +443,7 @@ class PostgresConnection:
             logger.info("Closed all connections in the pool")
             self._pool = None
     
-    def check_connection_health(self) -> Dict[str, Any]:
+    def check_connection_health(self) -> dict[str, Any]:
         """
         Check the health of the database connection.
         
@@ -468,7 +465,7 @@ class PostgresConnection:
             with self as conn:
                 # Check if we can execute a simple query
                 start_time = time.time()
-                results = conn.execute_query("SELECT 1 AS connection_test")
+                conn.execute_query("SELECT 1 AS connection_test")
                 response_time = time.time() - start_time
                 
                 # Get server version
@@ -696,9 +693,9 @@ class AsyncPostgresConnection:
     async def execute_query(
         self, 
         query: str, 
-        params: Optional[List] = None,
+        params: Optional[list] = None,
         fetch_all: bool = True
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute a SQL query asynchronously and return the results.
         
@@ -734,7 +731,7 @@ class AsyncPostgresConnection:
     
     async def execute_transaction(
         self, 
-        queries: List[Tuple[str, Optional[List]]]
+        queries: list[tuple[str, Optional[list]]]
     ) -> bool:
         """
         Execute multiple queries as a single transaction asynchronously.
@@ -777,7 +774,7 @@ class AsyncPostgresConnection:
             logger.info("Closed all connections in the async pool")
             self._pool = None
     
-    async def check_connection_health(self) -> Dict[str, Any]:
+    async def check_connection_health(self) -> dict[str, Any]:
         """
         Check the health of the async database connection.
         
@@ -800,7 +797,7 @@ class AsyncPostgresConnection:
             async with self as conn:
                 # Check if we can execute a simple query
                 start_time = time.time()
-                results = await conn.execute_query("SELECT 1 AS connection_test")
+                await conn.execute_query("SELECT 1 AS connection_test")
                 response_time = time.time() - start_time
                 
                 # Get server version

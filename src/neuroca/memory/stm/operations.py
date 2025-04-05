@@ -32,23 +32,20 @@ Usage:
     apply_decay(decay_rate=0.05)
 """
 
-import time
-import uuid
 import logging
-import json
-from typing import Dict, List, Optional, Union, Any, Tuple
+import uuid
 from datetime import datetime, timedelta
+from typing import Any, Optional
 
-from neuroca.memory.stm.models import STMEntry
-from neuroca.memory.stm.exceptions import (
-    STMEntryNotFoundError, 
-    STMCapacityExceededError,
-    STMInvalidOperationError,
-    STMStorageError
-)
-from neuroca.memory.ltm.operations import store_in_ltm
 from neuroca.config.settings import get_settings
-from neuroca.core.utils.validation import validate_content, sanitize_input
+from neuroca.core.utils.validation import sanitize_input
+from neuroca.memory.ltm.operations import store_in_ltm
+from neuroca.memory.stm.exceptions import (
+    STMCapacityExceededError,
+    STMEntryNotFoundError,
+    STMStorageError,
+)
+from neuroca.memory.stm.models import STMEntry
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -61,15 +58,15 @@ STM_MIN_PRIORITY_FOR_LTM = settings.memory.stm.min_priority_for_ltm
 STM_DECAY_INTERVAL = settings.memory.stm.decay_interval_seconds
 
 # In-memory storage for STM entries (in production, this might be Redis or another fast storage)
-_stm_store: Dict[str, STMEntry] = {}
+_stm_store: dict[str, STMEntry] = {}
 
 
 def create_memory(
     content: str,
     priority: float = 0.5,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
     ttl_seconds: Optional[int] = None,
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
 ) -> str:
     """
     Create a new short-term memory entry.
@@ -191,9 +188,9 @@ def update_memory(
     memory_id: str,
     content: Optional[str] = None,
     priority: Optional[float] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
     ttl_seconds: Optional[int] = None,
-    tags: Optional[List[str]] = None,
+    tags: Optional[list[str]] = None,
     decay_factor: Optional[float] = None
 ) -> STMEntry:
     """
@@ -287,10 +284,10 @@ def delete_memory(memory_id: str) -> bool:
 
 
 def get_all_memories(
-    tag_filter: Optional[List[str]] = None,
+    tag_filter: Optional[list[str]] = None,
     min_priority: float = 0.0,
     include_expired: bool = False
-) -> List[STMEntry]:
+) -> list[STMEntry]:
     """
     Retrieve all memory entries, optionally filtered.
     
@@ -471,9 +468,9 @@ def consolidate_to_ltm(memory_id: str) -> bool:
 
 def search_memories(
     query: str,
-    tag_filter: Optional[List[str]] = None,
+    tag_filter: Optional[list[str]] = None,
     min_priority: float = 0.0
-) -> List[STMEntry]:
+) -> list[STMEntry]:
     """
     Search for memories matching the query string.
     
@@ -557,7 +554,7 @@ def _make_room_for_new_entry(new_priority: float) -> None:
         )
 
 
-def get_memory_stats() -> Dict[str, Any]:
+def get_memory_stats() -> dict[str, Any]:
     """
     Get statistics about the current state of short-term memory.
     

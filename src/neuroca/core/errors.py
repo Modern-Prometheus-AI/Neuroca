@@ -40,7 +40,7 @@ import traceback
 import typing
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -180,10 +180,10 @@ class ErrorContext:
     line: Optional[int] = None
     
     # Additional context data relevant to the error
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     
     # Stack trace if available
-    stack_trace: Optional[List[str]] = None
+    stack_trace: Optional[list[str]] = None
 
 
 class NCAError(Exception):
@@ -198,7 +198,7 @@ class NCAError(Exception):
         code: ErrorCode,
         message: Optional[str] = None,
         cause: Optional[Exception] = None,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[dict[str, Any]] = None
     ):
         """Initialize a new NCA error.
         
@@ -241,7 +241,7 @@ class NCAError(Exception):
         except (IndexError, KeyError):
             return ErrorCategory.UNKNOWN
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the error to a dictionary representation.
         
         Returns:
@@ -321,7 +321,7 @@ def log_error(
     error: Union[NCAError, Exception],
     logger_instance: Optional[logging.Logger] = None,
     include_traceback: bool = True,
-    additional_context: Optional[Dict[str, Any]] = None
+    additional_context: Optional[dict[str, Any]] = None
 ) -> None:
     """Log an error with appropriate severity and context.
     
@@ -360,7 +360,7 @@ def log_error(
 
 def format_error_context(
     error: NCAError,
-    additional_context: Optional[Dict[str, Any]] = None
+    additional_context: Optional[dict[str, Any]] = None
 ) -> str:
     """Format error context information for logging or display.
     
@@ -393,7 +393,7 @@ def format_error_context(
 
 
 def handle_exceptions(
-    error_map: Dict[Type[Exception], ErrorCode],
+    error_map: dict[Type[Exception], ErrorCode],
     default_code: ErrorCode = ErrorCode.SYSTEM_INITIALIZATION_FAILED,
     logger_instance: Optional[logging.Logger] = None,
     reraise: bool = True

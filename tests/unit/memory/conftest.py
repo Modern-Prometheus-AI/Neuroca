@@ -14,8 +14,12 @@ from typing import Dict, List, Tuple
 
 from neuroca.core.memory.working_memory import WorkingMemory
 from neuroca.core.memory.episodic_memory import EpisodicMemory
-from neuroca.core.memory.semantic_memory import SemanticMemory, Concept, Relationship, RelationshipType
-from neuroca.core.memory.consolidation import MemoryConsolidator
+# Import the concrete implementation from the correct location
+from neuroca.memory.semantic_memory import SemanticMemory 
+# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
+from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType 
+# Import the concrete implementation instead of the abstract base class
+from neuroca.core.memory.consolidation import StandardMemoryConsolidator 
 
 
 @pytest.fixture
@@ -48,7 +52,8 @@ def semantic_memory():
 @pytest.fixture
 def memory_consolidator():
     """Fixture that provides a standard memory consolidator."""
-    consolidator = MemoryConsolidator()
+    # Instantiate the concrete class
+    consolidator = StandardMemoryConsolidator() 
     return consolidator
 
 
@@ -174,4 +179,4 @@ def populated_semantic_memory():
         memory.store(rel)
     
     yield memory
-    memory.clear() 
+    memory.clear()

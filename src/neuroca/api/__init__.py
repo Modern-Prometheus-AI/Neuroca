@@ -30,12 +30,11 @@ Security:
 """
 
 import logging
-import os
-from typing import Dict, Optional, Any, Callable
+from typing import Optional
 
 # Third-party imports
 try:
-    from flask import Flask, Blueprint, jsonify, request
+    from flask import Blueprint, Flask, jsonify, request
     from flask_cors import CORS
     from flask_limiter import Limiter
     from flask_limiter.util import get_remote_address
@@ -46,7 +45,7 @@ except ImportError as e:
     ) from e
 
 # Internal imports
-from neuroca.config import load_config, ConfigurationError
+from neuroca.config import ConfigurationError, load_config
 from neuroca.core.exceptions import NeuroCaException, ResourceNotFoundError
 from neuroca.monitoring.logging import setup_logger
 
@@ -92,7 +91,7 @@ def create_app(config_path: Optional[str] = None) -> Flask:
     CORS(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS", "*")}})
     
     # Setup rate limiting
-    limiter = Limiter(
+    Limiter(
         get_remote_address,
         app=app,
         default_limits=app.config.get("RATE_LIMITS", ["100 per day", "10 per minute"]),
@@ -125,10 +124,10 @@ def register_blueprints(app: Flask) -> None:
     try:
         # v1 API endpoints
         from neuroca.api.v1 import api_v1
-        from neuroca.api.v1.memory import memory_bp
         from neuroca.api.v1.cognitive import cognitive_bp
-        from neuroca.api.v1.integration import integration_bp
         from neuroca.api.v1.health import health_bp
+        from neuroca.api.v1.integration import integration_bp
+        from neuroca.api.v1.memory import memory_bp
         
         # Register main v1 blueprint
         app.register_blueprint(api_v1, url_prefix='/api/v1')

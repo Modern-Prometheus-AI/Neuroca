@@ -4,9 +4,10 @@ Memory retrieval functionality for the NCA system.
 This module provides functions for retrieving memories from different memory stores.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Optional
 
-def retrieve_memory(memory_id: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+def retrieve_memory(memory_id: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
     """
     Retrieve a memory by its ID with optional context parameters.
     
@@ -21,7 +22,7 @@ def retrieve_memory(memory_id: str, context: Optional[Dict[str, Any]] = None) ->
     return {"id": memory_id, "content": "Memory content", "timestamp": "2025-03-04T12:00:00Z"}
 
 
-def search_memories(query: str, limit: int = 10) -> List[Dict[str, Any]]:
+def search_memories(query: str, limit: int = 10) -> list[dict[str, Any]]:
     """
     Search memories using a query string.
     

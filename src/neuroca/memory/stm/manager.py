@@ -26,15 +26,15 @@ Usage:
     stm_manager.update()
 """
 
-import time
-import uuid
 import heapq
+import json
 import logging
 import threading
-from typing import Dict, List, Optional, Any, Set, Tuple, Union
+import time
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-import json
+from typing import Any, Optional
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -61,11 +61,11 @@ class STMItem:
     last_accessed: float
     access_count: int = 0
     activation: float = 1.0  # Starts at maximum activation
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     priority: float = 0.0
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the STM item to a dictionary for serialization."""
         return {
             "id": self.id,
@@ -80,7 +80,7 @@ class STMItem:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'STMItem':
+    def from_dict(cls, data: dict[str, Any]) -> 'STMItem':
         """Create an STM item from a dictionary."""
         # Convert tags back to a set if it exists
         if "tags" in data:
@@ -127,14 +127,14 @@ class STMManager:
         self.activation_threshold = activation_threshold
         
         # Main storage for STM items
-        self._items: Dict[str, STMItem] = {}
+        self._items: dict[str, STMItem] = {}
         
         # Index for faster searching
-        self._content_index: Dict[str, Set[str]] = {}
-        self._tag_index: Dict[str, Set[str]] = {}
+        self._content_index: dict[str, set[str]] = {}
+        self._tag_index: dict[str, set[str]] = {}
         
         # Priority queue for managing capacity
-        self._priority_queue: List[Tuple[float, str]] = []
+        self._priority_queue: list[tuple[float, str]] = []
         
         # Thread safety
         self._lock = threading.RLock()
@@ -189,9 +189,9 @@ class STMManager:
     def add_item(
         self,
         content: Any,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         priority: float = 0.0,
-        tags: Optional[Set[str]] = None,
+        tags: Optional[set[str]] = None,
         item_id: Optional[str] = None
     ) -> str:
         """
@@ -281,9 +281,9 @@ class STMManager:
         self,
         item_id: str,
         content: Optional[Any] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         priority: Optional[float] = None,
-        tags: Optional[Set[str]] = None
+        tags: Optional[set[str]] = None
     ) -> bool:
         """
         Update an existing item in STM.
@@ -364,11 +364,11 @@ class STMManager:
     def search_items(
         self,
         query: Optional[str] = None,
-        tags: Optional[Set[str]] = None,
-        metadata_filters: Optional[Dict[str, Any]] = None,
+        tags: Optional[set[str]] = None,
+        metadata_filters: Optional[dict[str, Any]] = None,
         min_activation: float = 0.0,
         limit: Optional[int] = None
-    ) -> List[STMItem]:
+    ) -> list[STMItem]:
         """
         Search for items in STM based on various criteria.
         
@@ -478,7 +478,7 @@ class STMManager:
             
             logger.debug(f"Updated STM state, removed {len(items_to_remove)} items due to decay")
     
-    def get_all_items(self) -> List[STMItem]:
+    def get_all_items(self) -> list[STMItem]:
         """
         Get all items currently in STM.
         
@@ -532,7 +532,7 @@ class STMManager:
                 logger.info(f"Saved STM state to {filepath}")
             except Exception as e:
                 logger.error(f"Failed to save STM state: {e}", exc_info=True)
-                raise IOError(f"Failed to save STM state: {str(e)}")
+                raise OSError(f"Failed to save STM state: {str(e)}")
     
     def load_from_file(self, filepath: str) -> None:
         """
@@ -546,7 +546,7 @@ class STMManager:
             ValueError: If the file contains invalid data
         """
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath) as f:
                 data = json.load(f)
             
             with self._lock:
@@ -579,9 +579,9 @@ class STMManager:
             raise ValueError(f"Invalid STM state file format: {str(e)}")
         except Exception as e:
             logger.error(f"Failed to load STM state: {e}", exc_info=True)
-            raise IOError(f"Failed to load STM state: {str(e)}")
+            raise OSError(f"Failed to load STM state: {str(e)}")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the STM.
         

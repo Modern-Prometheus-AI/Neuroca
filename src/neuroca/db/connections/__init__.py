@@ -30,22 +30,19 @@ Usage Examples:
     )
 """
 
-import os
-import time
 import logging
+import os
 import threading
-import functools
-from typing import Dict, Any, Optional, Union, Callable, TypeVar, Generic, List, Tuple
+import time
 from contextlib import contextmanager
 from enum import Enum, auto
-import json
-import hashlib
+from typing import Any, TypeVar
 
 # Import database drivers - these would be installed as dependencies
 try:
     import psycopg2
-    import psycopg2.pool
     import psycopg2.extras
+    import psycopg2.pool
     PSYCOPG2_AVAILABLE = True
 except ImportError:
     PSYCOPG2_AVAILABLE = False
@@ -66,7 +63,7 @@ except ImportError:
 try:
     import sqlalchemy
     from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker, scoped_session
+    from sqlalchemy.orm import scoped_session, sessionmaker
     SQLALCHEMY_AVAILABLE = True
 except ImportError:
     SQLALCHEMY_AVAILABLE = False
@@ -138,7 +135,7 @@ class ConnectionManager:
         """Implement singleton pattern for ConnectionManager."""
         with cls._lock:
             if cls._instance is None:
-                cls._instance = super(ConnectionManager, cls).__new__(cls)
+                cls._instance = super().__new__(cls)
                 cls._instance._initialized = False
             return cls._instance
     
@@ -149,16 +146,16 @@ class ConnectionManager:
                 return
                 
             # Connection pools by name and type
-            self._pools: Dict[str, Any] = {}
+            self._pools: dict[str, Any] = {}
             
             # Connection configurations
-            self._configs: Dict[str, Dict[str, Any]] = {}
+            self._configs: dict[str, dict[str, Any]] = {}
             
             # Active connections
-            self._active_connections: Dict[str, List[Any]] = {}
+            self._active_connections: dict[str, list[Any]] = {}
             
             # Connection status tracking
-            self._connection_status: Dict[str, ConnectionStatus] = {}
+            self._connection_status: dict[str, ConnectionStatus] = {}
             
             # Connection statistics
             self._stats = {
@@ -176,7 +173,7 @@ class ConnectionManager:
             self._initialized = True
             logger.info("ConnectionManager initialized")
     
-    def register_connection(self, name: str, db_type: DatabaseType, config: Dict[str, Any]) -> None:
+    def register_connection(self, name: str, db_type: DatabaseType, config: dict[str, Any]) -> None:
         """
         Register a new database connection configuration.
         
@@ -204,7 +201,7 @@ class ConnectionManager:
             self._connection_status[name] = ConnectionStatus.INITIALIZED
             logger.info(f"Registered new connection configuration: {name} ({db_type.name})")
     
-    def _validate_config(self, db_type: DatabaseType, config: Dict[str, Any]) -> None:
+    def _validate_config(self, db_type: DatabaseType, config: dict[str, Any]) -> None:
         """
         Validate connection configuration for the specified database type.
         
@@ -288,7 +285,7 @@ class ConnectionManager:
                 logger.error(f"Failed to create connection pool for {name}: {str(e)}")
                 raise ConnectionError(f"Failed to create connection pool: {str(e)}") from e
     
-    def _create_postgres_pool(self, config: Dict[str, Any], min_size: int, max_size: int) -> Any:
+    def _create_postgres_pool(self, config: dict[str, Any], min_size: int, max_size: int) -> Any:
         """Create a PostgreSQL connection pool."""
         if not PSYCOPG2_AVAILABLE:
             raise DatabaseNotSupportedError("PostgreSQL support requires psycopg2 package")
@@ -304,7 +301,7 @@ class ConnectionManager:
             **{k: v for k, v in config.items() if k not in ['host', 'port', 'dbname', 'user', 'password']}
         )
     
-    def _create_mongo_pool(self, config: Dict[str, Any]) -> Any:
+    def _create_mongo_pool(self, config: dict[str, Any]) -> Any:
         """Create a MongoDB connection pool."""
         if not PYMONGO_AVAILABLE:
             raise DatabaseNotSupportedError("MongoDB support requires pymongo package")
@@ -318,7 +315,7 @@ class ConnectionManager:
                 **{k: v for k, v in config.items() if k not in ['host', 'port']}
             )
     
-    def _create_redis_pool(self, config: Dict[str, Any]) -> Any:
+    def _create_redis_pool(self, config: dict[str, Any]) -> Any:
         """Create a Redis connection pool."""
         if not REDIS_AVAILABLE:
             raise DatabaseNotSupportedError("Redis support requires redis package")
@@ -329,7 +326,7 @@ class ConnectionManager:
             **{k: v for k, v in config.items() if k not in ['host', 'port']}
         )
     
-    def _create_sqlite_pool(self, config: Dict[str, Any]) -> Any:
+    def _create_sqlite_pool(self, config: dict[str, Any]) -> Any:
         """Create a SQLite connection pool using SQLAlchemy."""
         if not SQLALCHEMY_AVAILABLE:
             raise DatabaseNotSupportedError("SQLite pooling requires SQLAlchemy package")
@@ -338,7 +335,7 @@ class ConnectionManager:
         session_factory = sessionmaker(bind=engine)
         return scoped_session(session_factory)
     
-    def _create_mysql_pool(self, config: Dict[str, Any], min_size: int, max_size: int) -> Any:
+    def _create_mysql_pool(self, config: dict[str, Any], min_size: int, max_size: int) -> Any:
         """Create a MySQL connection pool using SQLAlchemy."""
         if not SQLALCHEMY_AVAILABLE:
             raise DatabaseNotSupportedError("MySQL pooling requires SQLAlchemy package")
@@ -353,7 +350,7 @@ class ConnectionManager:
         session_factory = sessionmaker(bind=engine)
         return scoped_session(session_factory)
     
-    def _create_custom_pool(self, config: Dict[str, Any]) -> Any:
+    def _create_custom_pool(self, config: dict[str, Any]) -> Any:
         """Create a custom connection pool using the provided factory function."""
         if 'connection_factory' not in config or not callable(config['connection_factory']):
             raise ConfigurationError("Custom connection requires a callable 'connection_factory'")
@@ -434,10 +431,7 @@ class ConnectionManager:
                         conn = pool()
                     elif db_type == DatabaseType.CUSTOM:
                         # For custom connections, the pool might be a factory function
-                        if callable(pool):
-                            conn = pool()
-                        else:
-                            conn = pool
+                        conn = pool() if callable(pool) else pool
                     
                     if conn is not None:
                         break
@@ -556,7 +550,7 @@ class ConnectionManager:
                     logger.error(f"Error closing connections for pool '{pool_name}': {str(e)}")
                     raise ConnectionError(f"Failed to close connections: {str(e)}") from e
     
-    def check_health(self) -> Dict[str, Any]:
+    def check_health(self) -> dict[str, Any]:
         """
         Check the health of all connection pools.
         
@@ -575,7 +569,7 @@ class ConnectionManager:
                 'timestamp': now
             }
             
-            for name, pool in self._pools.items():
+            for name, _pool in self._pools.items():
                 config = self._configs[name]
                 db_type = config['type']
                 
@@ -615,7 +609,7 @@ class ConnectionManager:
             
             return health_info
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get connection statistics.
         
@@ -642,7 +636,7 @@ class ConnectionManager:
 _connection_manager = ConnectionManager()
 
 
-def register_connection(name: str, db_type: DatabaseType, config: Dict[str, Any]) -> None:
+def register_connection(name: str, db_type: DatabaseType, config: dict[str, Any]) -> None:
     """
     Register a new database connection configuration.
     
@@ -751,7 +745,7 @@ def close_all_connections(name: str = None) -> None:
     return _connection_manager.close_all_connections(name)
 
 
-def check_health() -> Dict[str, Any]:
+def check_health() -> dict[str, Any]:
     """
     Check the health of all connection pools.
     
@@ -761,7 +755,7 @@ def check_health() -> Dict[str, Any]:
     return _connection_manager.check_health()
 
 
-def get_stats() -> Dict[str, Any]:
+def get_stats() -> dict[str, Any]:
     """
     Get connection statistics.
     
@@ -771,7 +765,7 @@ def get_stats() -> Dict[str, Any]:
     return _connection_manager.get_stats()
 
 
-def create_connection(name: str, conn_type: str, config: Dict[str, Any], 
+def create_connection(name: str, conn_type: str, config: dict[str, Any], 
                      min_pool_size: int = 1, max_pool_size: int = 10) -> None:
     """
     Convenience function to create and initialize a connection in one step.

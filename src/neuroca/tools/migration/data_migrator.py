@@ -30,19 +30,15 @@ import json
 import logging
 import os
 import re
-import shutil
-import sys
 import tempfile
 import time
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional
 
 import yaml
-from packaging import version
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -90,9 +86,9 @@ class MigrationContext:
     source_version: str
     target_version: str
     migration_type: MigrationType
-    affected_tiers: List[MemoryTier]
+    affected_tiers: list[MemoryTier]
     timestamp: datetime.datetime = datetime.datetime.now()
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -106,7 +102,7 @@ class MigrationResult:
     context: MigrationContext
     duration_seconds: float
     error: Optional[Exception] = None
-    details: Dict[str, Any] = None
+    details: dict[str, Any] = None
     
     def __post_init__(self):
         if self.details is None:
@@ -117,7 +113,7 @@ class MigrationResult:
         """Check if the migration resulted in an error."""
         return self.error is not None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the result to a dictionary for serialization."""
         result = {
             "success": self.success,
@@ -215,7 +211,7 @@ class MigrationHandler(ABC):
 class VersionPathFinder:
     """Utility class to find migration paths between versions."""
     
-    def __init__(self, available_migrations: Dict[Tuple[str, str], MigrationHandler]):
+    def __init__(self, available_migrations: dict[tuple[str, str], MigrationHandler]):
         """
         Initialize with available migrations.
         
@@ -228,12 +224,12 @@ class VersionPathFinder:
     def _build_version_graph(self):
         """Build a graph representation of available migrations."""
         self.graph = {}
-        for (source, target) in self.available_migrations.keys():
+        for (source, target) in self.available_migrations:
             if source not in self.graph:
                 self.graph[source] = set()
             self.graph[source].add(target)
     
-    def find_path(self, source_version: str, target_version: str) -> List[Tuple[str, str]]:
+    def find_path(self, source_version: str, target_version: str) -> list[tuple[str, str]]:
         """
         Find a path from source_version to target_version using available migrations.
         
@@ -321,7 +317,7 @@ class DataMigrator:
         os.makedirs(self.backup_dir, exist_ok=True)
         
         # Initialize handlers registry
-        self.migration_handlers: Dict[Tuple[str, str], MigrationHandler] = {}
+        self.migration_handlers: dict[tuple[str, str], MigrationHandler] = {}
         
         # Load configuration
         self._load_config()
@@ -343,7 +339,7 @@ class DataMigrator:
         """Load migration configuration from file."""
         try:
             if os.path.exists(self.config_path):
-                with open(self.config_path, 'r') as f:
+                with open(self.config_path) as f:
                     config = yaml.safe_load(f)
                 
                 # Load migration handlers from configuration
@@ -475,7 +471,7 @@ class DataMigrator:
             logger.error(f"Failed to create backup: {str(e)}")
             raise MigrationError(f"Backup creation failed: {str(e)}")
     
-    def load_backup(self, backup_path: str) -> Tuple[Any, MigrationContext]:
+    def load_backup(self, backup_path: str) -> tuple[Any, MigrationContext]:
         """
         Load data from a backup file.
         
@@ -489,7 +485,7 @@ class DataMigrator:
             MigrationError: If backup cannot be loaded
         """
         try:
-            with open(backup_path, 'r') as f:
+            with open(backup_path) as f:
                 backup = json.load(f)
             
             data = backup['data']
@@ -561,7 +557,6 @@ class DataMigrator:
             
             # Perform migrations step by step
             current_data = data
-            current_version = self.source_version
             
             for source, target in migration_path:
                 handler = self.migration_handlers[(source, target)]
@@ -575,9 +570,8 @@ class DataMigrator:
                 )
                 
                 # Create backup if enabled
-                backup_path = None
                 if self.auto_backup and not self.dry_run:
-                    backup_path = self.create_backup(current_data, context)
+                    self.create_backup(current_data, context)
                 
                 # Perform migration step
                 logger.info(f"Migrating from {source} to {target}...")
@@ -599,7 +593,6 @@ class DataMigrator:
                         )
                     logger.info(f"Dry run: skipping actual migration from {source} to {target}")
                 
-                current_version = target
             
             # Create final result
             final_context = MigrationContext(
@@ -687,11 +680,12 @@ class DataMigrator:
                     details={"dry_run": True, "backup_path": backup_path}
                 )
             
-            # TODO: Implement actual rollback logic here
-            # This would typically involve restoring the data from the backup
-            # and updating any version metadata
+            # NOTE: Actual rollback logic needs implementation.
+            # This typically involves restoring data from the backup
+            # and updating version metadata. Current implementation assumes
+            # the caller handles the restoration based on the returned backup data.
             
-            logger.info(f"Rollback completed successfully from backup: {backup_path}")
+            logger.info(f"Rollback process initiated for backup: {backup_path}")
             
             return MigrationResult(
                 success=True,
@@ -720,7 +714,7 @@ class DataMigrator:
                 error=e
             )
     
-    def list_available_migrations(self) -> List[Dict[str, str]]:
+    def list_available_migrations(self) -> list[dict[str, str]]:
         """
         List all available migrations.
         
@@ -729,10 +723,10 @@ class DataMigrator:
         """
         return [
             {"source": source, "target": target}
-            for source, target in self.migration_handlers.keys()
+            for source, target in self.migration_handlers
         ]
     
-    def list_backups(self) -> List[Dict[str, Any]]:
+    def list_backups(self) -> list[dict[str, Any]]:
         """
         List all available backups.
         

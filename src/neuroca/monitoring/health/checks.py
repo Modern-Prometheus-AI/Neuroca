@@ -34,7 +34,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Optional
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class HealthCheckResult:
     timestamp: datetime.datetime = field(default_factory=datetime.datetime.now)
     duration_ms: float = 0.0
     severity: HealthCheckSeverity = HealthCheckSeverity.MEDIUM
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class HealthCheck(ABC):
@@ -98,7 +98,7 @@ class HealthCheck(ABC):
                  component: str = "unknown",
                  severity: HealthCheckSeverity = HealthCheckSeverity.MEDIUM,
                  timeout_seconds: float = 10.0,
-                 metadata: Optional[Dict[str, Any]] = None):
+                 metadata: Optional[dict[str, Any]] = None):
         """
         Initialize a health check.
         
@@ -240,8 +240,8 @@ class HealthCheckRegistry:
     
     def __init__(self):
         """Initialize the health check registry."""
-        self._checks: Dict[str, HealthCheck] = {}
-        self._check_history: Dict[str, List[HealthCheckResult]] = {}
+        self._checks: dict[str, HealthCheck] = {}
+        self._check_history: dict[str, list[HealthCheckResult]] = {}
         self._history_limit: int = 100  # Maximum number of historical results to keep
     
     def register(self, check: HealthCheck) -> None:
@@ -317,7 +317,7 @@ class HealthCheckRegistry:
         
         return result
     
-    def run_all(self) -> Dict[str, HealthCheckResult]:
+    def run_all(self) -> dict[str, HealthCheckResult]:
         """
         Run all registered health checks.
         
@@ -352,7 +352,7 @@ class HealthCheckRegistry:
         
         return results
     
-    def run_for_component(self, component: str) -> Dict[str, HealthCheckResult]:
+    def run_for_component(self, component: str) -> dict[str, HealthCheckResult]:
         """
         Run all health checks for a specific component.
         
@@ -386,7 +386,7 @@ class HealthCheckRegistry:
         
         return results
     
-    async def run_all_async(self) -> Dict[str, HealthCheckResult]:
+    async def run_all_async(self) -> dict[str, HealthCheckResult]:
         """
         Run all registered health checks asynchronously.
         
@@ -436,7 +436,7 @@ class HealthCheckRegistry:
         check = self._checks[check_id]
         return check.execute()
     
-    def get_system_status(self) -> Tuple[HealthStatus, Dict[str, Any]]:
+    def get_system_status(self) -> tuple[HealthStatus, dict[str, Any]]:
         """
         Get the overall system health status based on the most recent check results.
         
@@ -504,7 +504,7 @@ class HealthCheckRegistry:
         
         return overall_status, details
     
-    def get_component_status(self, component: str) -> Tuple[HealthStatus, Dict[str, Any]]:
+    def get_component_status(self, component: str) -> tuple[HealthStatus, dict[str, Any]]:
         """
         Get the health status for a specific component.
         
@@ -592,7 +592,7 @@ class HealthCheckRegistry:
         
         self._check_history[check_id] = history
     
-    def get_history(self, check_id: str) -> List[HealthCheckResult]:
+    def get_history(self, check_id: str) -> list[HealthCheckResult]:
         """
         Get the history of results for a specific health check.
         

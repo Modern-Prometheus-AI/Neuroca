@@ -23,12 +23,12 @@ Usage:
                           field_name="configuration")
 """
 
-import re
-import uuid
+import datetime
 import json
 import logging
-import datetime
-from typing import Any, Dict, List, Optional, Union, Tuple, Set, Callable, TypeVar, Generic
+import re
+import uuid
+from typing import Any, Callable, Optional, TypeVar, Union
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class ValidationError(Exception):
         super().__init__(message)
 
 
-def validate_type(value: Any, expected_type: Union[type, Tuple[type, ...]], 
+def validate_type(value: Any, expected_type: Union[type, tuple[type, ...]], 
                  field_name: Optional[str] = None, 
                  allow_none: bool = False) -> Any:
     """
@@ -81,7 +81,7 @@ def validate_type(value: Any, expected_type: Union[type, Tuple[type, ...]],
         if allow_none:
             return None
         raise ValidationError(
-            f"Value cannot be None", field_name=field_name
+            "Value cannot be None", field_name=field_name
         )
     
     if not isinstance(value, expected_type):
@@ -146,7 +146,7 @@ def validate_string(value: Any, min_length: int = 0, max_length: Optional[int] =
     
     if pattern is not None and not re.match(pattern, value):
         raise ValidationError(
-            f"String does not match required pattern",
+            "String does not match required pattern",
             field_name=field_name
         )
     
@@ -315,7 +315,7 @@ def validate_bool(value: Any, field_name: Optional[str] = None,
 
 def validate_list(value: Any, item_validator: Optional[Callable[[Any], Any]] = None,
                  min_length: int = 0, max_length: Optional[int] = None,
-                 field_name: Optional[str] = None, allow_none: bool = False) -> Optional[List]:
+                 field_name: Optional[str] = None, allow_none: bool = False) -> Optional[list]:
     """
     Validates a list and optionally its items.
     
@@ -370,11 +370,11 @@ def validate_list(value: Any, item_validator: Optional[Callable[[Any], Any]] = N
     return value
 
 
-def validate_dict(value: Any, required_keys: Optional[List[str]] = None,
-                 optional_keys: Optional[List[str]] = None,
-                 value_validators: Optional[Dict[str, Callable]] = None,
+def validate_dict(value: Any, required_keys: Optional[list[str]] = None,
+                 optional_keys: Optional[list[str]] = None,
+                 value_validators: Optional[dict[str, Callable]] = None,
                  allow_extra_keys: bool = True, field_name: Optional[str] = None,
-                 allow_none: bool = False) -> Optional[Dict]:
+                 allow_none: bool = False) -> Optional[dict]:
     """
     Validates a dictionary, its keys, and optionally its values.
     
@@ -561,7 +561,7 @@ def validate_timestamp(value: Any, min_time: Optional[datetime.datetime] = None,
     return value
 
 
-def validate_json(value: Any, schema: Optional[Dict] = None,
+def validate_json(value: Any, schema: Optional[dict] = None,
                  field_name: Optional[str] = None,
                  allow_none: bool = False) -> Any:
     """
@@ -651,7 +651,7 @@ def validate_email(value: Any, field_name: Optional[str] = None,
     return value
 
 
-def validate_url(value: Any, allowed_schemes: Optional[List[str]] = None,
+def validate_url(value: Any, allowed_schemes: Optional[list[str]] = None,
                 field_name: Optional[str] = None, allow_none: bool = False) -> Optional[str]:
     """
     Validates a URL.
@@ -695,7 +695,7 @@ def validate_url(value: Any, allowed_schemes: Optional[List[str]] = None,
     return value
 
 
-def validate_memory_object(value: Any, required_attributes: Optional[List[str]] = None,
+def validate_memory_object(value: Any, required_attributes: Optional[list[str]] = None,
                           field_name: Optional[str] = None,
                           allow_none: bool = False) -> Any:
     """
@@ -732,7 +732,7 @@ def validate_memory_object(value: Any, required_attributes: Optional[List[str]] 
     return value
 
 
-def validate_enum(value: Any, enum_values: List[Any], case_sensitive: bool = True,
+def validate_enum(value: Any, enum_values: list[Any], case_sensitive: bool = True,
                  field_name: Optional[str] = None, allow_none: bool = False) -> Any:
     """
     Validates that a value is one of a set of allowed values.
@@ -827,7 +827,7 @@ def validate_range(value: Any, min_value: Optional[Any] = None, max_value: Optio
 
 
 # Convenience function for validating configuration objects
-def validate_config(config: Dict, schema: Dict, field_name: str = "config") -> Dict:
+def validate_config(config: dict, schema: dict, field_name: str = "config") -> dict:
     """
     Validates a configuration dictionary against a schema.
     

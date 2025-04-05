@@ -25,23 +25,22 @@ Usage:
 """
 
 import logging
-import time
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
-from sqlalchemy import and_, desc, func, select, update, delete
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, delete, desc, func, select, update
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from neuroca.core.models.memory import MemoryItem, STMItem
+from neuroca.config.settings import get_settings
 from neuroca.core.exceptions import (
+    InvalidParameterError,
     MemoryCapacityExceededError,
     MemoryItemNotFoundError,
     RepositoryError,
-    InvalidParameterError
 )
-from neuroca.config.settings import get_settings
+from neuroca.core.models.memory import STMItem
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -78,7 +77,7 @@ class STMRepository:
     async def store(self, 
                    content: str, 
                    priority: float = 0.5, 
-                   metadata: Optional[Dict[str, Any]] = None,
+                   metadata: Optional[dict[str, Any]] = None,
                    source: Optional[str] = None,
                    context_id: Optional[str] = None) -> str:
         """
@@ -150,7 +149,7 @@ class STMRepository:
                       min_priority: float = 0.0,
                       context_id: Optional[str] = None,
                       query: Optional[str] = None,
-                      update_access_stats: bool = True) -> List[Dict[str, Any]]:
+                      update_access_stats: bool = True) -> list[dict[str, Any]]:
         """
         Retrieve memory items from STM based on specified criteria.
         
@@ -241,7 +240,7 @@ class STMRepository:
                     memory_id: str, 
                     content: Optional[str] = None,
                     priority: Optional[float] = None, 
-                    metadata: Optional[Dict[str, Any]] = None,
+                    metadata: Optional[dict[str, Any]] = None,
                     extend_expiry: bool = False) -> bool:
         """
         Update an existing STM item.
@@ -379,7 +378,7 @@ class STMRepository:
             logger.error(f"Database error while counting STM items: {str(e)}")
             raise RepositoryError(f"Failed to get item count: {str(e)}")
     
-    async def get_by_id(self, memory_id: str) -> Optional[Dict[str, Any]]:
+    async def get_by_id(self, memory_id: str) -> Optional[dict[str, Any]]:
         """
         Retrieve a specific memory item by ID.
         
@@ -503,7 +502,7 @@ class STMRepository:
             logger.error(f"Database error while enforcing capacity limits: {str(e)}")
             raise RepositoryError(f"Failed to enforce capacity limits: {str(e)}")
     
-    async def _update_access_stats(self, item_ids: List[str]) -> None:
+    async def _update_access_stats(self, item_ids: list[str]) -> None:
         """
         Update access statistics for the specified items.
         
@@ -541,7 +540,7 @@ class STMRepository:
                     query: str, 
                     limit: int = 10,
                     min_priority: float = 0.0,
-                    context_id: Optional[str] = None) -> List[Dict[str, Any]]:
+                    context_id: Optional[str] = None) -> list[dict[str, Any]]:
         """
         Search for memory items in STM based on content.
         

@@ -24,24 +24,26 @@ Usage:
 
 import json
 import logging
-from typing import Dict, List, Optional, Any, Union, Type, Tuple
-from pydantic import BaseModel, Field, ValidationError
+from typing import Any, Optional
+
+from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 
 # LangChain imports
-from langchain.tools import BaseTool, StructuredTool, Tool
-from langchain.callbacks.manager import CallbackManagerForToolRun, AsyncCallbackManagerForToolRun
+from langchain.tools import BaseTool
+from pydantic import BaseModel, Field
+
+from neuroca.core.exceptions import (
+    HealthMonitorError,
+    InvalidInputError,
+    MemoryAccessError,
+    MemoryStorageError,
+)
+from neuroca.core.health import HealthMonitor
+from neuroca.memory.episodic_memory import EpisodicMemory
+from neuroca.memory.semantic_memory import SemanticMemory
 
 # NCA imports
 from neuroca.memory.working_memory import WorkingMemory
-from neuroca.memory.episodic_memory import EpisodicMemory
-from neuroca.memory.semantic_memory import SemanticMemory
-from neuroca.core.health import HealthMonitor
-from neuroca.core.exceptions import (
-    MemoryAccessError, 
-    MemoryStorageError, 
-    HealthMonitorError,
-    InvalidInputError
-)
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -54,11 +56,11 @@ class MemoryInput(BaseModel):
         ..., 
         description="The type of memory to access: 'working', 'episodic', or 'semantic'"
     )
-    tags: Optional[List[str]] = Field(
+    tags: Optional[list[str]] = Field(
         default=None, 
         description="Optional tags to categorize the memory"
     )
-    metadata: Optional[Dict[str, Any]] = Field(
+    metadata: Optional[dict[str, Any]] = Field(
         default=None, 
         description="Optional metadata associated with the memory"
     )
@@ -79,7 +81,7 @@ class MemoryRetrievalInput(BaseModel):
         default=0.7, 
         description="Similarity threshold for retrieval (0.0 to 1.0)"
     )
-    tags: Optional[List[str]] = Field(
+    tags: Optional[list[str]] = Field(
         default=None, 
         description="Filter results by these tags"
     )
@@ -91,7 +93,7 @@ class HealthInput(BaseModel):
         ..., 
         description="The health action to perform: 'status', 'update', or 'alert'"
     )
-    parameters: Optional[Dict[str, Any]] = Field(
+    parameters: Optional[dict[str, Any]] = Field(
         default=None, 
         description="Parameters for the health action"
     )
@@ -113,7 +115,7 @@ class MemoryStorageTool(BaseTool):
     - 'episodic': Long-term memory for experiences and events
     - 'semantic': Long-term memory for facts and knowledge
     """
-    args_schema: Type[BaseModel] = MemoryInput
+    args_schema: type[BaseModel] = MemoryInput
     
     def __init__(self):
         """Initialize memory storage tool with connections to memory systems."""
@@ -127,8 +129,8 @@ class MemoryStorageTool(BaseTool):
         self, 
         content: str, 
         memory_type: str, 
-        tags: Optional[List[str]] = None, 
-        metadata: Optional[Dict[str, Any]] = None,
+        tags: Optional[list[str]] = None, 
+        metadata: Optional[dict[str, Any]] = None,
         run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> str:
         """
@@ -184,8 +186,8 @@ class MemoryStorageTool(BaseTool):
         self, 
         content: str, 
         memory_type: str, 
-        tags: Optional[List[str]] = None, 
-        metadata: Optional[Dict[str, Any]] = None,
+        tags: Optional[list[str]] = None, 
+        metadata: Optional[dict[str, Any]] = None,
         run_manager: Optional[AsyncCallbackManagerForToolRun] = None
     ) -> str:
         """Async version of _run method."""
@@ -210,7 +212,7 @@ class MemoryRetrievalTool(BaseTool):
     - 'episodic': Long-term memory for experiences and events
     - 'semantic': Long-term memory for facts and knowledge
     """
-    args_schema: Type[BaseModel] = MemoryRetrievalInput
+    args_schema: type[BaseModel] = MemoryRetrievalInput
     
     def __init__(self):
         """Initialize memory retrieval tool with connections to memory systems."""
@@ -226,7 +228,7 @@ class MemoryRetrievalTool(BaseTool):
         memory_type: str, 
         limit: int = 5, 
         threshold: float = 0.7,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> str:
         """
@@ -316,7 +318,7 @@ class MemoryRetrievalTool(BaseTool):
         memory_type: str, 
         limit: int = 5, 
         threshold: float = 0.7,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         run_manager: Optional[AsyncCallbackManagerForToolRun] = None
     ) -> str:
         """Async version of _run method."""
@@ -340,7 +342,7 @@ class HealthMonitorTool(BaseTool):
     - Update health parameters ('update')
     - Respond to health alerts ('alert')
     """
-    args_schema: Type[BaseModel] = HealthInput
+    args_schema: type[BaseModel] = HealthInput
     
     def __init__(self):
         """Initialize health monitor tool with connection to health system."""
@@ -351,7 +353,7 @@ class HealthMonitorTool(BaseTool):
     def _run(
         self, 
         action: str, 
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[dict[str, Any]] = None,
         run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> str:
         """
@@ -419,7 +421,7 @@ class HealthMonitorTool(BaseTool):
     async def _arun(
         self, 
         action: str, 
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[dict[str, Any]] = None,
         run_manager: Optional[AsyncCallbackManagerForToolRun] = None
     ) -> str:
         """Async version of _run method."""
@@ -454,7 +456,7 @@ class CognitiveProcessTool(BaseTool):
         self, 
         process_type: str, 
         input_data: str,
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[dict[str, Any]] = None,
         run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> str:
         """
@@ -505,7 +507,7 @@ class CognitiveProcessTool(BaseTool):
         self, 
         process_type: str, 
         input_data: str,
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[dict[str, Any]] = None,
         run_manager: Optional[AsyncCallbackManagerForToolRun] = None
     ) -> str:
         """Async version of _run method."""
@@ -514,7 +516,7 @@ class CognitiveProcessTool(BaseTool):
         return self._run(process_type, input_data, parameters)
 
 
-def get_all_tools() -> List[BaseTool]:
+def get_all_tools() -> list[BaseTool]:
     """
     Get all available NCA tools for LangChain integration.
     
@@ -529,7 +531,7 @@ def get_all_tools() -> List[BaseTool]:
     ]
 
 
-def get_memory_tools() -> List[BaseTool]:
+def get_memory_tools() -> list[BaseTool]:
     """
     Get only memory-related NCA tools.
     
@@ -539,7 +541,7 @@ def get_memory_tools() -> List[BaseTool]:
     return [MemoryStorageTool(), MemoryRetrievalTool()]
 
 
-def get_health_tools() -> List[BaseTool]:
+def get_health_tools() -> list[BaseTool]:
     """
     Get only health-related NCA tools.
     
@@ -549,7 +551,7 @@ def get_health_tools() -> List[BaseTool]:
     return [HealthMonitorTool()]
 
 
-def get_cognitive_tools() -> List[BaseTool]:
+def get_cognitive_tools() -> list[BaseTool]:
     """
     Get only cognitive process NCA tools.
     

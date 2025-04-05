@@ -21,23 +21,22 @@ Usage:
 """
 
 import asyncio
-import logging
 import time
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Optional
 
 from neuroca.core.exceptions import (
     ContextRetrievalError,
     InvalidParameterError,
     MemoryAccessError,
 )
-from neuroca.memory.base import MemoryItem, MemoryTier
+from neuroca.core.models import ContextItem, RelevanceScore
+from neuroca.core.utils.logging import get_logger
+from neuroca.memory.base import MemoryItem
 from neuroca.memory.episodic import EpisodicMemory
 from neuroca.memory.semantic import SemanticMemory
 from neuroca.memory.working import WorkingMemory
-from neuroca.core.models import RelevanceScore, ContextItem
-from neuroca.core.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -109,9 +108,9 @@ class ContextRetriever:
     async def retrieve_context(
         self,
         query: str,
-        memory_tiers: Optional[List[str]] = None,
+        memory_tiers: Optional[list[str]] = None,
         options: Optional[RetrievalOptions] = None,
-    ) -> List[ContextItem]:
+    ) -> list[ContextItem]:
         """
         Retrieve context items relevant to the provided query.
         
@@ -188,7 +187,7 @@ class ContextRetriever:
             logger.error(f"Error during context retrieval: {str(e)}", exc_info=True)
             raise ContextRetrievalError(f"Failed to retrieve context: {str(e)}")
     
-    def _resolve_memory_tiers(self, memory_tiers: Optional[List[str]]) -> List[str]:
+    def _resolve_memory_tiers(self, memory_tiers: Optional[list[str]]) -> list[str]:
         """
         Resolve which memory tiers to search based on input and availability.
         
@@ -223,7 +222,7 @@ class ContextRetriever:
     
     async def _retrieve_from_tier(
         self, tier_name: str, query: str, options: RetrievalOptions
-    ) -> List[ContextItem]:
+    ) -> list[ContextItem]:
         """
         Retrieve context items from a specific memory tier.
         
@@ -266,7 +265,7 @@ class ContextRetriever:
     
     async def _retrieve_from_working_memory(
         self, query: str, options: RetrievalOptions
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Retrieve items from working memory.
         
@@ -299,7 +298,7 @@ class ContextRetriever:
     
     async def _retrieve_from_episodic_memory(
         self, query: str, options: RetrievalOptions
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Retrieve items from episodic memory.
         
@@ -332,7 +331,7 @@ class ContextRetriever:
     
     async def _retrieve_from_semantic_memory(
         self, query: str, options: RetrievalOptions
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Retrieve items from semantic memory.
         
@@ -382,8 +381,8 @@ class ContextRetriever:
         )
     
     def _rank_and_filter_items(
-        self, items: List[ContextItem], query: str, options: RetrievalOptions
-    ) -> List[ContextItem]:
+        self, items: list[ContextItem], query: str, options: RetrievalOptions
+    ) -> list[ContextItem]:
         """
         Rank and filter context items based on relevance to the query.
         
@@ -462,7 +461,7 @@ class ContextRetriever:
         item.relevance.score = max(0.0, min(1.0, composite_score))  # Clamp to [0,1]
 
     async def retrieve_context_by_id(
-        self, item_id: str, memory_tiers: Optional[List[str]] = None
+        self, item_id: str, memory_tiers: Optional[list[str]] = None
     ) -> Optional[ContextItem]:
         """
         Retrieve a specific context item by its ID.

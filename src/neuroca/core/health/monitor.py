@@ -5,16 +5,15 @@ This module implements the health monitoring system, including health check
 definitions, execution, and reporting.
 """
 
+import logging
+import threading
+import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Any, Optional, Callable, Type, Set
-import time
-import threading
-import logging
-from abc import ABC, abstractmethod
+from typing import Any, Optional
 
-from neuroca.core.health.component import ComponentStatus, ComponentHealthStatus
-
+from neuroca.core.health.component import ComponentHealthStatus, ComponentStatus
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -50,11 +49,11 @@ class HealthCheckResult:
     status: HealthCheckStatus
     component_id: str
     message: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
     execution_time: float = 0.0
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert check result to dictionary for serialization."""
         return {
             'check_id': self.check_id,
@@ -87,7 +86,7 @@ class HealthCheck(ABC):
         self.component_id = component_id
         self.description = description
         self.timeout_seconds = 5.0  # Default timeout
-        self.dependencies: Set[str] = set()  # Other checks this depends on
+        self.dependencies: set[str] = set()  # Other checks this depends on
     
     @abstractmethod
     def execute(self) -> HealthCheckResult:
@@ -218,9 +217,9 @@ class HealthMonitor:
     """
     def __init__(self):
         """Initialize the health monitor."""
-        self._checks: Dict[str, HealthCheck] = {}
-        self._results: Dict[str, HealthCheckResult] = {}
-        self._component_status: Dict[str, ComponentHealthStatus] = {}
+        self._checks: dict[str, HealthCheck] = {}
+        self._results: dict[str, HealthCheckResult] = {}
+        self._component_status: dict[str, ComponentHealthStatus] = {}
         self._lock = threading.RLock()
         self._scheduled_check_interval = 60  # Default: check every minute
         self._scheduler_thread = None
@@ -278,7 +277,7 @@ class HealthMonitor:
         
         return result
     
-    def run_all_checks(self) -> Dict[str, HealthCheckResult]:
+    def run_all_checks(self) -> dict[str, HealthCheckResult]:
         """
         Run all registered health checks and return results.
         
@@ -318,7 +317,7 @@ class HealthMonitor:
         with self._lock:
             return self._results.get(check_id)
     
-    def get_all_results(self) -> Dict[str, HealthCheckResult]:
+    def get_all_results(self) -> dict[str, HealthCheckResult]:
         """
         Get the most recent results for all health checks.
         
@@ -341,7 +340,7 @@ class HealthMonitor:
         with self._lock:
             return self._component_status.get(component_id)
     
-    def get_all_component_statuses(self) -> Dict[str, ComponentHealthStatus]:
+    def get_all_component_statuses(self) -> dict[str, ComponentHealthStatus]:
         """
         Get the current health status for all components.
         
@@ -454,7 +453,7 @@ def run_health_check(check_id: str) -> HealthCheckResult:
     """Run a specific health check using the global monitor."""
     return get_health_monitor().run_check(check_id)
 
-def get_health_report() -> Dict[str, Any]:
+def get_health_report() -> dict[str, Any]:
     """
     Generate a comprehensive health report for all components.
     

@@ -4,15 +4,17 @@ Episodic memory functionality for the NCA system.
 This module handles episodic memories - memories of specific events, times, and places.
 """
 
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import uuid
-from neuroca.core.memory.interfaces import MemorySystem, MemoryChunk # Import interface
+from datetime import datetime
+from typing import Any, Optional
+
+from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem  # Import interface
+
 
 # Placeholder for MemoryChunk implementation
 class EpisodicMemoryChunk(MemoryChunk[str]): # Assuming content is string for now
     def __init__(self, chunk_id: str, content: str, timestamp: datetime, location: Optional[str],
-                 context: Dict[str, Any], importance: float, last_accessed: datetime, retrieval_count: int):
+                 context: dict[str, Any], importance: float, last_accessed: datetime, retrieval_count: int):
         self._id = chunk_id
         self._content = content
         self._timestamp = timestamp
@@ -42,7 +44,7 @@ class EpisodicMemoryChunk(MemoryChunk[str]): # Assuming content is string for no
     @property
     def last_accessed(self) -> datetime: return self._last_accessed
     @property
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         return {
             "location": self._location,
             "context": self._context,
@@ -64,9 +66,9 @@ class EpisodicMemory(MemorySystem): # Inherit from MemorySystem
     """Class managing the episodic memory system."""
     
     # In-memory storage for simplicity in this example
-    _storage: Dict[str, EpisodicMemoryChunk] = {}
+    _storage: dict[str, EpisodicMemoryChunk] = {}
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None): # Accept config
+    def __init__(self, config: Optional[dict[str, Any]] = None): # Accept config
         """
         Initialize the episodic memory system.
         
@@ -113,7 +115,7 @@ class EpisodicMemory(MemorySystem): # Inherit from MemorySystem
         EpisodicMemory._storage[chunk_id] = chunk
         return chunk_id
 
-    def retrieve(self, query: Any, limit: int = 10, **parameters) -> List[MemoryChunk]: # Implement retrieve
+    def retrieve(self, query: Any, limit: int = 10, **parameters) -> list[MemoryChunk]: # Implement retrieve
         """
         Retrieve episodic memories matching the query.
         Very basic stub implementation: returns most recent memories.
@@ -164,7 +166,7 @@ class EpisodicMemory(MemorySystem): # Inherit from MemorySystem
         """Remove all content from episodic memory."""
         EpisodicMemory._storage.clear()
 
-    def get_statistics(self) -> Dict[str, Any]: # Implement get_statistics
+    def get_statistics(self) -> dict[str, Any]: # Implement get_statistics
         """Get statistics about episodic memory."""
         return {
             "name": self.name,
@@ -172,7 +174,7 @@ class EpisodicMemory(MemorySystem): # Inherit from MemorySystem
             "current_items": len(EpisodicMemory._storage),
         }
 
-    def dump(self) -> List[Dict[str, Any]]: # Implement dump
+    def dump(self) -> list[dict[str, Any]]: # Implement dump
         """Dump all content from episodic memory."""
         # Need proper serialization for MemoryChunk
         return [chunk.metadata for chunk in EpisodicMemory._storage.values()] # Placeholder dump

@@ -37,18 +37,17 @@ Usage:
 import base64
 import hashlib
 import hmac
-import json
 import logging
+import os
 import time
 from datetime import datetime, timedelta
 from enum import Enum
-from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Optional
 
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from neuroca.config.settings import get_settings
 from neuroca.core.models.user import User
@@ -74,7 +73,7 @@ class JWTPayload(BaseModel):
     exp: int  # Expiration time
     iat: int  # Issued at time
     type: TokenType  # Token type
-    roles: List[str] = []  # User roles
+    roles: list[str] = []  # User roles
     session_id: Optional[str] = None  # Session identifier
     jti: str  # JWT ID (unique identifier for this token)
 
@@ -195,7 +194,7 @@ class APIKeyAuth:
 
 def generate_jwt_token(
     user_id: str,
-    roles: List[str],
+    roles: list[str],
     token_type: TokenType = TokenType.ACCESS,
     session_id: Optional[str] = None,
     expires_delta: Optional[timedelta] = None
@@ -396,7 +395,7 @@ async def authenticate_request(
         )
 
 
-def require_roles(required_roles: List[str]):
+def require_roles(required_roles: list[str]):
     """
     Dependency for requiring specific roles to access an endpoint.
     
@@ -439,7 +438,7 @@ def revoke_token(token_id: str, reason: str = "User logout") -> bool:
     return True
 
 
-def refresh_access_token(refresh_token: str) -> Dict[str, str]:
+def refresh_access_token(refresh_token: str) -> dict[str, str]:
     """
     Generate a new access token using a refresh token.
     

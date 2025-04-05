@@ -38,12 +38,22 @@ import enum
 import json
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, root_validator, validator
 from sqlalchemy import (
-    Boolean, Column, DateTime, Enum, Float, ForeignKey, 
-    Integer, JSON, String, Table, Text, UniqueConstraint
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -177,7 +187,7 @@ class LTMEntry(Base):
         # Ensure importance stays within bounds
         return max(0.0, min(1.0, calculated_importance))
     
-    def update_metadata(self, new_metadata: Dict[str, Any]):
+    def update_metadata(self, new_metadata: dict[str, Any]):
         """
         Update the metadata dictionary with new values.
         
@@ -280,9 +290,9 @@ class LTMEntryCreate(BaseModel):
     importance: float = Field(0.5, ge=0.0, le=1.0)
     relevance: float = Field(0.5, ge=0.0, le=1.0)
     confidence: float = Field(1.0, ge=0.0, le=1.0)
-    embedding: Optional[List[float]] = None
-    metadata: Optional[Dict[str, Any]] = None
-    tags: Optional[List[str]] = None
+    embedding: Optional[list[float]] = None
+    metadata: Optional[dict[str, Any]] = None
+    tags: Optional[list[str]] = None
     is_core_memory: bool = False
     
     @validator('content')
@@ -309,8 +319,8 @@ class LTMEntryUpdate(BaseModel):
     importance: Optional[float] = Field(None, ge=0.0, le=1.0)
     relevance: Optional[float] = Field(None, ge=0.0, le=1.0)
     confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
-    embedding: Optional[List[float]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    embedding: Optional[list[float]] = None
+    metadata: Optional[dict[str, Any]] = None
     is_active: Optional[bool] = None
     is_core_memory: Optional[bool] = None
     decay_rate: Optional[float] = Field(None, ge=0.0, le=1.0)
@@ -331,7 +341,7 @@ class LTMRelationshipCreate(BaseModel):
     relationship_type: RelationshipType
     strength: float = Field(0.5, ge=0.0, le=1.0)
     bidirectional: bool = False
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
     
     @root_validator
     def validate_not_self_relationship(cls, values):
@@ -346,7 +356,7 @@ class LTMRelationshipUpdate(BaseModel):
     relationship_type: Optional[RelationshipType] = None
     strength: Optional[float] = Field(None, ge=0.0, le=1.0)
     bidirectional: Optional[bool] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 
 
 class TagCreate(BaseModel):

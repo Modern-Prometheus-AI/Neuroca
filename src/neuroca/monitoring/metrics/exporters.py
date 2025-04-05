@@ -30,7 +30,7 @@ import logging
 import os
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Optional, Union
 
 # Third-party imports
 try:
@@ -99,7 +99,7 @@ class MetricExporter(abc.ABC):
         self.name = name
         self.batch_size = batch_size
         self.flush_interval = flush_interval
-        self.metrics_buffer: List[Dict[str, Any]] = []
+        self.metrics_buffer: list[dict[str, Any]] = []
         self.last_flush_time = time.time()
         self._initialized = False
         
@@ -120,7 +120,7 @@ class MetricExporter(abc.ABC):
         pass
     
     @abc.abstractmethod
-    def _export_batch(self, metrics: List[Dict[str, Any]]) -> None:
+    def _export_batch(self, metrics: list[dict[str, Any]]) -> None:
         """
         Export a batch of metrics to the monitoring system.
         
@@ -137,7 +137,7 @@ class MetricExporter(abc.ABC):
     def export_metric(self, 
                      name: str, 
                      value: Union[int, float], 
-                     labels: Optional[Dict[str, str]] = None,
+                     labels: Optional[dict[str, str]] = None,
                      metric_type: MetricType = MetricType.GAUGE,
                      timestamp: Optional[float] = None) -> None:
         """
@@ -294,7 +294,7 @@ class PrometheusExporter(MetricExporter):
             logger.error(f"Failed to initialize Prometheus exporter: {str(e)}")
             raise ConfigurationError(f"Failed to initialize Prometheus exporter: {str(e)}") from e
     
-    def _get_or_create_metric(self, name: str, metric_type: str, labels: Dict[str, str]) -> Tuple[Any, Tuple[str, ...]]:
+    def _get_or_create_metric(self, name: str, metric_type: str, labels: dict[str, str]) -> tuple[Any, tuple[str, ...]]:
         """
         Get an existing metric object or create a new one.
         
@@ -336,7 +336,7 @@ class PrometheusExporter(MetricExporter):
         
         return self.metrics_dict[metric_key], label_values
     
-    def _export_batch(self, metrics: List[Dict[str, Any]]) -> None:
+    def _export_batch(self, metrics: list[dict[str, Any]]) -> None:
         """
         Export a batch of metrics to Prometheus.
         
@@ -467,7 +467,7 @@ class OpenTelemetryExporter(MetricExporter):
             logger.error(f"Failed to initialize OpenTelemetry exporter: {str(e)}")
             raise ConfigurationError(f"Failed to initialize OpenTelemetry exporter: {str(e)}") from e
     
-    def _get_or_create_metric(self, name: str, metric_type: str, labels: Dict[str, str]) -> Any:
+    def _get_or_create_metric(self, name: str, metric_type: str, labels: dict[str, str]) -> Any:
         """
         Get an existing metric object or create a new one.
         
@@ -516,7 +516,7 @@ class OpenTelemetryExporter(MetricExporter):
         
         return self.metrics_dict[metric_key]
     
-    def _export_batch(self, metrics: List[Dict[str, Any]]) -> None:
+    def _export_batch(self, metrics: list[dict[str, Any]]) -> None:
         """
         Export a batch of metrics to OpenTelemetry.
         
@@ -602,7 +602,7 @@ class LoggingExporter(MetricExporter):
         self._initialized = True
         logger.debug("Initialized logging exporter")
     
-    def _export_batch(self, metrics: List[Dict[str, Any]]) -> None:
+    def _export_batch(self, metrics: list[dict[str, Any]]) -> None:
         """
         Export a batch of metrics by logging them.
         
@@ -614,7 +614,7 @@ class LoggingExporter(MetricExporter):
             value = metric["value"]
             metric_type = metric["type"]
             labels = metric["labels"]
-            timestamp = metric["timestamp"]
+            metric["timestamp"]
             
             # Format the metric as a log message
             labels_str = ", ".join(f"{k}={v}" for k, v in labels.items()) if labels else ""
@@ -666,7 +666,7 @@ class JsonFileExporter(MetricExporter):
                 
             # Test file access
             mode = "a" if append else "w"
-            with open(file_path, mode) as f:
+            with open(file_path, mode):
                 pass
                 
         except Exception as e:
@@ -687,7 +687,7 @@ class JsonFileExporter(MetricExporter):
         self._initialized = True
         logger.debug(f"Initialized JSON file exporter to {self.file_path}")
     
-    def _export_batch(self, metrics: List[Dict[str, Any]]) -> None:
+    def _export_batch(self, metrics: list[dict[str, Any]]) -> None:
         """
         Export a batch of metrics to the JSON file.
         
@@ -702,7 +702,7 @@ class JsonFileExporter(MetricExporter):
             existing_metrics = []
             if self.append and os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
                 try:
-                    with open(self.file_path, "r") as f:
+                    with open(self.file_path) as f:
                         existing_metrics = json.load(f)
                 except json.JSONDecodeError:
                     logger.warning(f"Could not parse existing metrics file {self.file_path}, overwriting")
@@ -732,7 +732,7 @@ class CompositeExporter(MetricExporter):
     
     def __init__(self, 
                 name: str = "composite",
-                exporters: List[MetricExporter] = None,
+                exporters: list[MetricExporter] = None,
                 **kwargs):
         """
         Initialize the composite exporter.
@@ -782,7 +782,7 @@ class CompositeExporter(MetricExporter):
         self._initialized = True
         logger.debug(f"Initialized all {len(self.exporters)} sub-exporters")
     
-    def _export_batch(self, metrics: List[Dict[str, Any]]) -> None:
+    def _export_batch(self, metrics: list[dict[str, Any]]) -> None:
         """
         Export a batch of metrics to all sub-exporters.
         
@@ -818,7 +818,7 @@ class CompositeExporter(MetricExporter):
 
 
 # Factory function to create exporters from configuration
-def create_exporter(config: Dict[str, Any]) -> MetricExporter:
+def create_exporter(config: dict[str, Any]) -> MetricExporter:
     """
     Create a metric exporter from a configuration dictionary.
     

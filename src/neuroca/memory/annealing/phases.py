@@ -32,7 +32,7 @@ import logging
 import math
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -80,7 +80,7 @@ class PhaseConfig:
     decay_factor: float = 0.05
     reinforcement_factor: float = 0.1
     volatility: float = 0.2
-    custom_params: Optional[Dict[str, Any]] = None
+    custom_params: Optional[dict[str, Any]] = None
     
     def __post_init__(self):
         """Validate configuration parameters."""
@@ -256,7 +256,7 @@ class AnnealingPhase(abc.ABC):
         """
         return self.phase_complete or self.phase_progress >= 1.0
     
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """Get the current state of the phase.
         
         Returns:
@@ -762,7 +762,7 @@ class AnnealingPhaseFactory:
             raise InvalidPhaseError(f"Unsupported phase type: {phase_type}")
     
     @staticmethod
-    def create_default_phase_sequence() -> List[Tuple[PhaseType, PhaseConfig]]:
+    def create_default_phase_sequence() -> list[tuple[PhaseType, PhaseConfig]]:
         """Create a default sequence of annealing phases.
         
         This method provides a standard sequence of phases that can be used

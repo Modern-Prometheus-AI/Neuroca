@@ -22,7 +22,6 @@ The formatters in this module are designed to:
 5. Integrate with monitoring systems for alerts and dashboards
 """
 
-import datetime
 import json
 import logging
 import os
@@ -30,9 +29,8 @@ import platform
 import socket
 import sys
 import threading
-import traceback
 import uuid
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 import pythonjsonlogger.jsonlogger as jsonlogger
 
@@ -70,7 +68,7 @@ class BaseFormatter(logging.Formatter):
         self.include_process_info = include_process_info
         self._hostname = socket.gethostname() if include_hostname else None
     
-    def get_common_fields(self, record: logging.LogRecord) -> Dict[str, Any]:
+    def get_common_fields(self, record: logging.LogRecord) -> dict[str, Any]:
         """
         Extract common fields from a log record that should be included in all formats.
         
@@ -145,7 +143,7 @@ class JsonFormatter(BaseFormatter):
         include_process_info: bool = True,
         json_indent: Optional[int] = None,
         json_ensure_ascii: bool = False,
-        extra_fields: Optional[Dict[str, Any]] = None
+        extra_fields: Optional[dict[str, Any]] = None
     ):
         """
         Initialize the JSON formatter.
@@ -363,7 +361,7 @@ class ColoredConsoleFormatter(BaseFormatter):
                 
         return '\n'.join(colored_lines)
     
-    def _format_nca_context(self, context: Dict[str, Any]) -> str:
+    def _format_nca_context(self, context: dict[str, Any]) -> str:
         """
         Format NCA context information for display.
         
@@ -410,9 +408,9 @@ class StructuredFormatter(jsonlogger.JsonFormatter):
         style: str = '%',
         json_indent: Optional[int] = None,
         json_ensure_ascii: bool = False,
-        reserved_attrs: Optional[List[str]] = None,
-        rename_fields: Optional[Dict[str, str]] = None,
-        static_fields: Optional[Dict[str, Any]] = None,
+        reserved_attrs: Optional[list[str]] = None,
+        rename_fields: Optional[dict[str, str]] = None,
+        static_fields: Optional[dict[str, Any]] = None,
         include_hostname: bool = True,
         include_system_info: bool = True,
         include_request_id: bool = True
@@ -478,7 +476,7 @@ class StructuredFormatter(jsonlogger.JsonFormatter):
         # Initialize request ID tracking
         self._request_id_local = threading.local() if include_request_id else None
     
-    def add_fields(self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]) -> None:
+    def add_fields(self, log_record: dict[str, Any], record: logging.LogRecord, message_dict: dict[str, Any]) -> None:
         """
         Add custom fields to the log record before formatting.
         
@@ -513,7 +511,7 @@ class StructuredFormatter(jsonlogger.JsonFormatter):
         if hasattr(record, 'nca_context') and record.nca_context:
             log_record['nca_context'] = record.nca_context
     
-    def _get_system_info(self) -> Dict[str, str]:
+    def _get_system_info(self) -> dict[str, str]:
         """
         Collect system information for inclusion in log records.
         
@@ -616,7 +614,7 @@ class MemoryTierFormatter(StructuredFormatter):
         self.memory_tier = memory_tier
         self.component_name = component_name
     
-    def add_fields(self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]) -> None:
+    def add_fields(self, log_record: dict[str, Any], record: logging.LogRecord, message_dict: dict[str, Any]) -> None:
         """
         Add memory-specific fields to the log record.
         

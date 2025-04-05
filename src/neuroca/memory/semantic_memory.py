@@ -4,15 +4,25 @@ Semantic memory functionality for the NCA system.
 This module handles semantic memories - factual knowledge not tied to specific events.
 """
 
-from typing import Dict, List, Any, Optional, Set
-from datetime import datetime
 import uuid
-from neuroca.core.memory.interfaces import MemorySystem, MemoryChunk # Import interface
+from datetime import datetime
+from typing import Any, Optional
+
+from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem  # Import interface
+
+# Attempt to import Concept and Relationship for type checking in store method
+try:
+    from neuroca.core.memory.semantic_memory import Concept, Relationship
+except ImportError:
+    Concept = None
+    Relationship = None
+    import logging
+    logging.warning("Could not import Concept/Relationship for SemanticMemory.store type checking.")
 
 # Placeholder for MemoryChunk implementation
-class SemanticMemoryChunk(MemoryChunk[Dict[str, Any]]): # Content is facts dict
-    def __init__(self, chunk_id: str, concept: str, facts: Dict[str, Any],
-                 related_concepts: Set[str], confidence: float,
+class SemanticMemoryChunk(MemoryChunk[dict[str, Any]]): # Content is facts dict
+    def __init__(self, chunk_id: str, concept: str, facts: dict[str, Any],
+                 related_concepts: set[str], confidence: float,
                  created_at: datetime, last_updated: datetime, access_count: int):
         self._id = chunk_id
         self._concept = concept
@@ -35,7 +45,7 @@ class SemanticMemoryChunk(MemoryChunk[Dict[str, Any]]): # Content is facts dict
     @property
     def id(self) -> str: return self._id
     @property
-    def content(self) -> Dict[str, Any]: return self._facts # Return facts as content
+    def content(self) -> dict[str, Any]: return self._facts # Return facts as content
     @property
     def activation(self) -> float: return self._activation
     @property
@@ -43,7 +53,7 @@ class SemanticMemoryChunk(MemoryChunk[Dict[str, Any]]): # Content is facts dict
     @property
     def last_accessed(self) -> datetime: return self._last_updated # Use last_updated as proxy
     @property
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         return {
             "concept": self._concept,
             "related_concepts": list(self._related_concepts), # Convert set for serialization
@@ -65,10 +75,10 @@ class SemanticMemory(MemorySystem): # Inherit from MemorySystem
     """Class managing the semantic memory system."""
 
     # In-memory storage for simplicity
-    _storage: Dict[str, SemanticMemoryChunk] = {} # Store by chunk_id
-    _concept_index: Dict[str, str] = {} # Map concept name to chunk_id
+    _storage: dict[str, SemanticMemoryChunk] = {} # Store by chunk_id
+    _concept_index: dict[str, str] = {} # Map concept name to chunk_id
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None): # Accept config
+    def __init__(self, config: Optional[dict[str, Any]] = None): # Accept config
         """
         Initialize the semantic memory system.
         
@@ -101,34 +111,100 @@ class SemanticMemory(MemorySystem): # Inherit from MemorySystem
             str: The ID of the stored/updated memory chunk.
             
         Raises:
-            ValueError: If 'concept' is not in metadata or content is not a dict.
+            ValueError: If 'concept' is not in metadata or content type is unsupported.
         """
-        concept = metadata.get('concept')
-        if not concept:
-            raise ValueError("Metadata must include 'concept' for semantic memory.")
-        if not isinstance(content, dict):
-            raise ValueError("Content for semantic memory must be a dictionary of facts.")
-
         now = datetime.now()
-        chunk_id = SemanticMemory._concept_index.get(concept)
+        concept_name = None
+        facts = {}
+        related_concepts = set(metadata.get('related_concepts', []))
+        confidence = metadata.get('confidence', 1.0)
+        is_relationship = False
 
-        if chunk_id and chunk_id in SemanticMemory._storage:
-            # Update existing chunk
-            chunk = SemanticMemory._storage[chunk_id]
-            chunk._facts.update(content) # Merge facts
-            chunk._related_concepts.update(metadata.get('related_concepts', set()))
-            chunk._confidence = metadata.get('confidence', chunk._confidence) # Update confidence if provided
-            chunk.update_activation() # Mark as updated/accessed
-            return chunk_id
+        if Concept and isinstance(content, Concept):
+            concept_name = content.name
+            facts = content.properties
+            confidence = content.confidence # Use confidence from Concept object
+            # Merge metadata passed in kwargs for flexibility
+            related_concepts.update(metadata.get('related_concepts', set())) 
+            confidence = metadata.get('confidence', confidence) # Allow metadata confidence override
+
+        elif Relationship and isinstance(content, Relationship):
+             # Handle relationship storage - Needs a more robust solution later
+             # For now, store basic info. Use structured ID.
+             is_relationship = True
+             concept_name = f"rel:{content.source_id}-{content.relationship_type.name}-{content.target_id}" # Artificial concept name for logging/debug
+             facts = { # Store relationship details in facts dict
+                 "source": content.source_id,
+                 "target": content.target_id,
+                 "type": content.relationship_type.name,
+                 "attributes": content.attributes
+             }
+             confidence = content.confidence
+             # Use the structured relationship ID for storage key
+             structured_rel_id = f"relationship:{content.source_id}:{content.relationship_type.name}:{content.target_id}"
+
+        elif isinstance(content, dict):
+            # Existing logic: content is facts, concept name from metadata
+            concept_name = metadata.get('concept')
+            if not concept_name:
+                raise ValueError("Metadata must include 'concept' when content is a dict.")
+            facts = content
+            confidence = metadata.get('confidence', 1.0) 
+            related_concepts = set(metadata.get('related_concepts', []))
+
         else:
-            # Create new chunk
-            chunk_id = str(uuid.uuid4())
-            chunk = SemanticMemoryChunk(
-                chunk_id=chunk_id,
-                concept=concept,
-                facts=content,
-                related_concepts=set(metadata.get('related_concepts', [])),
-                confidence=metadata.get('confidence', 1.0),
+            raise ValueError(f"Unsupported content type for SemanticMemory store: {type(content)}. Expecting Concept, Relationship, or dict.")
+
+        if not concept_name:
+             raise ValueError("Could not determine concept name or relationship identifier for storage.")
+
+        # --- Storage Logic ---
+        if is_relationship:
+            # Handle Relationship update/creation using structured ID
+            existing_chunk_id = structured_rel_id
+            if existing_chunk_id in SemanticMemory._storage:
+                # Update existing relationship chunk
+                chunk = SemanticMemory._storage[existing_chunk_id]
+                chunk._facts.update(facts) # Merge/overwrite attributes
+                new_confidence = (chunk._confidence + confidence) / 2 # Average confidence
+                chunk._confidence = new_confidence
+                chunk.update_activation()
+                return existing_chunk_id
+            else:
+                # Create new relationship chunk with the structured ID
+                chunk = SemanticMemoryChunk(
+                    chunk_id=existing_chunk_id, # Use structured ID
+                    concept=concept_name, # Artificial concept name
+                    facts=facts,
+                    related_concepts=related_concepts, # Likely empty for relationships
+                    confidence=confidence,
+                    created_at=now,
+                    last_updated=now,
+                    access_count=0
+                )
+                SemanticMemory._storage[existing_chunk_id] = chunk
+                # Do NOT add relationships to concept_index
+                return existing_chunk_id
+        else:
+            # Handle Concept update/creation using concept_index and UUIDs
+            existing_chunk_id = SemanticMemory._concept_index.get(concept_name)
+            if existing_chunk_id and existing_chunk_id in SemanticMemory._storage:
+                # Update existing concept chunk
+                chunk = SemanticMemory._storage[existing_chunk_id]
+                chunk._facts.update(facts) # Merge facts/properties
+                chunk._related_concepts.update(related_concepts)
+                chunk._confidence = confidence # Use updated confidence
+                chunk.update_activation()
+                return existing_chunk_id # Return the existing storage key (UUID)
+            else:
+                # Create new concept chunk
+                new_chunk_id = str(uuid.uuid4()) # Use UUID for storage key
+                chunk = SemanticMemoryChunk(
+                    chunk_id=new_chunk_id,
+                    concept=concept_name,
+                    facts=facts,
+                    related_concepts=related_concepts,
+                    confidence=confidence,
                 created_at=now,
                 last_updated=now,
                 access_count=0
@@ -137,7 +213,7 @@ class SemanticMemory(MemorySystem): # Inherit from MemorySystem
             SemanticMemory._concept_index[concept] = chunk_id
             return chunk_id
 
-    def retrieve(self, query: Any, limit: int = 10, **parameters) -> List[MemoryChunk]: # Implement retrieve
+    def retrieve(self, query: Any, limit: int = 10, **parameters) -> list[MemoryChunk]: # Implement retrieve
         """
         Retrieve semantic memories matching the query.
         Basic implementation: retrieves by concept name if query is string.
@@ -196,7 +272,7 @@ class SemanticMemory(MemorySystem): # Inherit from MemorySystem
         SemanticMemory._storage.clear()
         SemanticMemory._concept_index.clear()
 
-    def get_statistics(self) -> Dict[str, Any]: # Implement get_statistics
+    def get_statistics(self) -> dict[str, Any]: # Implement get_statistics
         """Get statistics about semantic memory."""
         return {
             "name": self.name,
@@ -205,7 +281,7 @@ class SemanticMemory(MemorySystem): # Inherit from MemorySystem
             "concepts_indexed": len(SemanticMemory._concept_index),
         }
 
-    def dump(self) -> List[Dict[str, Any]]: # Implement dump
+    def dump(self) -> list[dict[str, Any]]: # Implement dump
         """Dump all content from semantic memory."""
         # Need proper serialization for MemoryChunk
         return [chunk.metadata for chunk in SemanticMemory._storage.values()] # Placeholder dump

@@ -15,7 +15,7 @@ Functions:
 import json
 import logging
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ def count_tokens(text: str, model: str = "gpt-4") -> int:
         return int(len(text.split()) * 1.3)
         
 
-def format_prompt(template: str, variables: Dict[str, Any], preserve_unknown: bool = True) -> str:
+def format_prompt(template: str, variables: dict[str, Any], preserve_unknown: bool = True) -> str:
     """
     Format a prompt template with variables.
     
@@ -236,7 +236,7 @@ async def create_embedding(
     text: str, 
     model: str = "sentence-transformers/all-mpnet-base-v2",
     device: str = "cpu"
-) -> List[float]:
+) -> list[float]:
     """
     Create an embedding for text using a local model.
     

@@ -32,24 +32,24 @@ Usage:
 
 import importlib
 import logging
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Optional
 
 # Import memory base classes and exceptions
 from neuroca.core.memory.interfaces import MemorySystem  # Corrected import path
 from neuroca.memory.exceptions import (
     MemoryConfigurationError,
     MemoryCreationError,
+    MemoryInitializationError,
     MemoryTypeNotFoundError,
-    MemoryInitializationError
 )
 
 # Import specific memory implementations
 # These will be dynamically loaded, but we include them here for type checking
 try:
-    from neuroca.memory.working import WorkingMemory
     from neuroca.memory.episodic import EpisodicMemory
-    from neuroca.memory.semantic import SemanticMemory
     from neuroca.memory.procedural import ProceduralMemory
+    from neuroca.memory.semantic import SemanticMemory
+    from neuroca.memory.working import WorkingMemory
     HAS_ALL_MEMORY_TYPES = True
 except ImportError:
     HAS_ALL_MEMORY_TYPES = False
@@ -83,7 +83,7 @@ class MemoryFactory:
         "sensory": "neuroca.memory.sensory.SensoryMemory",
     }
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize the memory factory with optional configuration.
         
@@ -94,7 +94,7 @@ class MemoryFactory:
         Raises:
             MemoryConfigurationError: If the provided configuration is invalid.
         """
-        self._registry: Dict[str, Type[MemorySystem]] = {}
+        self._registry: dict[str, type[MemorySystem]] = {}
         self._config = config or {}
         self._default_params = self._initialize_default_params()
         
@@ -104,7 +104,7 @@ class MemoryFactory:
             
         logger.debug("MemoryFactory initialized with config: %s", self._config)
     
-    def _initialize_default_params(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_default_params(self) -> dict[str, dict[str, Any]]:
         """
         Initialize default parameters for each memory type.
         
@@ -157,7 +157,7 @@ class MemoryFactory:
         except NameError:
             logger.debug("Some memory types not available for pre-registration")
     
-    def register_memory_type(self, memory_type: str, memory_class: Type[MemorySystem]) -> None:
+    def register_memory_type(self, memory_type: str, memory_class: type[MemorySystem]) -> None:
         """
         Register a new memory type with the factory.
         
@@ -178,7 +178,7 @@ class MemoryFactory:
         self._registry[memory_type] = memory_class
         logger.debug("Registered memory type: %s", memory_type)
     
-    def _load_memory_class(self, memory_type: str) -> Type[MemorySystem]:
+    def _load_memory_class(self, memory_type: str) -> type[MemorySystem]:
         """
         Dynamically load a memory class based on its type.
         
@@ -259,14 +259,14 @@ class MemoryFactory:
             logger.debug("Creating %s memory with params: %s", memory_type, default_params)
             return memory_class(**default_params)
             
-        except (MemoryTypeNotFoundError, MemoryInitializationError) as e:
+        except (MemoryTypeNotFoundError, MemoryInitializationError):
             # Re-raise these specific exceptions
             raise
         except Exception as e:
             logger.exception("Error creating memory of type %s: %s", memory_type, str(e))
             raise MemoryCreationError(f"Failed to create {memory_type} memory: {str(e)}")
     
-    def create_memory_system(self, config: Dict[str, Dict[str, Any]]) -> Dict[str, MemorySystem]:
+    def create_memory_system(self, config: dict[str, dict[str, Any]]) -> dict[str, MemorySystem]:
         """
         Create a complete memory system with multiple memory components.
         
@@ -312,7 +312,7 @@ class MemoryFactory:
         """
         return list(self._MEMORY_TYPE_MAPPING.keys())
     
-    def get_memory_type_info(self, memory_type: str) -> Dict[str, Any]:
+    def get_memory_type_info(self, memory_type: str) -> dict[str, Any]:
         """
         Get information about a specific memory type, including its default parameters.
         

@@ -28,11 +28,10 @@ Usage:
 """
 
 import enum
-import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -83,11 +82,11 @@ class MemoryEventMetadata(BaseModel):
         default=None, 
         description="Source of the memory (e.g., 'user_interaction', 'system_inference')"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, 
         description="Tags associated with the memory"
     )
-    context_ids: List[str] = Field(
+    context_ids: list[str] = Field(
         default_factory=list, 
         description="IDs of related context elements"
     )
@@ -106,8 +105,8 @@ class MemoryEvent(BaseEvent):
     memory_id: str
     memory_type: MemoryType
     operation: MemoryOperation
-    content: Optional[Dict[str, Any]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    content: Optional[dict[str, Any]] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     # Default event type for memory events
     event_type: EventType = field(default=EventType.MEMORY)
@@ -168,7 +167,7 @@ class MemoryUpdatedEvent(MemoryEvent):
     """Event emitted when a memory is updated."""
     operation: MemoryOperation = field(default=MemoryOperation.UPDATE)
     priority: EventPriority = field(default=EventPriority.NORMAL)
-    previous_content: Optional[Dict[str, Any]] = None
+    previous_content: Optional[dict[str, Any]] = None
     
     def __post_init__(self):
         """Validate the updated event."""
@@ -279,7 +278,7 @@ class MemoryAssociationEvent(MemoryEvent):
     """Event emitted when memories are associated with each other."""
     operation: MemoryOperation = field(default=MemoryOperation.ASSOCIATE)
     priority: EventPriority = field(default=EventPriority.NORMAL)
-    associated_memory_ids: List[str] = field(default_factory=list)
+    associated_memory_ids: list[str] = field(default_factory=list)
     association_type: str = "generic"  # Type of association (e.g., "temporal", "semantic")
     association_strength: float = 0.5  # Strength of the association (0-1)
     
@@ -309,8 +308,8 @@ class MemoryEventFactory:
         event_type: str,
         memory_id: str,
         memory_type: MemoryType,
-        content: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        content: Optional[dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         **kwargs
     ) -> MemoryEvent:
         """

@@ -25,8 +25,8 @@ Usage:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from contextlib import contextmanager
+from typing import Any, Generic, Optional, TypeVar
 
 # Type variable for generic repository implementation
 T = TypeVar('T')
@@ -56,7 +56,7 @@ class DuplicateEntityError(RepositoryError):
 
 class ValidationError(RepositoryError):
     """Exception raised when entity validation fails."""
-    def __init__(self, entity_type: str, errors: Dict[str, str]):
+    def __init__(self, entity_type: str, errors: dict[str, str]):
         self.entity_type = entity_type
         self.errors = errors
         message = f"Validation failed for {entity_type}: {errors}"
@@ -109,7 +109,7 @@ class BaseRepository(Generic[T], ABC):
         pass
     
     @abstractmethod
-    async def get_all(self, filters: Optional[Dict[str, Any]] = None) -> List[T]:
+    async def get_all(self, filters: Optional[dict[str, Any]] = None) -> list[T]:
         """
         Retrieve all entities, optionally filtered.
         
@@ -214,7 +214,7 @@ class RepositoryFactory:
     ensuring that only one instance of each repository type exists.
     """
     
-    _repositories: Dict[str, BaseRepository] = {}
+    _repositories: dict[str, BaseRepository] = {}
     
     @classmethod
     def register_repository(cls, name: str, repository: BaseRepository) -> None:
@@ -250,7 +250,7 @@ class RepositoryFactory:
         return cls._repositories[name]
     
     @classmethod
-    def list_repositories(cls) -> List[str]:
+    def list_repositories(cls) -> list[str]:
         """
         List all registered repository names.
         

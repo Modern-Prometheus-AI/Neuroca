@@ -5,10 +5,9 @@ This module provides utilities for the memory consolidation process,
 complementing the functionality in memory_consolidation.py.
 """
 
-from typing import Dict, List, Any, Optional, Callable
-from datetime import datetime, timedelta
-import json
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Callable, Optional
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 class ConsolidationTask:
     """Represents a consolidation task to be scheduled and executed."""
     
-    def __init__(self, task_id: str, memory_ids: List[str], 
+    def __init__(self, task_id: str, memory_ids: list[str], 
                  task_type: str = "standard", 
                  priority: int = 1,
                  scheduled_time: Optional[datetime] = None):
@@ -36,11 +35,11 @@ class ConsolidationTask:
         self.priority = priority
         self.scheduled_time = scheduled_time or datetime.now()
         self.status = "pending"
-        self.result: Optional[Dict[str, Any]] = None
+        self.result: Optional[dict[str, Any]] = None
         self.created_at = datetime.now()
         self.executed_at: Optional[datetime] = None
         
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the task to a dictionary representation."""
         return {
             "task_id": self.task_id,
@@ -55,7 +54,7 @@ class ConsolidationTask:
         }
         
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ConsolidationTask':
+    def from_dict(cls, data: dict[str, Any]) -> 'ConsolidationTask':
         """Create a consolidation task from a dictionary."""
         task = cls(
             task_id=data["task_id"],
@@ -77,8 +76,8 @@ class ConsolidationScheduler:
     
     def __init__(self):
         """Initialize the consolidation scheduler."""
-        self.tasks: Dict[str, ConsolidationTask] = {}
-        self.callbacks: Dict[str, Callable] = {}
+        self.tasks: dict[str, ConsolidationTask] = {}
+        self.callbacks: dict[str, Callable] = {}
         
     def schedule_task(self, task: ConsolidationTask) -> str:
         """
@@ -94,7 +93,7 @@ class ConsolidationScheduler:
         logger.info(f"Scheduled consolidation task {task.task_id} for {task.scheduled_time}")
         return task.task_id
         
-    def get_pending_tasks(self, current_time: Optional[datetime] = None) -> List[ConsolidationTask]:
+    def get_pending_tasks(self, current_time: Optional[datetime] = None) -> list[ConsolidationTask]:
         """
         Get all pending tasks that are due for execution.
         
@@ -163,7 +162,7 @@ class ConsolidationScheduler:
 # Create a singleton instance
 scheduler = ConsolidationScheduler()
 
-def schedule_consolidation(memory_ids: List[str], delay_minutes: int = 0, 
+def schedule_consolidation(memory_ids: list[str], delay_minutes: int = 0, 
                           task_type: str = "standard", priority: int = 1) -> str:
     """
     Schedule a memory consolidation task.

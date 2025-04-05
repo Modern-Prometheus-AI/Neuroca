@@ -29,23 +29,20 @@ Examples:
     $ neuroca db downgrade --revision=ae1027a6acf
 """
 
-import os
-import sys
 import logging
-import click
+import sys
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
+import click
 from alembic import command
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
-from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
-from sqlalchemy.exc import SQLAlchemyError, OperationalError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
-from neuroca.config import settings
-from neuroca.db.connection import get_db_url
 from neuroca.core.exceptions import DatabaseError
+from neuroca.db.connection import get_db_url
 
 # Configure logger
 logger = logging.getLogger(__name__)

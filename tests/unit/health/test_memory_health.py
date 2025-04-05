@@ -11,7 +11,8 @@ from unittest.mock import MagicMock, patch
 
 from neuroca.core.memory.working_memory import WorkingMemory
 from neuroca.core.memory.episodic_memory import EpisodicMemory
-from neuroca.core.memory.semantic_memory import SemanticMemory, Concept, Relationship
+# Import the concrete implementation from the correct location
+from neuroca.memory.semantic_memory import SemanticMemory 
 from neuroca.core.memory.factory import create_memory_system
 from neuroca.core.memory.health import (
     get_memory_health_monitor, register_memory_system, record_memory_operation,
@@ -284,4 +285,4 @@ def test_memory_health_monitor_singleton():
     health = register_memory_system(working, "working", "singleton_test")
     
     # Monitor should have the registered system
-    assert "singleton_test" in monitor1._memory_systems 
+    assert "singleton_test" in monitor1._memory_systems

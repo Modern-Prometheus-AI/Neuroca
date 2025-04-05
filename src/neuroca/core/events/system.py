@@ -27,12 +27,11 @@ Usage:
 import enum
 import logging
 import threading
-import time
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Set, Type, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar, Union
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -83,7 +82,7 @@ class SystemEvent(ABC):
     category: SystemEventCategory = SystemEventCategory.CUSTOM
     
     # Additional metadata for the event
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     @abstractmethod
     def get_description(self) -> str:
@@ -100,7 +99,7 @@ class SystemStartupEvent(SystemEvent):
     """Event fired when the system is starting up."""
     startup_time: datetime = field(default_factory=datetime.now)
     startup_mode: str = "normal"  # normal, recovery, maintenance, etc.
-    components_loaded: List[str] = field(default_factory=list)
+    components_loaded: list[str] = field(default_factory=list)
     
     def __post_init__(self):
         self.category = SystemEventCategory.LIFECYCLE
@@ -209,7 +208,7 @@ class EventHandler:
     def __init__(
         self,
         callback: Callable[[SystemEvent], None],
-        event_type: Type[SystemEvent],
+        event_type: type[SystemEvent],
         handler_id: Optional[str] = None,
         filter_fn: Optional[Callable[[SystemEvent], bool]] = None
     ):
@@ -273,7 +272,7 @@ class SystemEventBus:
     def __new__(cls):
         with cls._lock:
             if cls._instance is None:
-                cls._instance = super(SystemEventBus, cls).__new__(cls)
+                cls._instance = super().__new__(cls)
                 cls._instance._initialized = False
         return cls._instance
     
@@ -281,9 +280,9 @@ class SystemEventBus:
         if self._initialized:
             return
             
-        self._handlers: Dict[Type[SystemEvent], List[EventHandler]] = {}
-        self._global_handlers: List[EventHandler] = []
-        self._event_history: List[SystemEvent] = []
+        self._handlers: dict[type[SystemEvent], list[EventHandler]] = {}
+        self._global_handlers: list[EventHandler] = []
+        self._event_history: list[SystemEvent] = []
         self._max_history_size = 1000  # Default history size
         self._history_enabled = True
         self._lock = threading.RLock()
@@ -303,7 +302,7 @@ class SystemEventBus:
     
     def subscribe(
         self,
-        event_type: Type[T],
+        event_type: type[T],
         callback: Callable[[T], None],
         handler_id: Optional[str] = None,
         filter_fn: Optional[Callable[[T], bool]] = None
@@ -426,7 +425,7 @@ class SystemEventBus:
         
         logger.debug(f"Published event: {event}")
     
-    def get_history(self, limit: Optional[int] = None) -> List[SystemEvent]:
+    def get_history(self, limit: Optional[int] = None) -> list[SystemEvent]:
         """
         Get the event history.
         
@@ -496,9 +495,9 @@ class EventMonitor:
             event_bus: Event bus to monitor (uses singleton if None)
         """
         self.event_bus = event_bus or SystemEventBus.get_instance()
-        self.event_counts: Dict[Type[SystemEvent], int] = {}
-        self.category_counts: Dict[SystemEventCategory, int] = {}
-        self.priority_counts: Dict[SystemEventPriority, int] = {}
+        self.event_counts: dict[type[SystemEvent], int] = {}
+        self.category_counts: dict[SystemEventCategory, int] = {}
+        self.priority_counts: dict[SystemEventPriority, int] = {}
         self.start_time = datetime.now()
         self.handler_id: Optional[str] = None
         self._lock = threading.RLock()
@@ -538,7 +537,7 @@ class EventMonitor:
             # Update priority counts
             self.priority_counts[event.priority] = self.priority_counts.get(event.priority, 0) + 1
     
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get monitoring statistics.
         
@@ -575,7 +574,7 @@ def create_error_event(
     error: Exception,
     component: Optional[str] = None,
     recoverable: bool = True,
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 ) -> SystemErrorEvent:
     """
     Create a system error event from an exception.
@@ -607,7 +606,7 @@ def publish_error(
     error: Exception,
     component: Optional[str] = None,
     recoverable: bool = True,
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 ) -> None:
     """
     Create and publish a system error event from an exception.
@@ -642,7 +641,7 @@ def filter_by_priority(min_priority: SystemEventPriority, max_priority: Optional
     return priority_filter
 
 
-def filter_by_category(categories: Union[SystemEventCategory, List[SystemEventCategory]]):
+def filter_by_category(categories: Union[SystemEventCategory, list[SystemEventCategory]]):
     """
     Create a filter function for events based on category.
     

@@ -2,14 +2,13 @@
 CLI commands for managing the NCA memory system.
 """
 
-import typer
 import logging
-import time
 from typing import Annotated
 
+import typer
 from rich.console import Console
-from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 # Assuming logger and console are initialized elsewhere or passed/imported
 # For now, initialize locally for standalone execution possibility (though intended to be part of main app)
@@ -35,10 +34,13 @@ def memory_list(
 
     logger.info(f"Listing {tier} memory contents...")
     
-    # TODO: Connect to the actual memory subsystems
-    # For now, we'll just show a sample output
+    # NOTE: Implement connection to the actual MemoryManager here.
+    # This should involve getting the MemoryManager instance (e.g., via context or factory)
+    # and calling its retrieval methods based on the 'tier' argument.
+    # Example: memory_manager = get_memory_manager()
+    # Example: items = memory_manager.retrieve_all(memory_type=tier)
     
-    table = Table(title=f"{tier.title()} Memory Contents")
+    table = Table(title=f"{tier.title()} Memory Contents (Sample Data)")
     table.add_column("ID", style="cyan")
     table.add_column("Content", style="green")
     table.add_column("Created", style="yellow")
@@ -46,7 +48,8 @@ def memory_list(
     table.add_column("Access Count", style="magenta")
     table.add_column("Status", style="blue")
     
-    # Sample data - TODO: Replace with actual data retrieval
+    # NOTE: Replace sample data below with actual data retrieved from MemoryManager.
+    # The loop should iterate through the 'items' fetched above.
     if tier in ['working', 'all']:
         table.add_row("wm-001", "Placeholder: Current task context", "2024-01-01 10:00", 
                      "2024-01-01 10:05", "1", "Active")
@@ -87,13 +90,17 @@ def memory_clear(
 
     logger.info(f"Clearing {tier} memory...")
     
-    # TODO: Connect to the actual memory subsystems
+    # NOTE: Implement connection to the actual MemoryManager here.
+    # This should involve getting the MemoryManager instance and calling its clear method.
+    # Example: memory_manager = get_memory_manager()
+    # Example: success = memory_manager.clear(memory_type=tier)
+    
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console, transient=True # transient hides progress on completion
     ) as progress:
-        task = progress.add_task(f"Clearing {tier} memory...", total=None)
+        progress.add_task(f"Clearing {tier} memory...", total=None)
         # Simulate clearing operation
         import time
         time.sleep(1.5)

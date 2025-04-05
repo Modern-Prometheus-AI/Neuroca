@@ -33,8 +33,7 @@ import json
 import logging
 import os
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,7 +45,6 @@ from neuroca.config import settings
 from neuroca.core.exceptions import AnalysisError, ConfigurationError
 from neuroca.memory.models import MemoryTier
 from neuroca.monitoring.metrics import MetricsCollector
-from neuroca.tools.utils.visualization import create_heatmap, create_line_chart
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -106,7 +104,7 @@ class MemoryAnalyzer:
         # Load configuration
         try:
             if config_path:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     self.config = json.load(f)
             else:
                 self.config = settings.MEMORY_ANALYZER_CONFIG
@@ -123,7 +121,7 @@ class MemoryAnalyzer:
         
         logger.debug("Memory Analyzer initialized successfully")
     
-    def get_memory_snapshot(self, tier: Optional[MemoryTier] = None) -> Dict[str, Any]:
+    def get_memory_snapshot(self, tier: Optional[MemoryTier] = None) -> dict[str, Any]:
         """
         Get current memory usage snapshot across all or specific memory tiers.
         
@@ -166,7 +164,7 @@ class MemoryAnalyzer:
         tier: Optional[MemoryTier] = None,
         custom_start: Optional[datetime.datetime] = None,
         custom_end: Optional[datetime.datetime] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analyze memory access patterns over a specified time window.
         
@@ -223,7 +221,7 @@ class MemoryAnalyzer:
             logger.error(error_msg, exc_info=True)
             raise AnalysisError(error_msg)
     
-    def _process_access_patterns(self, access_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_access_patterns(self, access_data: dict[str, Any]) -> dict[str, Any]:
         """
         Process raw access data to extract meaningful patterns.
         
@@ -274,10 +272,10 @@ class MemoryAnalyzer:
         self,
         time_window: str = "24h",
         tier: Optional[MemoryTier] = None,
-        metrics: Optional[List[MemoryMetricType]] = None,
+        metrics: Optional[list[MemoryMetricType]] = None,
         custom_start: Optional[datetime.datetime] = None,
         custom_end: Optional[datetime.datetime] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analyze memory performance metrics over a specified time window.
         
@@ -333,7 +331,7 @@ class MemoryAnalyzer:
             logger.error(error_msg, exc_info=True)
             raise AnalysisError(error_msg)
     
-    def _analyze_performance_metrics(self, perf_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_performance_metrics(self, perf_data: dict[str, Any]) -> dict[str, Any]:
         """
         Analyze raw performance metrics to extract insights.
         
@@ -406,7 +404,7 @@ class MemoryAnalyzer:
         
         return analysis
     
-    def identify_bottlenecks(self, threshold: float = 0.8) -> Dict[str, Any]:
+    def identify_bottlenecks(self, threshold: float = 0.8) -> dict[str, Any]:
         """
         Identify potential bottlenecks in the memory system.
         
@@ -454,10 +452,10 @@ class MemoryAnalyzer:
     
     def _identify_bottleneck_indicators(
         self, 
-        snapshot: Dict[str, Any], 
-        perf_data: Dict[str, Any], 
+        snapshot: dict[str, Any], 
+        perf_data: dict[str, Any], 
         threshold: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Identify bottleneck indicators from memory snapshot and performance data.
         
@@ -522,7 +520,7 @@ class MemoryAnalyzer:
         
         return bottlenecks
     
-    def generate_recommendations(self) -> Dict[str, Any]:
+    def generate_recommendations(self) -> dict[str, Any]:
         """
         Generate optimization recommendations based on memory analysis.
         
@@ -566,10 +564,10 @@ class MemoryAnalyzer:
     
     def _generate_optimization_recommendations(
         self,
-        bottlenecks: Dict[str, Any],
-        perf_data: Dict[str, Any],
-        access_patterns: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        bottlenecks: dict[str, Any],
+        perf_data: dict[str, Any],
+        access_patterns: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """
         Generate specific optimization recommendations based on analysis results.
         
@@ -585,7 +583,7 @@ class MemoryAnalyzer:
         
         # Process capacity bottlenecks
         if "bottlenecks" in bottlenecks:
-            for bottleneck_id, bottleneck in bottlenecks["bottlenecks"].items():
+            for _bottleneck_id, bottleneck in bottlenecks["bottlenecks"].items():
                 if bottleneck["type"] == "capacity":
                     recommendations.append({
                         "id": f"capacity_{bottleneck['tier']}",
@@ -815,7 +813,7 @@ class MemoryAnalyzer:
             if "patterns" in access_patterns and "hourly_distribution" in access_patterns["patterns"]:
                 hourly = access_patterns["patterns"]["hourly_distribution"]
                 if hourly:
-                    hours = sorted(list(hourly.keys()))
+                    hours = sorted(hourly.keys())
                     counts = [hourly[hour] for hour in hours]
                     axs[0, 0].bar(hours, counts)
                     axs[0, 0].set_title("Hourly Access Distribution")
@@ -827,7 +825,7 @@ class MemoryAnalyzer:
             if "patterns" in access_patterns and "daily_distribution" in access_patterns["patterns"]:
                 daily = access_patterns["patterns"]["daily_distribution"]
                 if daily:
-                    days = sorted(list(daily.keys()))
+                    days = sorted(daily.keys())
                     counts = [daily[day] for day in days]
                     day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
                     day_labels = [day_names[int(day)] for day in days]
@@ -969,7 +967,7 @@ class MemoryAnalyzer:
             logger.error(error_msg, exc_info=True)
             raise AnalysisError(error_msg)
     
-    def _generate_html_report(self, report_data: Dict[str, Any]) -> str:
+    def _generate_html_report(self, report_data: dict[str, Any]) -> str:
         """
         Generate HTML content for the analysis report.
         

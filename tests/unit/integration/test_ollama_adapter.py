@@ -20,8 +20,11 @@ import aiohttp
 from aiohttp import ClientResponse, ClientSession
 
 from neuroca.integration.adapters.ollama import OllamaAdapter, OllamaError
+# Corrected import: Use BaseAdapter instead of LLMAdapter (which doesn't exist in base.py)
+# Also import other necessary items from base
+from neuroca.integration.adapters.base import BaseAdapter, AdapterError, LLMResponse, ResponseType 
 from neuroca.integration.models import (
-    LLMRequest, LLMResponse, TokenUsage, ResponseType
+    LLMRequest, TokenUsage # LLMResponse is imported above now
 )
 
 

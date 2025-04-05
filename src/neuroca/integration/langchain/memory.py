@@ -23,22 +23,22 @@ Usage:
 """
 
 import logging
-import json
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, Union, Set
 from datetime import datetime
+from typing import Any, Optional
 
 # LangChain imports
 from langchain.memory.chat_memory import BaseChatMemory
-from langchain.schema import BaseMessage, HumanMessage, AIMessage
 from langchain.memory.utils import get_prompt_input_key
+from langchain.schema import AIMessage, HumanMessage
+
+from neuroca.core.exceptions import MemoryCapacityError
+from neuroca.core.models import MemoryEntry, MemoryQuery, MemoryType
+from neuroca.memory.episodic_memory import EpisodicMemory
+from neuroca.memory.semantic_memory import SemanticMemory
 
 # NCA imports
 from neuroca.memory.working_memory import WorkingMemory
-from neuroca.memory.episodic_memory import EpisodicMemory
-from neuroca.memory.semantic_memory import SemanticMemory
-from neuroca.core.models import MemoryEntry, MemoryQuery, MemoryType
-from neuroca.core.exceptions import MemoryAccessError, MemoryCapacityError
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -97,8 +97,8 @@ class NCAMemory(BaseChatMemory):
         logger.debug(f"Initialized NCAMemory with ID: {self.memory_id}")
     
     def _get_input_output(
-        self, inputs: Dict[str, Any], outputs: Dict[str, str]
-    ) -> Tuple[str, str]:
+        self, inputs: dict[str, Any], outputs: dict[str, str]
+    ) -> tuple[str, str]:
         """
         Extract the input and output from the chain's inputs and outputs.
         
@@ -199,7 +199,7 @@ class WorkingMemoryAdapter(NCAMemory):
         self.working_memory = WorkingMemory(capacity=capacity, decay_rate=decay_rate)
         logger.debug(f"Initialized WorkingMemoryAdapter with capacity: {capacity}")
     
-    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
+    def save_context(self, inputs: dict[str, Any], outputs: dict[str, str]) -> None:
         """
         Save the context of the conversation to working memory.
         
@@ -245,7 +245,7 @@ class WorkingMemoryAdapter(NCAMemory):
             logger.error(f"Error saving context to working memory: {e}")
             raise
     
-    def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def load_memory_variables(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """
         Load memory variables from working memory.
         
@@ -344,7 +344,7 @@ class EpisodicMemoryAdapter(NCAMemory):
         self.episodic_memory = EpisodicMemory()
         logger.debug(f"Initialized EpisodicMemoryAdapter with threshold: {retrieval_threshold}")
     
-    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
+    def save_context(self, inputs: dict[str, Any], outputs: dict[str, str]) -> None:
         """
         Save the context of the conversation to episodic memory.
         
@@ -377,7 +377,7 @@ class EpisodicMemoryAdapter(NCAMemory):
             logger.error(f"Error saving context to episodic memory: {e}")
             raise
     
-    def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def load_memory_variables(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """
         Load memory variables from episodic memory based on relevance to current input.
         
@@ -500,10 +500,10 @@ class SemanticMemoryAdapter(NCAMemory):
         self.retrieval_threshold = retrieval_threshold
         self.max_tokens = max_tokens
         self.semantic_memory = SemanticMemory()
-        self._important_concepts: Set[str] = set()
+        self._important_concepts: set[str] = set()
         logger.debug(f"Initialized SemanticMemoryAdapter with threshold: {retrieval_threshold}")
     
-    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
+    def save_context(self, inputs: dict[str, Any], outputs: dict[str, str]) -> None:
         """
         Extract and save important concepts and knowledge to semantic memory.
         
@@ -573,7 +573,7 @@ class SemanticMemoryAdapter(NCAMemory):
                     self._important_concepts.add(concept)
                     logger.debug(f"Added concept to tracking: {concept}")
     
-    def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def load_memory_variables(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """
         Load relevant knowledge from semantic memory based on the current input.
         

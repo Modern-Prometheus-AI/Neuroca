@@ -25,30 +25,27 @@ Usage:
     memories = await repo.search_memories(query_embedding, limit=5)
 """
 
-import asyncio
 import datetime
-import json
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
-import numpy as np
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
-from pymongo.errors import DuplicateKeyError, PyMongoError
+from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import ValidationError
+from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from neuroca.config.settings import get_settings
 from neuroca.core.exceptions import (
     DatabaseConnectionError,
     MemoryNotFoundError,
     MemoryStorageError,
-    RepositoryError
+    RepositoryError,
 )
 from neuroca.core.models.memory import (
     LTMMemory,
-    MemoryType,
+    MemoryImportance,
     MemoryRetrievalMetadata,
-    MemoryImportance
+    MemoryType,
 )
 from neuroca.core.utils.embedding import cosine_similarity, normalize_embedding
 from neuroca.core.utils.time import get_current_timestamp
@@ -146,7 +143,7 @@ class LTMRepository:
         if not self._connected:
             await self.connect()
 
-    async def store_memory(self, memory: Union[LTMMemory, Dict[str, Any]]) -> str:
+    async def store_memory(self, memory: Union[LTMMemory, dict[str, Any]]) -> str:
         """
         Store a new memory in the long-term memory database.
         
@@ -242,7 +239,7 @@ class LTMRepository:
             logger.error(f"Error retrieving memory {memory_id}: {str(e)}")
             raise RepositoryError(f"Error retrieving memory {memory_id}: {str(e)}")
 
-    async def update_memory(self, memory_id: str, updates: Dict[str, Any]) -> bool:
+    async def update_memory(self, memory_id: str, updates: dict[str, Any]) -> bool:
         """
         Update an existing memory.
         
@@ -326,15 +323,15 @@ class LTMRepository:
 
     async def search_memories(
         self, 
-        query_embedding: Optional[List[float]] = None,
+        query_embedding: Optional[list[float]] = None,
         query_text: Optional[str] = None,
         memory_type: Optional[MemoryType] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         min_importance: Optional[MemoryImportance] = None,
-        time_range: Optional[Tuple[datetime.datetime, datetime.datetime]] = None,
+        time_range: Optional[tuple[datetime.datetime, datetime.datetime]] = None,
         limit: int = 10,
         threshold: float = 0.7
-    ) -> List[Tuple[LTMMemory, MemoryRetrievalMetadata]]:
+    ) -> list[tuple[LTMMemory, MemoryRetrievalMetadata]]:
         """
         Search for memories based on various criteria.
         
@@ -446,7 +443,7 @@ class LTMRepository:
 
     async def consolidate_memories(
         self, 
-        source_memories: List[str], 
+        source_memories: list[str], 
         consolidated_memory: LTMMemory
     ) -> str:
         """
@@ -509,7 +506,7 @@ class LTMRepository:
         end_time: datetime.datetime,
         memory_type: Optional[MemoryType] = None,
         limit: int = 100
-    ) -> List[LTMMemory]:
+    ) -> list[LTMMemory]:
         """
         Retrieve memories created within a specific time range.
         
@@ -559,7 +556,7 @@ class LTMRepository:
         min_importance: MemoryImportance,
         memory_type: Optional[MemoryType] = None,
         limit: int = 50
-    ) -> List[LTMMemory]:
+    ) -> list[LTMMemory]:
         """
         Retrieve memories with importance at or above the specified level.
         
@@ -604,7 +601,7 @@ class LTMRepository:
         access_threshold_days: int = 30,
         importance_threshold: MemoryImportance = MemoryImportance.MEDIUM,
         dry_run: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Apply forgetting mechanism to remove or decay old, unimportant memories.
         
@@ -697,7 +694,7 @@ class LTMRepository:
             logger.error(f"Error applying forgetting mechanism: {str(e)}")
             raise RepositoryError(f"Error applying forgetting mechanism: {str(e)}")
 
-    async def get_memory_stats(self) -> Dict[str, Any]:
+    async def get_memory_stats(self) -> dict[str, Any]:
         """
         Get statistics about the memories in the database.
         

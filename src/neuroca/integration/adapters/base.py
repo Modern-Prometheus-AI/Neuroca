@@ -41,7 +41,7 @@ import json
 import logging
 import time
 import typing
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union, ClassVar
+from typing import Any, ClassVar, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -143,8 +143,8 @@ class AdapterConfig:
     top_k: Optional[int] = None
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
-    stop_sequences: Optional[List[str]] = None
-    extra_params: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    stop_sequences: Optional[list[str]] = None
+    extra_params: dict[str, Any] = dataclasses.field(default_factory=dict)
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -166,7 +166,7 @@ class AdapterConfig:
         if self.retry_delay < 0:
             raise ConfigurationError("retry_delay cannot be negative")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary, excluding sensitive information."""
         config_dict = dataclasses.asdict(self)
         # Remove sensitive information
@@ -196,13 +196,13 @@ class LLMResponse:
     content: Any
     response_type: ResponseType
     model_name: str
-    usage: Dict[str, int]
+    usage: dict[str, int]
     raw_response: Optional[Any] = None
-    metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    metadata: dict[str, Any] = dataclasses.field(default_factory=dict)
     finish_reason: Optional[str] = None
     created_at: float = dataclasses.field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert response to dictionary for serialization."""
         result = dataclasses.asdict(self)
         result['response_type'] = self.response_type.value
@@ -217,7 +217,7 @@ class LLMResponse:
         return result
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'LLMResponse':
+    def from_dict(cls, data: dict[str, Any]) -> 'LLMResponse':
         """Create an LLMResponse instance from a dictionary."""
         if 'response_type' in data and isinstance(data['response_type'], str):
             data['response_type'] = ResponseType(data['response_type'])
@@ -290,7 +290,7 @@ class BaseAdapter(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def generate_chat(self, messages: List[Dict[str, str]], **kwargs) -> LLMResponse:
+    async def generate_chat(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
         """
         Generate a response from the LLM based on a conversation history.
         
@@ -307,7 +307,7 @@ class BaseAdapter(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def generate_embedding(self, text: Union[str, List[str]], **kwargs) -> LLMResponse:
+    async def generate_embedding(self, text: Union[str, list[str]], **kwargs) -> LLMResponse:
         """
         Generate embeddings for the provided text(s).
         
@@ -326,8 +326,8 @@ class BaseAdapter(abc.ABC):
     @abc.abstractmethod
     async def generate_with_functions(
         self, 
-        messages: List[Dict[str, str]], 
-        functions: List[Dict[str, Any]], 
+        messages: list[dict[str, str]], 
+        functions: list[dict[str, Any]], 
         **kwargs
     ) -> LLMResponse:
         """
@@ -399,7 +399,7 @@ class BaseAdapter(abc.ABC):
         self.logger.error(f"Operation failed after {max_retries} retries: {str(last_error)}")
         raise last_error
 
-    def get_merged_params(self, **kwargs) -> Dict[str, Any]:
+    def get_merged_params(self, **kwargs) -> dict[str, Any]:
         """
         Merge configuration with provided parameters.
         
@@ -452,7 +452,7 @@ class AdapterRegistry:
     This class provides a centralized registry for adapter implementations,
     allowing them to be registered, discovered, and instantiated by name.
     """
-    _adapters: Dict[str, Type[BaseAdapter]] = {}
+    _adapters: dict[str, type[BaseAdapter]] = {}
     
     @classmethod
     def register(cls, name: Optional[str] = None):
@@ -473,7 +473,7 @@ class AdapterRegistry:
                 # Implementation...
             ```
         """
-        def decorator(adapter_cls: Type[BaseAdapter]) -> Type[BaseAdapter]:
+        def decorator(adapter_cls: type[BaseAdapter]) -> type[BaseAdapter]:
             adapter_name = name or adapter_cls.name
             if not adapter_name:
                 raise ValueError("Adapter must have a name attribute or provide a name parameter")
@@ -488,7 +488,7 @@ class AdapterRegistry:
         return decorator
     
     @classmethod
-    def get_adapter_class(cls, name: str) -> Type[BaseAdapter]:
+    def get_adapter_class(cls, name: str) -> type[BaseAdapter]:
         """
         Get an adapter class by name.
         
@@ -524,7 +524,7 @@ class AdapterRegistry:
         return adapter_cls(config)
     
     @classmethod
-    def list_adapters(cls) -> List[str]:
+    def list_adapters(cls) -> list[str]:
         """
         List all registered adapter names.
         

@@ -16,11 +16,18 @@ Usage:
 import datetime
 import enum
 import logging
-import re
 import uuid
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Generic, Optional, TypeVar
 
-from pydantic import BaseModel, Field, validator, root_validator, EmailStr, HttpUrl, constr, conint, confloat
+from pydantic import (
+    BaseModel,
+    Field,
+    confloat,
+    conint,
+    constr,
+    root_validator,
+    validator,
+)
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -165,7 +172,7 @@ class BaseResponse(BaseModel):
         None,
         description="Error code for unsuccessful requests"
     )
-    error_details: Optional[Dict[str, Any]] = Field(
+    error_details: Optional[dict[str, Any]] = Field(
         None,
         description="Additional error details for debugging"
     )
@@ -181,7 +188,7 @@ class BaseResponse(BaseModel):
 
 class PaginatedResponse(BaseResponse, Generic[T]):
     """Generic paginated response model."""
-    data: List[T] = Field(
+    data: list[T] = Field(
         ...,
         description="List of items in the current page"
     )
@@ -326,7 +333,7 @@ class HealthStatus(BaseModel):
         default_factory=datetime.datetime.utcnow,
         description="Time when the health was last checked"
     )
-    metrics: Optional[Dict[str, Any]] = Field(
+    metrics: Optional[dict[str, Any]] = Field(
         None,
         description="Component-specific health metrics"
     )
@@ -352,7 +359,7 @@ class SystemHealthResponse(BaseResponse):
         ...,
         description="Overall system health status"
     )
-    components: List[HealthStatus] = Field(
+    components: list[HealthStatus] = Field(
         ...,
         description="Health status of individual components"
     )

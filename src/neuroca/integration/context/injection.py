@@ -22,17 +22,15 @@ Usage:
     )
 """
 
-import logging
-from typing import Dict, List, Optional, Tuple, Union, Any
 import json
+import logging
 from dataclasses import dataclass
 from enum import Enum
-import re
+from typing import Any, Optional, Union
 
-from neuroca.core.models.base import BaseModel
-from neuroca.memory.retrieval import MemoryRetrievalResult
 from neuroca.config.settings import ContextInjectionConfig
 from neuroca.core.exceptions import ContextWindowExceededError, InvalidContextFormatError
+from neuroca.memory.retrieval import MemoryRetrievalResult
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -54,7 +52,7 @@ class ContextElement:
     source: str  # e.g., "working_memory", "episodic_memory", "semantic_memory"
     priority: ContextPriority
     token_count: int
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -128,11 +126,11 @@ class ContextInjectionManager:
     def inject_context(
         self,
         prompt: str,
-        conversation_history: List[Dict[str, str]] = None,
-        memory_retrieval_results: List[MemoryRetrievalResult] = None,
+        conversation_history: list[dict[str, str]] = None,
+        memory_retrieval_results: list[MemoryRetrievalResult] = None,
         system_instructions: str = None,
-        additional_context: Dict[str, Any] = None
-    ) -> Union[str, Dict[str, Any]]:
+        additional_context: dict[str, Any] = None
+    ) -> Union[str, dict[str, Any]]:
         """
         Inject relevant context into the prompt based on available information.
         
@@ -201,11 +199,11 @@ class ContextInjectionManager:
     def _prepare_context_elements(
         self,
         prompt: str,
-        conversation_history: List[Dict[str, str]],
-        memory_retrieval_results: List[MemoryRetrievalResult],
+        conversation_history: list[dict[str, str]],
+        memory_retrieval_results: list[MemoryRetrievalResult],
         system_instructions: Optional[str],
-        additional_context: Dict[str, Any]
-    ) -> List[ContextElement]:
+        additional_context: dict[str, Any]
+    ) -> list[ContextElement]:
         """
         Prepare context elements from various sources.
         
@@ -307,9 +305,9 @@ class ContextInjectionManager:
     
     def _select_context_elements(
         self,
-        context_elements: List[ContextElement],
+        context_elements: list[ContextElement],
         prompt_tokens: int
-    ) -> List[ContextElement]:
+    ) -> list[ContextElement]:
         """
         Select which context elements to include based on priority and token limits.
         
@@ -354,10 +352,10 @@ class ContextInjectionManager:
     def _format_context(
         self,
         prompt: str,
-        selected_elements: List[ContextElement],
-        conversation_history: List[Dict[str, str]],
+        selected_elements: list[ContextElement],
+        conversation_history: list[dict[str, str]],
         system_instructions: Optional[str]
-    ) -> Union[str, Dict[str, Any]]:
+    ) -> Union[str, dict[str, Any]]:
         """
         Format the selected context elements according to the chosen strategy and format.
         
@@ -394,7 +392,7 @@ class ContextInjectionManager:
     def _format_prepend_strategy(
         self,
         prompt: str,
-        selected_elements: List[ContextElement],
+        selected_elements: list[ContextElement],
         system_instructions: Optional[str]
     ) -> str:
         """
@@ -443,7 +441,7 @@ class ContextInjectionManager:
     def _format_append_strategy(
         self,
         prompt: str,
-        selected_elements: List[ContextElement]
+        selected_elements: list[ContextElement]
     ) -> str:
         """
         Format context by appending it after the prompt.
@@ -483,8 +481,8 @@ class ContextInjectionManager:
     def _format_interleave_strategy(
         self,
         prompt: str,
-        selected_elements: List[ContextElement],
-        conversation_history: List[Dict[str, str]]
+        selected_elements: list[ContextElement],
+        conversation_history: list[dict[str, str]]
     ) -> str:
         """
         Format context by interleaving it with conversation history.
@@ -502,7 +500,7 @@ class ContextInjectionManager:
                                     if e.source != "conversation_history"]
         
         # Get conversation history elements
-        conversation_elements = [e for e in selected_elements 
+        [e for e in selected_elements 
                                if e.source == "conversation_history"]
         
         # Build conversation with interleaved context
@@ -559,9 +557,9 @@ class ContextInjectionManager:
     def _format_structured_strategy(
         self,
         prompt: str,
-        elements_by_source: Dict[str, List[ContextElement]],
+        elements_by_source: dict[str, list[ContextElement]],
         system_instructions: Optional[str]
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Format context as a structured object (e.g., for ChatML or similar formats).
         
@@ -657,7 +655,7 @@ class ContextInjectionManager:
         
         return {"messages": messages}
     
-    def _estimate_structured_token_count(self, structured_prompt: Dict[str, Any]) -> int:
+    def _estimate_structured_token_count(self, structured_prompt: dict[str, Any]) -> int:
         """
         Estimate the token count for a structured prompt.
         
@@ -709,11 +707,11 @@ class ContextInjector:
     def inject(
         self,
         prompt: str,
-        conversation_history: List[Dict[str, str]] = None,
-        memory_results: List[MemoryRetrievalResult] = None,
+        conversation_history: list[dict[str, str]] = None,
+        memory_results: list[MemoryRetrievalResult] = None,
         system_instructions: str = None,
-        additional_context: Dict[str, Any] = None
-    ) -> Union[str, Dict[str, Any]]:
+        additional_context: dict[str, Any] = None
+    ) -> Union[str, dict[str, Any]]:
         """
         Inject context into a prompt.
         
@@ -738,12 +736,12 @@ class ContextInjector:
 
 def inject_context(
     prompt: str,
-    conversation_history: List[Dict[str, str]] = None,
-    memory_results: List[MemoryRetrievalResult] = None,
+    conversation_history: list[dict[str, str]] = None,
+    memory_results: list[MemoryRetrievalResult] = None,
     system_instructions: str = None,
-    additional_context: Dict[str, Any] = None,
+    additional_context: dict[str, Any] = None,
     config: ContextInjectionConfig = None
-) -> Union[str, Dict[str, Any]]:
+) -> Union[str, dict[str, Any]]:
     """
     Convenience function for injecting context into a prompt.
     

@@ -30,9 +30,10 @@ import logging
 import threading
 import time
 import uuid
+from collections.abc import Coroutine
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -75,8 +76,8 @@ class ScheduledTask:
     last_run_time: Optional[float] = None
     next_run_time: Optional[float] = None
     status: TaskStatus = TaskStatus.PENDING
-    args: Tuple = field(default_factory=tuple)
-    kwargs: Dict[str, Any] = field(default_factory=dict)
+    args: tuple = field(default_factory=tuple)
+    kwargs: dict[str, Any] = field(default_factory=dict)
     max_retries: int = 3
     retry_count: int = 0
     timeout: Optional[float] = None
@@ -130,9 +131,9 @@ class LymphaticScheduler:
             max_concurrent_tasks: Maximum number of tasks to run concurrently
             idle_threshold: CPU utilization threshold below which to consider the system idle
         """
-        self._task_queue: List[ScheduledTask] = []
-        self._task_map: Dict[str, ScheduledTask] = {}
-        self._running_tasks: Set[str] = set()
+        self._task_queue: list[ScheduledTask] = []
+        self._task_map: dict[str, ScheduledTask] = {}
+        self._running_tasks: set[str] = set()
         self._lock = threading.RLock()
         self._event = threading.Event()
         self._scheduler_thread: Optional[threading.Thread] = None
@@ -184,8 +185,8 @@ class LymphaticScheduler:
         priority: Priority = Priority.MEDIUM,
         recurring: bool = False,
         interval: Optional[float] = None,
-        args: Tuple = None,
-        kwargs: Dict[str, Any] = None,
+        args: tuple = None,
+        kwargs: dict[str, Any] = None,
         timeout: Optional[float] = None,
         max_retries: int = 3
     ) -> str:
@@ -281,7 +282,7 @@ class LymphaticScheduler:
                 return task.status
             return None
     
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get scheduler statistics.
         
@@ -378,10 +379,7 @@ class LymphaticScheduler:
                 )
                 
                 # Wait for the coroutine to complete with timeout if specified
-                if task.timeout:
-                    result = future.result(task.timeout)
-                else:
-                    result = future.result()
+                future.result(task.timeout) if task.timeout else future.result()
             else:
                 # Execute synchronous function
                 if task.timeout:
@@ -406,10 +404,10 @@ class LymphaticScheduler:
                     if result_container and isinstance(result_container[0], Exception):
                         raise result_container[0]
                     
-                    result = result_container[0] if result_container else None
+                    result_container[0] if result_container else None
                 else:
                     # Execute directly without timeout
-                    result = task.callback(*task.args, **task.kwargs)
+                    task.callback(*task.args, **task.kwargs)
             
             # Task completed successfully
             execution_time = time.time() - start_time
@@ -512,8 +510,8 @@ class LymphaticScheduler:
         callback: Union[Callable[..., Any], Coroutine[Any, Any, Any]],
         name: str = None,
         priority: Priority = Priority.LOW,
-        args: Tuple = None,
-        kwargs: Dict[str, Any] = None,
+        args: tuple = None,
+        kwargs: dict[str, Any] = None,
         timeout: Optional[float] = None,
         max_retries: int = 3
     ) -> str:

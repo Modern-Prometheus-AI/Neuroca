@@ -38,7 +38,7 @@ import logging
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
+from typing import Optional
 
 from fastapi import FastAPI, Request, Response
 from opentelemetry import trace
@@ -77,7 +77,7 @@ def setup_tracing(
     sample_rate: float = 0.1,
     otlp_endpoint: Optional[str] = None,
     console_export: bool = False,
-    exclude_paths: Optional[List[str]] = None,
+    exclude_paths: Optional[list[str]] = None,
 ) -> None:
     """
     Set up OpenTelemetry tracing for the application.
@@ -283,7 +283,7 @@ class TracingMiddleware(BaseHTTPMiddleware):
         current_request_id.set(request_id)
         
         # Extract trace context from headers if present
-        carrier = {k: v for k, v in request.headers.items()}
+        carrier = dict(request.headers.items())
         ctx = TraceContextTextMapPropagator().extract(carrier=carrier)
         
         # Start a new span for this request
@@ -375,7 +375,7 @@ class ASGITracingMiddleware:
         exclude_paths: List of URL paths to exclude from tracing
     """
     
-    def __init__(self, app: ASGIApp, exclude_paths: Optional[List[str]] = None):
+    def __init__(self, app: ASGIApp, exclude_paths: Optional[list[str]] = None):
         """
         Initialize the ASGI tracing middleware.
         
@@ -516,7 +516,7 @@ class ASGITracingMiddleware:
                 raise
 
 
-def instrument_fastapi(app: FastAPI, excluded_urls: Optional[List[str]] = None) -> None:
+def instrument_fastapi(app: FastAPI, excluded_urls: Optional[list[str]] = None) -> None:
     """
     Instrument a FastAPI application with OpenTelemetry.
     

@@ -34,8 +34,7 @@ import logging
 import os
 import platform
 import time
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 import psutil
 
@@ -94,7 +93,7 @@ class BaseMetricsCollector(abc.ABC):
         logger.debug(f"Initialized {self.__class__.__name__} with name '{name}'")
     
     @abc.abstractmethod
-    def collect(self) -> List[Metric]:
+    def collect(self) -> list[Metric]:
         """
         Collect metrics and return them as a list.
         
@@ -141,7 +140,7 @@ class BaseMetricsCollector(abc.ABC):
         value: Union[int, float, str, bool],
         metric_type: MetricType,
         unit: Optional[MetricUnit] = None,
-        labels: Optional[Dict[str, str]] = None,
+        labels: Optional[dict[str, str]] = None,
         description: Optional[str] = None,
         timestamp: Optional[float] = None,
     ) -> Metric:
@@ -225,7 +224,7 @@ class SystemMetricsCollector(BaseMetricsCollector):
         
         logger.debug(f"SystemMetricsCollector initialized for process {self.process_id}")
     
-    def collect(self) -> List[Metric]:
+    def collect(self) -> list[Metric]:
         """
         Collect system metrics including CPU, memory, disk, and network usage.
         
@@ -263,7 +262,7 @@ class SystemMetricsCollector(BaseMetricsCollector):
             logger.error(error_msg, exc_info=True)
             raise MetricsCollectionError(error_msg) from e
     
-    def _collect_cpu_metrics(self) -> List[Metric]:
+    def _collect_cpu_metrics(self) -> list[Metric]:
         """
         Collect CPU-related metrics.
         
@@ -333,7 +332,7 @@ class SystemMetricsCollector(BaseMetricsCollector):
         
         return metrics
     
-    def _collect_memory_metrics(self) -> List[Metric]:
+    def _collect_memory_metrics(self) -> list[Metric]:
         """
         Collect memory-related metrics.
         
@@ -420,7 +419,7 @@ class SystemMetricsCollector(BaseMetricsCollector):
         
         return metrics
     
-    def _collect_disk_metrics(self) -> List[Metric]:
+    def _collect_disk_metrics(self) -> list[Metric]:
         """
         Collect disk-related metrics.
         
@@ -533,7 +532,7 @@ class SystemMetricsCollector(BaseMetricsCollector):
         
         return metrics
     
-    def _collect_process_metrics(self) -> List[Metric]:
+    def _collect_process_metrics(self) -> list[Metric]:
         """
         Collect process-specific metrics.
         
@@ -664,7 +663,7 @@ class MemoryTierMetricsCollector(BaseMetricsCollector):
         
         logger.debug("MemoryTierMetricsCollector initialized")
     
-    def collect(self) -> List[Metric]:
+    def collect(self) -> list[Metric]:
         """
         Collect metrics for all memory tiers.
         
@@ -694,7 +693,7 @@ class MemoryTierMetricsCollector(BaseMetricsCollector):
             logger.error(error_msg, exc_info=True)
             raise MetricsCollectionError(error_msg) from e
     
-    def _collect_working_memory_metrics(self) -> List[Metric]:
+    def _collect_working_memory_metrics(self) -> list[Metric]:
         """
         Collect working memory metrics.
         
@@ -780,7 +779,7 @@ class MemoryTierMetricsCollector(BaseMetricsCollector):
         
         return metrics
     
-    def _collect_episodic_memory_metrics(self) -> List[Metric]:
+    def _collect_episodic_memory_metrics(self) -> list[Metric]:
         """
         Collect episodic memory metrics.
         
@@ -875,7 +874,7 @@ class MemoryTierMetricsCollector(BaseMetricsCollector):
         
         return metrics
     
-    def _collect_semantic_memory_metrics(self) -> List[Metric]:
+    def _collect_semantic_memory_metrics(self) -> list[Metric]:
         """
         Collect semantic memory metrics.
         
@@ -1004,7 +1003,7 @@ class LLMIntegrationMetricsCollector(BaseMetricsCollector):
         
         logger.debug("LLMIntegrationMetricsCollector initialized")
     
-    def collect(self) -> List[Metric]:
+    def collect(self) -> list[Metric]:
         """
         Collect LLM integration metrics.
         
@@ -1036,7 +1035,7 @@ class LLMIntegrationMetricsCollector(BaseMetricsCollector):
             logger.error(error_msg, exc_info=True)
             raise MetricsCollectionError(error_msg) from e
     
-    def _collect_provider_metrics(self, provider: str) -> List[Metric]:
+    def _collect_provider_metrics(self, provider: str) -> list[Metric]:
         """
         Collect metrics for a specific LLM provider.
         
@@ -1199,7 +1198,7 @@ class LLMIntegrationMetricsCollector(BaseMetricsCollector):
         
         return metrics
     
-    def _get_models_for_provider(self, provider: str) -> List[str]:
+    def _get_models_for_provider(self, provider: str) -> list[str]:
         """
         Get the list of models for a specific provider.
         
@@ -1253,7 +1252,7 @@ class PerformanceMetricsCollector(BaseMetricsCollector):
         
         logger.debug("PerformanceMetricsCollector initialized")
     
-    def collect(self) -> List[Metric]:
+    def collect(self) -> list[Metric]:
         """
         Collect performance metrics.
         
@@ -1283,7 +1282,7 @@ class PerformanceMetricsCollector(BaseMetricsCollector):
             logger.error(error_msg, exc_info=True)
             raise MetricsCollectionError(error_msg) from e
     
-    def _collect_api_performance_metrics(self) -> List[Metric]:
+    def _collect_api_performance_metrics(self) -> list[Metric]:
         """
         Collect API performance metrics.
         
@@ -1374,7 +1373,7 @@ class PerformanceMetricsCollector(BaseMetricsCollector):
         
         return metrics
     
-    def _collect_processing_performance_metrics(self) -> List[Metric]:
+    def _collect_processing_performance_metrics(self) -> list[Metric]:
         """
         Collect processing performance metrics.
         
@@ -1462,7 +1461,7 @@ class PerformanceMetricsCollector(BaseMetricsCollector):
         
         return metrics
     
-    def _collect_memory_performance_metrics(self) -> List[Metric]:
+    def _collect_memory_performance_metrics(self) -> list[Metric]:
         """
         Collect memory performance metrics.
         
@@ -1583,7 +1582,7 @@ class CustomMetricsCollector(BaseMetricsCollector):
         super().__init__(name, enabled, collection_interval, metrics_prefix)
         
         # Storage for custom metrics
-        self._custom_metrics: Dict[str, Dict[str, Any]] = {}
+        self._custom_metrics: dict[str, dict[str, Any]] = {}
         
         logger.debug("CustomMetricsCollector initialized")
     
@@ -1593,7 +1592,7 @@ class CustomMetricsCollector(BaseMetricsCollector):
         metric_type: MetricType,
         description: str,
         unit: Optional[MetricUnit] = None,
-        labels: Optional[Dict[str, str]] = None,
+        labels: Optional[dict[str, str]] = None,
     ) -> None:
         """
         Register a new custom metric.
@@ -1626,7 +1625,7 @@ class CustomMetricsCollector(BaseMetricsCollector):
         self,
         name: str,
         value: Union[int, float, str, bool],
-        labels: Optional[Dict[str, str]] = None,
+        labels: Optional[dict[str, str]] = None,
     ) -> None:
         """
         Update the value of a custom metric.
@@ -1650,7 +1649,7 @@ class CustomMetricsCollector(BaseMetricsCollector):
         
         logger.debug(f"Updated custom metric '{name}' with value {value}")
     
-    def collect(self) -> List[Metric]:
+    def collect(self) -> list[Metric]:
         """
         Collect all registered custom metrics.
         
@@ -1763,7 +1762,7 @@ class MetricsCollectorRegistry:
     
     def __init__(self):
         """Initialize a new metrics collector registry."""
-        self._collectors: Dict[str, BaseMetricsCollector] = {}
+        self._collectors: dict[str, BaseMetricsCollector] = {}
         logger.debug("MetricsCollectorRegistry initialized")
     
     def register(self, collector: BaseMetricsCollector) -> None:
@@ -1816,7 +1815,7 @@ class MetricsCollectorRegistry:
         
         return self._collectors[name]
     
-    def collect_all(self) -> List[Metric]:
+    def collect_all(self) -> list[Metric]:
         """
         Collect metrics from all registered collectors.
         
@@ -1837,7 +1836,7 @@ class MetricsCollectorRegistry:
         logger.info(f"Collected a total of {len(all_metrics)} metrics from all collectors")
         return all_metrics
     
-    def get_collector_names(self) -> List[str]:
+    def get_collector_names(self) -> list[str]:
         """
         Get the names of all registered collectors.
         

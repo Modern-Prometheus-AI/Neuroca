@@ -38,26 +38,25 @@ Security:
 import asyncio
 import json
 import logging
-import os
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
+import aiohttp
 import google.auth
+import tenacity
 from google.auth.transport.requests import Request
 from google.cloud import aiplatform
 from google.oauth2 import service_account
-import aiohttp
-import tenacity
 
-from neuroca.integration.adapters.base import BaseAdapter, AdapterResponse
+from neuroca.integration.adapters.base import AdapterResponse, BaseAdapter
 from neuroca.integration.exceptions import (
     AuthenticationError,
+    InvalidRequestError,
     ModelNotFoundError,
     QuotaExceededError,
     RateLimitError,
     ServiceUnavailableError,
-    InvalidRequestError,
     UnexpectedResponseError,
 )
 
@@ -294,8 +293,8 @@ class VertexAIAdapter(BaseAdapter):
         temperature: float = 0.7,
         top_p: float = 0.95,
         top_k: int = 40,
-        stop_sequences: Optional[List[str]] = None,
-        safety_settings: Optional[List[Dict[str, Any]]] = None,
+        stop_sequences: Optional[list[str]] = None,
+        safety_settings: Optional[list[dict[str, Any]]] = None,
         **kwargs
     ) -> AdapterResponse:
         """
@@ -437,10 +436,10 @@ class VertexAIAdapter(BaseAdapter):
     
     async def get_embeddings(
         self,
-        texts: List[str],
+        texts: list[str],
         model: str = "textembedding-gecko@001",
         **kwargs
-    ) -> List[List[float]]:
+    ) -> list[list[float]]:
         """
         Generate embeddings for a list of texts using Vertex AI.
         
@@ -544,14 +543,14 @@ class VertexAIAdapter(BaseAdapter):
     
     async def chat_completion(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "chat-bison@001",
         max_tokens: int = 1024,
         temperature: float = 0.7,
         top_p: float = 0.95,
         top_k: int = 40,
-        stop_sequences: Optional[List[str]] = None,
-        safety_settings: Optional[List[Dict[str, Any]]] = None,
+        stop_sequences: Optional[list[str]] = None,
+        safety_settings: Optional[list[dict[str, Any]]] = None,
         **kwargs
     ) -> AdapterResponse:
         """

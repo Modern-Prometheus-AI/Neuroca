@@ -2,6 +2,7 @@
 
 import logging
 import os
+
 import uvicorn
 from fastapi import FastAPI
 
@@ -37,11 +38,11 @@ def start():
     logger.info("Starting NeuroCognitive Architecture API")
     uvicorn.run(
         "neuroca.api.main:app",
-        host=os.environ.get("API_HOST", "0.0.0.0"),
+        host=os.environ.get("API_HOST", "127.0.0.1"),  # Default to localhost
         port=int(os.environ.get("API_PORT", 8000)),
         reload=os.environ.get("API_RELOAD", "false").lower() == "true",
     )
 
 
 if __name__ == "__main__":
-    start() 
+    start()

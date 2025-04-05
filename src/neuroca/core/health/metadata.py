@@ -36,12 +36,11 @@ import copy
 import datetime
 import json
 import logging
-import os
 import uuid
 from dataclasses import asdict, dataclass, field
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -115,13 +114,11 @@ class HealthMetricDefinition:
         if not self.validate_value(value):
             return HealthStatus.UNKNOWN
         
-        if self.critical_threshold is not None:
-            if value >= self.critical_threshold:
-                return HealthStatus.CRITICAL
+        if self.critical_threshold is not None and value >= self.critical_threshold:
+            return HealthStatus.CRITICAL
         
-        if self.warning_threshold is not None:
-            if value >= self.warning_threshold:
-                return HealthStatus.DEGRADED
+        if self.warning_threshold is not None and value >= self.warning_threshold:
+            return HealthStatus.DEGRADED
         
         if value == self.default_value:
             return HealthStatus.OPTIMAL
@@ -140,15 +137,15 @@ class HealthMetadata:
     """
     
     component_id: str
-    metrics: Dict[str, float]
+    metrics: dict[str, float]
     category: str
     timestamp: datetime.datetime = field(default_factory=datetime.datetime.now)
     version: int = 1
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     description: Optional[str] = None
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
     parent_id: Optional[str] = None
-    metric_definitions: Dict[str, HealthMetricDefinition] = field(default_factory=dict)
+    metric_definitions: dict[str, HealthMetricDefinition] = field(default_factory=dict)
     
     def __post_init__(self):
         """Validate the metadata after initialization."""
@@ -204,7 +201,7 @@ class HealthMetadata:
         
         return True
     
-    def update_metrics(self, metrics: Dict[str, float]) -> None:
+    def update_metrics(self, metrics: dict[str, float]) -> None:
         """
         Update the metrics with new values and increment version.
         
@@ -279,7 +276,7 @@ class HealthMetadata:
         else:
             return HealthStatus.NORMAL
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the metadata to a dictionary for serialization.
         
@@ -303,7 +300,7 @@ class HealthMetadata:
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'HealthMetadata':
+    def from_dict(cls, data: dict[str, Any]) -> 'HealthMetadata':
         """
         Create a HealthMetadata instance from a dictionary.
         
@@ -396,7 +393,7 @@ class MetadataRegistry:
         Args:
             storage_path: Optional path for persisting metadata to disk
         """
-        self._metadata: Dict[str, List[HealthMetadata]] = {}
+        self._metadata: dict[str, list[HealthMetadata]] = {}
         self._storage_path = Path(storage_path) if storage_path else None
         
         if self._storage_path and not self._storage_path.exists():
@@ -468,7 +465,7 @@ class MetadataRegistry:
         logger.warning(f"Version {version} not found for component {component_id}")
         raise MetadataNotFoundError(f"Version {version} not found for component {component_id}")
     
-    def get_history(self, component_id: str) -> List[HealthMetadata]:
+    def get_history(self, component_id: str) -> list[HealthMetadata]:
         """
         Retrieve the full history of metadata for a component.
         
@@ -487,7 +484,7 @@ class MetadataRegistry:
         
         return self._metadata[component_id]
     
-    def list_components(self, category: Optional[str] = None, tag: Optional[str] = None) -> List[str]:
+    def list_components(self, category: Optional[str] = None, tag: Optional[str] = None) -> list[str]:
         """
         List all component IDs in the registry, optionally filtered by category or tag.
         
@@ -519,7 +516,7 @@ class MetadataRegistry:
             
         return components
     
-    def update(self, component_id: str, metrics: Dict[str, float]) -> HealthMetadata:
+    def update(self, component_id: str, metrics: dict[str, float]) -> HealthMetadata:
         """
         Update metrics for a component and create a new version.
         
@@ -551,7 +548,7 @@ class MetadataRegistry:
             logger.error(f"Failed to update component {component_id}: {str(e)}")
             raise
     
-    def compare(self, component_id: str, version1: int, version2: int) -> Dict[str, Tuple[float, float]]:
+    def compare(self, component_id: str, version1: int, version2: int) -> dict[str, tuple[float, float]]:
         """
         Compare metrics between two versions of a component's metadata.
         
@@ -610,7 +607,7 @@ class MetadataRegistry:
                 f.write(metadata.to_json())
                 
             logger.debug(f"Persisted metadata for {metadata.component_id} v{metadata.version} to {file_path}")
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(f"Failed to persist metadata: {str(e)}")
     
     def load_from_storage(self) -> int:
@@ -633,13 +630,11 @@ class MetadataRegistry:
                     continue
                     
                 # Find all version files
-                version_files = sorted([
-                    f for f in component_dir.glob("v*.json")
-                ], key=lambda f: int(f.stem[1:]))  # Sort by version number
+                version_files = sorted(component_dir.glob("v*.json"), key=lambda f: int(f.stem[1:]))  # Sort by version number
                 
                 for file_path in version_files:
                     try:
-                        with open(file_path, 'r') as f:
+                        with open(file_path) as f:
                             metadata = HealthMetadata.from_json(f.read())
                             
                         # Add to registry without persisting again
@@ -648,7 +643,7 @@ class MetadataRegistry:
                             self._metadata[component_id] = []
                         self._metadata[component_id].append(metadata)
                         count += 1
-                    except (IOError, json.JSONDecodeError, MetadataValidationError) as e:
+                    except (OSError, json.JSONDecodeError, MetadataValidationError) as e:
                         logger.error(f"Failed to load metadata from {file_path}: {str(e)}")
                         continue
             
@@ -659,7 +654,7 @@ class MetadataRegistry:
             return count
 
 
-def create_default_metric_definitions() -> Dict[str, HealthMetricDefinition]:
+def create_default_metric_definitions() -> dict[str, HealthMetricDefinition]:
     """
     Create a set of default metric definitions for common health metrics.
     

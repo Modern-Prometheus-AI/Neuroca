@@ -7,11 +7,13 @@ and component states.
 """
 
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 # Import enums from the dynamics module to ensure consistency
-from neuroca.core.health.dynamics import HealthState, HealthParameterType, HealthEventType
+from neuroca.core.health.dynamics import HealthEventType, HealthParameterType, HealthState
+
 
 class HealthParameterSchema(BaseModel):
     """Schema representing a tracked health parameter."""
@@ -38,7 +40,7 @@ class HealthEventSchema(BaseModel):
     old_value: Optional[Any] = Field(None, description="Previous value, if applicable")
     new_value: Optional[Any] = Field(None, description="New value, if applicable")
     timestamp: datetime = Field(..., description="Timestamp when the event occurred")
-    details: Dict[str, Any] = Field(default_factory=dict, description="Additional event details")
+    details: dict[str, Any] = Field(default_factory=dict, description="Additional event details")
 
     class Config:
         use_enum_values = True # Serialize enums as their string values
@@ -48,8 +50,8 @@ class DetailedComponentHealthSchema(BaseModel):
     """Schema for detailed health status of a single component, including dynamics."""
     component_id: str = Field(..., description="Unique identifier for the component")
     status: HealthState = Field(..., description="Current overall health state of the component")
-    parameters: Dict[str, HealthParameterSchema] = Field(..., description="Tracked health parameters and their current values")
-    recent_events: List[HealthEventSchema] = Field(..., description="List of recent health events for this component")
+    parameters: dict[str, HealthParameterSchema] = Field(..., description="Tracked health parameters and their current values")
+    recent_events: list[HealthEventSchema] = Field(..., description="List of recent health events for this component")
     last_state_change: datetime = Field(..., description="Timestamp of the last state change")
 
     class Config:

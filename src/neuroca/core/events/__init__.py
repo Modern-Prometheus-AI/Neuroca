@@ -45,7 +45,7 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Set, Type, TypeVar, Union, Generic
+from typing import Any, Callable, Optional, TypeVar
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class Event:
         self.id = str(uuid.uuid4())
         self.timestamp = datetime.now()
         self.is_canceled = False
-        self.metadata: Dict[str, Any] = {}
+        self.metadata: dict[str, Any] = {}
     
     def cancel(self) -> None:
         """
@@ -234,17 +234,17 @@ class EventBus:
             raise RuntimeError("EventBus is a singleton. Use EventBus.get_instance() instead.")
         
         # Map of event types to handlers
-        self._handlers: Dict[Type[Event], List[EventHandler]] = {}
+        self._handlers: dict[type[Event], list[EventHandler]] = {}
         
         # Set of all registered subscribers
-        self._subscribers: Set[EventSubscriber] = set()
+        self._subscribers: set[EventSubscriber] = set()
         
         # Lock for thread safety
         self._handlers_lock = threading.RLock()
         
         # Event history for debugging (limited size)
         self._max_history_size = 100
-        self._event_history: List[Event] = []
+        self._event_history: list[Event] = []
         self._history_lock = threading.RLock()
         
         logger.info("EventBus initialized")
@@ -273,7 +273,7 @@ class EventBus:
                 cls._instance = None
     
     def subscribe(self, 
-                  event_type: Type[T], 
+                  event_type: type[T], 
                   callback: Callable[[T], None], 
                   priority: EventPriority = EventPriority.NORMAL,
                   subscriber: Optional[EventSubscriber] = None,
@@ -311,7 +311,7 @@ class EventBus:
         
         logger.debug(f"Subscribed to {event_type.__name__} events with priority {priority}")
     
-    def unsubscribe(self, event_type: Type[Event], callback: Callable[[Event], None]) -> bool:
+    def unsubscribe(self, event_type: type[Event], callback: Callable[[Event], None]) -> bool:
         """
         Unsubscribe from events of a specific type.
         
@@ -432,7 +432,7 @@ class EventBus:
         else:
             executor.submit(self.publish, event)
     
-    def get_event_history(self) -> List[Event]:
+    def get_event_history(self) -> list[Event]:
         """
         Get a copy of the recent event history.
         
@@ -457,7 +457,7 @@ class EventBus:
         with self._handlers_lock:
             return len(self._subscribers)
     
-    def get_handler_count(self) -> Dict[str, int]:
+    def get_handler_count(self) -> dict[str, int]:
         """
         Get the number of handlers registered for each event type.
         

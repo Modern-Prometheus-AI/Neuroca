@@ -33,15 +33,14 @@ import os
 import time
 import uuid
 from enum import Enum, auto
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional
 
 # Import health dynamics components
 from neuroca.core.health.dynamics import (
-    record_cognitive_operation, 
-    get_health_dynamics, 
+    ComponentHealth,  # Import the class for type hinting
     HealthState,
-    ComponentHealth, # Import the class for type hinting
+    get_health_dynamics,
+    record_cognitive_operation,
 )
 
 # Configure logging
@@ -92,8 +91,8 @@ class MemoryItem:
         self,
         content: Any,
         priority: MemoryPriority = MemoryPriority.MEDIUM,
-        tags: Optional[Set[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        tags: Optional[set[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         decay_factor: float = 0.05
     ):
         """
@@ -162,7 +161,7 @@ class MemoryItem:
         self.associations[memory_id] = clamped_strength
         logger.debug(f"Added association from {self.id} to {memory_id} with strength {clamped_strength}")
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert memory item to a dictionary for serialization.
         
@@ -183,7 +182,7 @@ class MemoryItem:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MemoryItem':
+    def from_dict(cls, data: dict[str, Any]) -> 'MemoryItem':
         """
         Create a memory item from a dictionary representation.
         
@@ -227,7 +226,7 @@ class MemoryStore:
             capacity: Maximum number of items this store can hold (None for unlimited)
         """
         self.capacity = capacity
-        self.items: Dict[str, MemoryItem] = {}
+        self.items: dict[str, MemoryItem] = {}
         logger.info(f"Initialized memory store with capacity {capacity}")
     
     def add(self, item: MemoryItem) -> str:
@@ -293,10 +292,10 @@ class MemoryStore:
     def search(
         self, 
         query: Optional[str] = None, 
-        tags: Optional[Set[str]] = None,
+        tags: Optional[set[str]] = None,
         min_activation: float = 0.0,
         limit: Optional[int] = None
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Search for memory items matching criteria.
         
@@ -390,7 +389,7 @@ class MemoryStore:
         self.items.clear()
         logger.info(f"Cleared memory store ({count} items removed)")
     
-    def get_all_ids(self) -> List[str]:
+    def get_all_ids(self) -> list[str]:
         """
         Get all memory item IDs in the store.
         
@@ -473,8 +472,8 @@ class EpisodicMemoryStore(MemoryStore):
         content: Any, 
         timestamp: Optional[datetime.datetime] = None,
         location: Optional[str] = None,
-        actors: Optional[List[str]] = None,
-        tags: Optional[Set[str]] = None,
+        actors: Optional[list[str]] = None,
+        tags: Optional[set[str]] = None,
         priority: MemoryPriority = MemoryPriority.MEDIUM
     ) -> str:
         """
@@ -514,7 +513,7 @@ class EpisodicMemoryStore(MemoryStore):
         self, 
         start_time: datetime.datetime, 
         end_time: datetime.datetime
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Retrieve episodes that occurred within a specific timeframe.
         
@@ -568,10 +567,10 @@ class SemanticMemoryStore(MemoryStore):
     def add_fact(
         self, 
         fact: Any,
-        concepts: List[str],
+        concepts: list[str],
         confidence: float = 1.0,
         source: Optional[str] = None,
-        tags: Optional[Set[str]] = None,
+        tags: Optional[set[str]] = None,
         priority: MemoryPriority = MemoryPriority.MEDIUM
     ) -> str:
         """
@@ -615,7 +614,7 @@ class SemanticMemoryStore(MemoryStore):
             
         return item_id
     
-    def get_facts_by_concept(self, concept: str) -> List[MemoryItem]:
+    def get_facts_by_concept(self, concept: str) -> list[MemoryItem]:
         """
         Retrieve facts related to a specific concept.
         
@@ -637,7 +636,7 @@ class SemanticMemoryStore(MemoryStore):
         logger.debug(f"Retrieved {len(results)} facts for concept '{concept}'")
         return results
     
-    def get_related_concepts(self, concept: str, max_distance: int = 2) -> Dict[str, int]:
+    def get_related_concepts(self, concept: str, max_distance: int = 2) -> dict[str, int]:
         """
         Find concepts related to the given concept within a certain distance.
         
@@ -732,8 +731,8 @@ class MemoryManager:
         content: Any, 
         memory_type: MemoryType,
         priority: MemoryPriority = MemoryPriority.MEDIUM,
-        tags: Optional[Set[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        tags: Optional[set[str]] = None,
+        metadata: Optional[dict[str, Any]] = None
     ) -> str:
         """
         Store content in the specified memory type.
@@ -752,7 +751,7 @@ class MemoryManager:
             MemoryCapacityError: If the target memory store is at capacity
             ValueError: If an invalid memory type is specified
         """
-        start_time = time.time()
+        time.time()
         component_id = MEMORY_MANAGER_COMPONENT_ID # Default
         complexity = 0.3 # Default complexity for store operation
 
@@ -798,10 +797,10 @@ class MemoryManager:
         query: Optional[str] = None,
         memory_type: Optional[MemoryType] = None,
         item_id: Optional[str] = None,
-        tags: Optional[Set[str]] = None,
+        tags: Optional[set[str]] = None,
         min_activation: float = 0.0,
         limit: Optional[int] = None
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Retrieve memory items matching the specified criteria.
         
@@ -816,7 +815,7 @@ class MemoryManager:
         Returns:
             List of matching memory items
         """
-        start_time = time.time()
+        time.time()
         results = []
         component_id = MEMORY_MANAGER_COMPONENT_ID # Default
         complexity = 0.1 # Low complexity for simple ID retrieval
@@ -870,7 +869,7 @@ class MemoryManager:
         logger.info(f"Retrieved {len(results)} items matching query criteria")
         return results
 
-    def _get_stores_with_ids(self, memory_type: Optional[MemoryType] = None) -> List[Tuple[MemoryStore, str]]:
+    def _get_stores_with_ids(self, memory_type: Optional[MemoryType] = None) -> list[tuple[MemoryStore, str]]:
         """
         Get the memory stores and their corresponding component IDs.
         
@@ -907,7 +906,7 @@ class MemoryManager:
         Returns:
             int: Number of items consolidated
         """
-        start_time = time.time()
+        time.time()
         complexity = 0.8 # High complexity for consolidation
 
         # Check if enough time has passed since last consolidation
@@ -1053,7 +1052,7 @@ class MemoryManager:
         Returns:
             bool: True if association was created, False otherwise
         """
-        start_time = time.time()
+        time.time()
         complexity = 0.3
         found_item1_store_id = None
         found_item2_store_id = None
@@ -1073,7 +1072,7 @@ class MemoryManager:
                 break
                 
         if not item1 or not item2:
-            logger.warning(f"Could not create association: items not found")
+            logger.warning("Could not create association: items not found")
             return False
             
         # Create bidirectional association
@@ -1102,7 +1101,7 @@ class MemoryManager:
         Args:
             force: Whether to force maintenance regardless of timing
         """
-        start_time = time.time()
+        time.time()
         complexity = 0.5 # Medium complexity for maintenance/forgetting
 
         # Check if enough time has passed since last maintenance
@@ -1228,7 +1227,7 @@ class MemoryManager:
             
         except Exception as e:
             logger.error(f"Error saving memory: {str(e)}")
-            raise IOError(f"Failed to save memory: {str(e)}")
+            raise OSError(f"Failed to save memory: {str(e)}")
     
     def _save_store(self, store: MemoryStore, filepath: str) -> None:
         """
@@ -1275,7 +1274,7 @@ class MemoryManager:
             # Load concept network
             concept_path = os.path.join(self.persistence_dir, "concept_network.json")
             if os.path.exists(concept_path):
-                with open(concept_path, 'r') as f:
+                with open(concept_path) as f:
                     network_data = json.load(f)
                     # Convert lists back to sets
                     self.semantic_memory.concept_network = {k: set(v) for k, v in network_data.items()}
@@ -1295,7 +1294,7 @@ class MemoryManager:
             store: The memory store to load into
             filepath: Path to the JSON file
         """
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             items_dict = json.load(f)
             
         # Clear existing items
@@ -1327,7 +1326,7 @@ class MemoryManager:
             
         logger.info("Memory cleared")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the memory system.
         

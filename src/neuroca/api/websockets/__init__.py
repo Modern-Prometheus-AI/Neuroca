@@ -20,19 +20,19 @@ Usage:
 """
 
 import asyncio
+import contextlib
 import json
-import logging
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Callable, Optional
 
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel, ValidationError
 
 from neuroca.config import settings
-from neuroca.core.auth import get_current_user, verify_token
+from neuroca.core.auth import verify_token
 from neuroca.core.models import User
 from neuroca.core.utils import get_logger
 
@@ -40,10 +40,10 @@ from neuroca.core.utils import get_logger
 logger = get_logger(__name__)
 
 # Connection registry to track active websocket connections
-active_connections: Dict[str, Dict[str, Any]] = {}
+active_connections: dict[str, dict[str, Any]] = {}
 
 # Event subscription registry
-event_subscribers: Dict[str, Set[str]] = {}
+event_subscribers: dict[str, set[str]] = {}
 
 
 class MessageType(str, Enum):
@@ -65,7 +65,7 @@ class WebSocketMessage(BaseModel):
     type: MessageType
     id: str = ""  # Message ID for correlation
     timestamp: datetime = datetime.utcnow()
-    payload: Dict[str, Any] = {}
+    payload: dict[str, Any] = {}
 
 
 class ConnectionManager:
@@ -76,8 +76,8 @@ class ConnectionManager:
     
     def __init__(self):
         """Initialize the connection manager."""
-        self.active_connections: Dict[str, Dict[str, Any]] = {}
-        self.message_handlers: Dict[MessageType, Callable] = {
+        self.active_connections: dict[str, dict[str, Any]] = {}
+        self.message_handlers: dict[MessageType, Callable] = {
             MessageType.CONNECT: self._handle_connect,
             MessageType.DISCONNECT: self._handle_disconnect,
             MessageType.SUBSCRIBE: self._handle_subscribe,
@@ -171,7 +171,7 @@ class ConnectionManager:
             # Connection might be broken, disconnect it
             await self.disconnect(connection_id)
     
-    async def broadcast(self, event_type: str, payload: Dict[str, Any]) -> None:
+    async def broadcast(self, event_type: str, payload: dict[str, Any]) -> None:
         """
         Broadcast a message to all subscribers of an event type.
         
@@ -322,12 +322,13 @@ class ConnectionManager:
             return
             
         command = message.payload["command"]
-        args = message.payload.get("args", {})
+        message.payload.get("args", {})
         
         logger.info(f"Command received from {connection_id}: {command}")
         
-        # TODO: Implement command routing to appropriate handlers
-        # This would connect to the core NCA command processing system
+        # NOTE: Implement command routing to appropriate handlers.
+        # This should connect to the core NCA command processing system
+        # (e.g., CognitiveController or a dedicated command dispatcher).
         
         # For now, send a placeholder response
         await self.send_message(
@@ -349,12 +350,13 @@ class ConnectionManager:
             return
             
         query = message.payload["query"]
-        params = message.payload.get("params", {})
+        message.payload.get("params", {})
         
         logger.info(f"Query received from {connection_id}: {query}")
         
-        # TODO: Implement query routing to appropriate handlers
-        # This would connect to the core NCA query processing system
+        # NOTE: Implement query routing to appropriate handlers.
+        # This should connect to the core NCA query processing system
+        # (e.g., MemoryManager, HealthManager, or a dedicated query dispatcher).
         
         # For now, send a placeholder response
         await self.send_message(
@@ -413,10 +415,9 @@ class ConnectionManager:
             return
             
         self._heartbeat_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await self._heartbeat_task
-        except asyncio.CancelledError:
-            pass
+
         self._heartbeat_task = None
         logger.info("Websocket heartbeat monitor stopped")
     
@@ -581,7 +582,7 @@ def setup_websockets(app: FastAPI) -> None:
     logger.info("Websocket API initialized")
 
 
-async def broadcast_event(event_type: str, payload: Dict[str, Any]) -> None:
+async def broadcast_event(event_type: str, payload: dict[str, Any]) -> None:
     """
     Broadcast an event to all subscribed websocket connections.
     

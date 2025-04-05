@@ -9,23 +9,23 @@ The profiling data can be used to identify bottlenecks, optimize performance,
 and ensure the system operates within acceptable latency bounds under load.
 """
 
-import time
 import cProfile
-import pstats
-import io
 import functools
-import os
-import gc
+import io
+import json
 import logging
+import os
+import pstats
+import threading
+import time
 import tracemalloc
-from typing import Dict, List, Any, Optional, Callable, Union, Tuple, Set
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-import json
-import threading
-from concurrent.futures import ThreadPoolExecutor
-import psutil
+from typing import Any, Callable, Optional
+
 import numpy as np
+import psutil
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -39,10 +39,10 @@ class ProfileResult:
     memory_usage: Optional[int] = None  # in bytes
     cpu_usage: Optional[float] = None  # in percentage
     call_count: int = 1
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    children: List['ProfileResult'] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    children: list['ProfileResult'] = field(default_factory=list)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the profile result to a dictionary."""
         result = {
             "operation_name": self.operation_name,
@@ -71,7 +71,7 @@ class ProfileResult:
 @dataclass
 class ProfileMetrics:
     """Collection of metrics from multiple profiling operations."""
-    results: List[ProfileResult] = field(default_factory=list)
+    results: list[ProfileResult] = field(default_factory=list)
     
     def add_result(self, result: ProfileResult) -> None:
         """Add a profile result to the metrics."""
@@ -84,7 +84,7 @@ class ProfileMetrics:
                 return result
         return None
     
-    def summarize(self) -> Dict[str, Any]:
+    def summarize(self) -> dict[str, Any]:
         """Generate a summary of the profiling metrics."""
         if not self.results:
             return {"message": "No profiling data available."}
@@ -170,9 +170,9 @@ class Profiler:
     def __init__(self):
         """Initialize the profiler."""
         self.metrics = ProfileMetrics()
-        self._active_profiles: Dict[str, Dict[str, Any]] = {}
+        self._active_profiles: dict[str, dict[str, Any]] = {}
         self._lock = threading.RLock()
-        self._profile_stack: List[str] = []
+        self._profile_stack: list[str] = []
         self._trace_memory = False
         
     def reset(self) -> None:
@@ -199,7 +199,7 @@ class Profiler:
     def profile(self, operation_name: Optional[str] = None, 
                 trace_memory: bool = False, 
                 track_cpu: bool = False,
-                metadata: Optional[Dict[str, Any]] = None):
+                metadata: Optional[dict[str, Any]] = None):
         """
         Decorator for profiling a function.
         
@@ -233,7 +233,7 @@ class Profiler:
     def profile_operation(self, operation_name: str, 
                          trace_memory: bool = False, 
                          track_cpu: bool = False,
-                         metadata: Optional[Dict[str, Any]] = None):
+                         metadata: Optional[dict[str, Any]] = None):
         """
         Context manager for profiling an operation.
         
@@ -252,7 +252,7 @@ class Profiler:
     def _start_profiling(self, operation_name: str, 
                         trace_memory: bool, 
                         track_cpu: bool,
-                        metadata: Optional[Dict[str, Any]]) -> None:
+                        metadata: Optional[dict[str, Any]]) -> None:
         """Start profiling an operation."""
         with self._lock:
             profile_data = {
@@ -347,7 +347,7 @@ class Profiler:
             # Remove the profile data for this operation
             del self._active_profiles[operation_name]
     
-    def detailed_function_profile(self, func: Callable, *args, **kwargs) -> Tuple[Any, pstats.Stats]:
+    def detailed_function_profile(self, func: Callable, *args, **kwargs) -> tuple[Any, pstats.Stats]:
         """
         Perform a detailed profile of a function using cProfile.
         
@@ -370,7 +370,7 @@ class Profiler:
         
         return result, ps
     
-    def summarize(self) -> Dict[str, Any]:
+    def summarize(self) -> dict[str, Any]:
         """Generate a summary of the profiling metrics."""
         return self.metrics.summarize()
     
@@ -434,7 +434,7 @@ def measure_operation(operation_name: str):
         profiler.metrics.add_result(profile_result)
 
 
-def run_profiled_load_test(func: Callable, num_threads: int = 4, iterations: int = 100) -> Dict[str, Any]:
+def run_profiled_load_test(func: Callable, num_threads: int = 4, iterations: int = 100) -> dict[str, Any]:
     """
     Run a load test on a function with profiling.
     
@@ -447,7 +447,6 @@ def run_profiled_load_test(func: Callable, num_threads: int = 4, iterations: int
         Dictionary with load test results.
     """
     profiler.reset()
-    results = []
     errors = []
     
     def worker(iteration):
@@ -461,7 +460,7 @@ def run_profiled_load_test(func: Callable, num_threads: int = 4, iterations: int
     start_time = time.time()
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = [executor.submit(worker, i) for i in range(iterations)]
-        results = [future.result() for future in futures]
+        [future.result() for future in futures]
     end_time = time.time()
     
     total_time = end_time - start_time

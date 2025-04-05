@@ -33,22 +33,22 @@ Usage:
     analyzer.export_data("performance_data.json")
 """
 
-import time
-import logging
-import json
-import os
 import datetime
-import threading
+import json
+import logging
+import os
 import statistics
+import threading
+import time
 import uuid
-from typing import Dict, List, Any, Optional, Union, Callable, Generator, Tuple, ContextManager
+from collections.abc import Generator
 from contextlib import contextmanager
-from dataclasses import dataclass, field, asdict
-import matplotlib.pyplot as plt
-import numpy as np
-import psutil
-import pandas as pd
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Any, Optional
+
+import matplotlib.pyplot as plt
+import psutil
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -71,9 +71,9 @@ class PerformanceMetric:
     unit: str
     timestamp: datetime.datetime = field(default_factory=datetime.datetime.now)
     component: str = ""
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert metric to dictionary format for serialization."""
         result = asdict(self)
         result['timestamp'] = self.timestamp.isoformat()
@@ -100,11 +100,11 @@ class ProfileResult:
     end_time: datetime.datetime
     duration_ms: float
     component: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     memory_usage: Optional[float] = None
     cpu_usage: Optional[float] = None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert profile result to dictionary format for serialization."""
         result = asdict(self)
         result['start_time'] = self.start_time.isoformat()
@@ -120,7 +120,7 @@ class PerformanceAnalyzer:
     analyzing performance data, and generating reports.
     """
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize the performance analyzer with optional configuration.
         
@@ -151,8 +151,8 @@ class PerformanceAnalyzer:
         logger.setLevel(self.config['log_level'])
         
         # Initialize storage
-        self.metrics: List[PerformanceMetric] = []
-        self.profile_results: List[ProfileResult] = []
+        self.metrics: list[PerformanceMetric] = []
+        self.profile_results: list[ProfileResult] = []
         self._ensure_storage_path()
         
         # Thread safety
@@ -193,7 +193,7 @@ class PerformanceAnalyzer:
         logger.debug("Auto-save thread started")
     
     @contextmanager
-    def profile(self, operation: str, component: str = "", metadata: Optional[Dict[str, Any]] = None) -> Generator[None, None, None]:
+    def profile(self, operation: str, component: str = "", metadata: Optional[dict[str, Any]] = None) -> Generator[None, None, None]:
         """
         Context manager for profiling an operation.
         
@@ -214,7 +214,7 @@ class PerformanceAnalyzer:
             
         # Capture initial resource usage if configured
         initial_memory = psutil.Process().memory_info().rss / (1024 * 1024) if self.config['track_memory'] else None
-        initial_cpu = psutil.Process().cpu_percent() if self.config['track_cpu'] else None
+        psutil.Process().cpu_percent() if self.config['track_cpu'] else None
         
         start_time = datetime.datetime.now()
         start_timestamp = time.time()
@@ -255,7 +255,7 @@ class PerformanceAnalyzer:
             
             logger.debug(f"Profiled {operation}: {duration_ms:.2f}ms")
     
-    def add_metric(self, name: str, value: float, unit: str, component: str = "", tags: Optional[Dict[str, str]] = None) -> None:
+    def add_metric(self, name: str, value: float, unit: str, component: str = "", tags: Optional[dict[str, str]] = None) -> None:
         """
         Add a performance metric measurement.
         
@@ -291,7 +291,7 @@ class PerformanceAnalyzer:
                    component: Optional[str] = None, 
                    start_time: Optional[datetime.datetime] = None,
                    end_time: Optional[datetime.datetime] = None,
-                   tags: Optional[Dict[str, str]] = None) -> List[PerformanceMetric]:
+                   tags: Optional[dict[str, str]] = None) -> list[PerformanceMetric]:
         """
         Get metrics matching the specified filters.
         
@@ -328,7 +328,7 @@ class PerformanceAnalyzer:
         
         return filtered_metrics
     
-    def get_metric_values(self, name: str, **kwargs) -> List[float]:
+    def get_metric_values(self, name: str, **kwargs) -> list[float]:
         """
         Get values for a specific metric.
         
@@ -342,7 +342,7 @@ class PerformanceAnalyzer:
         metrics = self.get_metrics(name=name, **kwargs)
         return [m.value for m in metrics]
     
-    def get_metric_statistics(self, name: str, **kwargs) -> Dict[str, float]:
+    def get_metric_statistics(self, name: str, **kwargs) -> dict[str, float]:
         """
         Calculate statistics for a specific metric.
         
@@ -378,7 +378,7 @@ class PerformanceAnalyzer:
                            operation: Optional[str] = None,
                            component: Optional[str] = None,
                            start_time: Optional[datetime.datetime] = None,
-                           end_time: Optional[datetime.datetime] = None) -> List[ProfileResult]:
+                           end_time: Optional[datetime.datetime] = None) -> list[ProfileResult]:
         """
         Get profile results matching the specified filters.
         
@@ -409,10 +409,10 @@ class PerformanceAnalyzer:
         return filtered_results
     
     def generate_report(self, 
-                       components: Optional[List[str]] = None,
-                       operations: Optional[List[str]] = None,
+                       components: Optional[list[str]] = None,
+                       operations: Optional[list[str]] = None,
                        start_time: Optional[datetime.datetime] = None,
-                       end_time: Optional[datetime.datetime] = None) -> Dict[str, Any]:
+                       end_time: Optional[datetime.datetime] = None) -> dict[str, Any]:
         """
         Generate a comprehensive performance report.
         
@@ -566,7 +566,7 @@ class PerformanceAnalyzer:
             logger.error(f"Failed to save performance data: {str(e)}")
             raise
     
-    def load_data(self, filepath: str) -> Dict[str, Any]:
+    def load_data(self, filepath: str) -> dict[str, Any]:
         """
         Load performance data from a file.
         
@@ -577,7 +577,7 @@ class PerformanceAnalyzer:
             Dictionary with loaded performance data
         """
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath) as f:
                 data = json.load(f)
             logger.info(f"Performance data loaded from {filepath}")
             return data
@@ -586,8 +586,8 @@ class PerformanceAnalyzer:
             raise
     
     def visualize_metrics(self, 
-                         metric_names: List[str], 
-                         components: Optional[List[str]] = None,
+                         metric_names: list[str], 
+                         components: Optional[list[str]] = None,
                          start_time: Optional[datetime.datetime] = None,
                          end_time: Optional[datetime.datetime] = None,
                          output_file: Optional[str] = None) -> None:
@@ -652,8 +652,8 @@ class PerformanceAnalyzer:
             plt.show()
     
     def visualize_operation_comparison(self, 
-                                      operations: List[str],
-                                      components: Optional[List[str]] = None,
+                                      operations: list[str],
+                                      components: Optional[list[str]] = None,
                                       metric: str = "duration_ms",
                                       output_file: Optional[str] = None) -> None:
         """
@@ -747,7 +747,7 @@ class PerformanceAnalyzer:
         
         logger.info("System resource tracking completed")
     
-    def identify_bottlenecks(self, threshold_ms: float = 100.0) -> List[Dict[str, Any]]:
+    def identify_bottlenecks(self, threshold_ms: float = 100.0) -> list[dict[str, Any]]:
         """
         Identify performance bottlenecks based on operation duration.
         
@@ -779,7 +779,7 @@ class PerformanceAnalyzer:
                     'min_duration_ms': min(durations),
                     'std_dev_ms': statistics.stdev(durations) if len(durations) > 1 else 0,
                     'count': len(durations),
-                    'components': list(set(r.component for r in results if r.component))
+                    'components': list({r.component for r in results if r.component})
                 })
         
         # Sort by average duration (descending)
@@ -820,7 +820,7 @@ class PerformanceAnalyzer:
 
 # Utility functions for common performance analysis tasks
 
-def analyze_performance_data(filepath: str) -> Dict[str, Any]:
+def analyze_performance_data(filepath: str) -> dict[str, Any]:
     """
     Analyze performance data from a saved file.
     
@@ -885,7 +885,7 @@ def analyze_performance_data(filepath: str) -> Dict[str, Any]:
     }
 
 
-def compare_performance_sessions(filepaths: List[str]) -> Dict[str, Any]:
+def compare_performance_sessions(filepaths: list[str]) -> dict[str, Any]:
     """
     Compare performance data from multiple sessions.
     

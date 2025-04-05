@@ -26,20 +26,18 @@ Environment Variables:
     NEUROCA_API_KEY: API key for LLM service integration
 """
 
+import json
+import logging
 import os
 import sys
-import logging
-import json
-import yaml
 from pathlib import Path
-from typing import Optional, Dict, Any, List, Tuple, Annotated # Added Annotated for Typer options
+from typing import Annotated, Any, Optional  # Added Annotated for Typer options
 
 # import click # Remove click
 import typer
+import yaml
 from rich.console import Console
 from rich.logging import RichHandler
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
 
 # Package version - Consider moving to __init__.py or a central place
 try:
@@ -81,9 +79,9 @@ class NCAConfig:
             config_path: Optional path to configuration file
         """
         self.config_path = config_path or os.environ.get("NEUROCA_CONFIG_PATH")
-        self.config: Dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
         
-    def load(self) -> Dict[str, Any]:
+    def load(self) -> dict[str, Any]:
         """
         Load configuration from file if specified.
         
@@ -103,10 +101,10 @@ class NCAConfig:
             
         try:
             if config_path.suffix.lower() in ('.yaml', '.yml'):
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     self.config = yaml.safe_load(f)
             elif config_path.suffix.lower() == '.json':
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     self.config = json.load(f)
             else:
                 raise ConfigurationError(f"Unsupported configuration format: {config_path.suffix}")
@@ -250,10 +248,10 @@ def init(
                 
             try:
                 if template_path.suffix.lower() in ('.yaml', '.yml'):
-                    with open(template_path, 'r') as f:
+                    with open(template_path) as f:
                         template_config = yaml.safe_load(f)
                 elif template_path.suffix.lower() == '.json':
-                    with open(template_path, 'r') as f:
+                    with open(template_path) as f:
                         template_config = json.load(f)
                 else:
                     logger.error(f"Unsupported template format: {template_path.suffix}")
@@ -347,9 +345,9 @@ def init(
 
 # --- Import Command Modules ---
 # Import sub-apps from the commands directory
-from .commands.memory import memory_app # Import memory commands
-from .commands.health import health_app # Import health commands
-from .commands.llm import llm_app # Import LLM commands
+from .commands.health import health_app  # Import health commands
+from .commands.llm import llm_app  # Import LLM commands
+from .commands.memory import memory_app  # Import memory commands
 
 # Add imported sub-apps to the main app
 app.add_typer(memory_app)
@@ -383,7 +381,7 @@ def run(
         input_path = Path(input_source)
         if input_path.exists() and input_path.is_file():
             try:
-                with open(input_path, 'r') as f:
+                with open(input_path) as f:
                     input_text = f.read()
                 logger.debug(f"Loaded input from file: {input_source}")
             except Exception as e:
@@ -396,7 +394,7 @@ def run(
     # Interactive mode
     if interactive:
         logger.info("Starting interactive session. Type 'exit' or 'quit' to end.")
-        console.print("[bold]NCA Interactive Mode[/bold] (Model: {})".format(model_name))
+        console.print(f"[bold]NCA Interactive Mode[/bold] (Model: {model_name})")
         console.print("Type your input and press Enter. Type 'exit' or 'quit' to end the session.")
         
         while True:
@@ -410,17 +408,15 @@ def run(
                 
                 # Simulate processing
                 import time
-                time.sleep(1.5)
+                time.sleep(1.5) # Simulate processing time
                 
-                # TODO: Process the input through the NCA system
-                console.print("\n[dim]Processing...[/dim]")
+                # NOTE: Implement call to the actual NCA processing logic here.
+                # This should involve initializing the NCA core and passing the user_input.
+                # Example: nca_instance = initialize_nca(config_manager.config)
+                # Example: response_data = nca_instance.process(user_input)
                 
-                # Simulate processing
-                import time
-                time.sleep(1.5)
-                
-                # TODO: Get actual response from the NCA system
-                response = f"NCA processed: {user_input}\n\nThis is a simulated response from the {model_name} model."
+                # NOTE: Replace simulated response with actual result from NCA.
+                response = f"NCA processed: {user_input}\n\n[Simulated Response - Model: {model_name}]"
                 console.print(f"\n[green]{response}[/green]")
                 
             except KeyboardInterrupt:
@@ -442,10 +438,13 @@ def run(
     # Process the input
     logger.info("Processing input...")
     
-    # TODO: Process the input through the NCA system
+    # NOTE: Implement call to the actual NCA processing logic here.
+    # This should involve initializing the NCA core and passing the input_text.
+    # Example: nca_instance = initialize_nca(config_manager.config)
+    # Example: result_data = nca_instance.process(input_text)
     
-    # Sample processing result - TODO: Replace with actual result
-    result = f"NCA processed the input using {model_name} model.\n\n"
+    # NOTE: Replace simulated result with actual result from NCA.
+    result = f"NCA processed the input using {model_name} model.\n\n[Simulated Result]"
     result += "This is a simulated response that would normally contain the output from the NCA system."
     
     # Handle output

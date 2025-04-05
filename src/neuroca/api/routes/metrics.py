@@ -20,26 +20,25 @@ Usage:
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Union, Any
+from typing import Any, Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, BackgroundTasks, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 
-from neuroca.core.auth import get_current_user, User, Permission, require_permissions
+from neuroca.config.settings import get_settings
+from neuroca.core.auth import Permission, User, get_current_user, require_permissions
 from neuroca.core.exceptions import MetricNotFoundException, MetricValidationError
 from neuroca.core.models.metrics import (
-    MetricType, 
-    MetricValue, 
+    MemoryMetrics,
     MetricDefinition,
     MetricSummary,
     MetricTimeseriesData,
+    MetricType,
+    PerformanceMetrics,
     SystemHealthMetrics,
-    MemoryMetrics,
-    PerformanceMetrics
 )
 from neuroca.core.services.metrics import MetricsService
-from neuroca.config.settings import get_settings
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ class MetricRequest(BaseModel):
     name: str = Field(..., description="Unique name of the metric")
     value: Union[float, int, str, bool] = Field(..., description="Value of the metric")
     timestamp: Optional[datetime] = Field(None, description="Timestamp of the metric (defaults to now)")
-    labels: Dict[str, str] = Field(default_factory=dict, description="Additional labels/dimensions for the metric")
+    labels: dict[str, str] = Field(default_factory=dict, description="Additional labels/dimensions for the metric")
     
     @validator('name')
     def validate_name(cls, v):
@@ -79,7 +78,7 @@ class MetricDefinitionRequest(BaseModel):
     unit: str = Field(..., description="Unit of measurement (e.g., 'seconds', 'bytes', 'count')")
     aggregation: str = Field("last", description="Default aggregation method (sum, avg, min, max, last)")
     retention_days: int = Field(30, description="Number of days to retain this metric data")
-    labels: List[str] = Field(default_factory=list, description="Allowed label keys for this metric")
+    labels: list[str] = Field(default_factory=list, description="Allowed label keys for this metric")
 
 class MetricQueryParams(BaseModel):
     """Model for metric query parameters."""
@@ -88,7 +87,7 @@ class MetricQueryParams(BaseModel):
     interval: Optional[str] = Field("1m", description="Aggregation interval (e.g., '1m', '5m', '1h')")
     aggregation: Optional[str] = Field(None, description="Aggregation method to use")
     limit: Optional[int] = Field(1000, description="Maximum number of data points to return")
-    labels: Optional[Dict[str, str]] = Field(None, description="Filter by specific label values")
+    labels: Optional[dict[str, str]] = Field(None, description="Filter by specific label values")
 
 # Dependency for metrics service
 def get_metrics_service():
@@ -252,7 +251,7 @@ async def submit_metric(
 
 @router.post("/batch", status_code=status.HTTP_201_CREATED)
 async def submit_metrics_batch(
-    metrics: List[MetricRequest],
+    metrics: list[MetricRequest],
     background_tasks: BackgroundTasks,
     metrics_service: MetricsService = Depends(get_metrics_service),
     current_user: User = Depends(get_current_user)
@@ -346,7 +345,7 @@ async def register_metric_definition(
             detail=f"Failed to register metric definition: {str(e)}"
         )
 
-@router.get("/definitions", response_model=List[MetricDefinition])
+@router.get("/definitions", response_model=list[MetricDefinition])
 async def list_metric_definitions(
     metrics_service: MetricsService = Depends(get_metrics_service),
     current_user: User = Depends(get_current_user)
@@ -420,7 +419,7 @@ async def delete_metric_definition(
     
     try:
         await metrics_service.delete_metric_definition(name)
-        return None
+        return
     except MetricNotFoundException as e:
         logger.warning(f"Metric definition not found for deletion: {name}")
         raise HTTPException(
@@ -442,7 +441,7 @@ async def get_metric_data(
     interval: str = Query("1m", description="Aggregation interval (e.g., '1m', '5m', '1h')"),
     aggregation: Optional[str] = Query(None, description="Aggregation method to use"),
     limit: int = Query(1000, description="Maximum number of data points to return"),
-    labels: Optional[Dict[str, str]] = Query(None, description="Filter by specific label values"),
+    labels: Optional[dict[str, str]] = Query(None, description="Filter by specific label values"),
     metrics_service: MetricsService = Depends(get_metrics_service),
     current_user: User = Depends(get_current_user)
 ):
@@ -538,10 +537,10 @@ async def get_metric_summary(
             detail=f"Failed to get metric summary: {str(e)}"
         )
 
-@router.get("/dashboard", response_model=Dict[str, Any])
+@router.get("/dashboard", response_model=dict[str, Any])
 async def get_metrics_dashboard(
     dashboard_id: Optional[str] = Query(None, description="ID of a saved dashboard configuration"),
-    metrics: Optional[List[str]] = Query(None, description="List of metrics to include"),
+    metrics: Optional[list[str]] = Query(None, description="List of metrics to include"),
     period: str = Query("24h", description="Time period to analyze"),
     metrics_service: MetricsService = Depends(get_metrics_service),
     current_user: User = Depends(get_current_user)
@@ -578,7 +577,7 @@ async def get_metrics_dashboard(
 
 @router.get("/export", status_code=status.HTTP_200_OK)
 async def export_metrics(
-    metrics: List[str] = Query(..., description="List of metrics to export"),
+    metrics: list[str] = Query(..., description="List of metrics to export"),
     start_time: datetime = Query(..., description="Start time for export range"),
     end_time: datetime = Query(..., description="End time for export range"),
     format: str = Query("json", description="Export format (json, csv)"),

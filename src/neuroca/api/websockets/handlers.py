@@ -19,22 +19,21 @@ import logging
 import time
 import uuid
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union, Callable
+from typing import Any, Callable
 
-from fastapi import WebSocket, WebSocketDisconnect, HTTPException, Depends, status
-from pydantic import BaseModel, ValidationError, Field
+from fastapi import Depends, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel, Field, ValidationError
 
-from neuroca.core.auth import get_current_user, User
+from neuroca.config import settings
+from neuroca.core.auth import User, get_current_user
+from neuroca.core.cognitive import cognitive_processor
 from neuroca.core.exceptions import (
-    NCAException, 
-    AuthenticationError, 
+    AuthenticationError,
     ProcessingError,
-    ResourceNotFoundError
+    ResourceNotFoundError,
 )
 from neuroca.memory import memory_manager
-from neuroca.core.cognitive import cognitive_processor
 from neuroca.monitoring.metrics import increment_counter, record_latency
-from neuroca.config import settings
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -57,7 +56,7 @@ class WebSocketMessage(BaseModel):
     type: MessageType
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: float = Field(default_factory=time.time)
-    payload: Dict[str, Any] = {}
+    payload: dict[str, Any] = {}
 
 
 class ConnectionManager:
@@ -72,10 +71,10 @@ class ConnectionManager:
     """
     
     def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
-        self.user_connections: Dict[str, Set[str]] = {}  # user_id -> set of connection_ids
-        self.connection_user_map: Dict[str, str] = {}  # connection_id -> user_id
-        self.connection_locks: Dict[str, asyncio.Lock] = {}  # Prevent race conditions
+        self.active_connections: dict[str, WebSocket] = {}
+        self.user_connections: dict[str, set[str]] = {}  # user_id -> set of connection_ids
+        self.connection_user_map: dict[str, str] = {}  # connection_id -> user_id
+        self.connection_locks: dict[str, asyncio.Lock] = {}  # Prevent race conditions
         
     async def connect(self, websocket: WebSocket, user: User) -> str:
         """
@@ -247,7 +246,7 @@ class WebSocketHandler:
     
     def __init__(self):
         self.connection_manager = connection_manager
-        self.message_handlers: Dict[MessageType, Callable] = {
+        self.message_handlers: dict[MessageType, Callable] = {
             MessageType.QUERY: self.handle_query,
             MessageType.MEMORY_UPDATE: self.handle_memory_update,
             MessageType.COGNITIVE_EVENT: self.handle_cognitive_event,

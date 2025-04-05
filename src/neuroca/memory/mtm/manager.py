@@ -29,11 +29,11 @@ Usage:
 """
 
 import asyncio
+import contextlib
 import datetime
-import json
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -59,10 +59,10 @@ class MTMMemory(BaseModel):
     """
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     content: str
-    embedding: Optional[List[float]] = None
-    context: Dict[str, Any] = Field(default_factory=dict)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    associations: List[MemoryAssociation] = Field(default_factory=list)
+    embedding: Optional[list[float]] = None
+    context: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    associations: list[MemoryAssociation] = Field(default_factory=list)
     importance: float = 0.5
     created_at: datetime.datetime = Field(default_factory=datetime.datetime.now)
     last_accessed: datetime.datetime = Field(default_factory=datetime.datetime.now)
@@ -101,7 +101,7 @@ class MTMManager:
         self._is_running = False
         
         # Cache for frequently accessed memories
-        self._memory_cache: Dict[str, MTMMemory] = {}
+        self._memory_cache: dict[str, MTMMemory] = {}
         self._cache_size = settings.memory.mtm.cache_size
         
         logger.info("MTM Manager initialized with repository: %s", self.repository.__class__.__name__)
@@ -134,18 +134,17 @@ class MTMManager:
         self._is_running = False
         if self.maintenance_task:
             self.maintenance_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.maintenance_task
-            except asyncio.CancelledError:
-                pass
+
             self.maintenance_task = None
         
         # Flush cache to persistent storage
         await self._flush_cache()
         logger.info("MTM Manager stopped")
     
-    async def store_memory(self, content: str, context: Optional[Dict[str, Any]] = None, 
-                          metadata: Optional[Dict[str, Any]] = None,
+    async def store_memory(self, content: str, context: Optional[dict[str, Any]] = None, 
+                          metadata: Optional[dict[str, Any]] = None,
                           importance: Optional[float] = None,
                           priority: MemoryPriority = MemoryPriority.NORMAL) -> str:
         """
@@ -251,7 +250,7 @@ class MTMManager:
             raise MemoryStorageError(error_msg) from e
     
     async def update_memory(self, memory_id: str, 
-                           updates: Dict[str, Any]) -> MTMMemory:
+                           updates: dict[str, Any]) -> MTMMemory:
         """
         Update an existing memory.
         
@@ -333,7 +332,7 @@ class MTMManager:
     
     async def search_memories(self, query: str, limit: int = 10, 
                              threshold: float = 0.7,
-                             context_filter: Optional[Dict[str, Any]] = None) -> List[MTMMemory]:
+                             context_filter: Optional[dict[str, Any]] = None) -> list[MTMMemory]:
         """
         Search for memories based on semantic similarity to the query.
         
@@ -386,7 +385,7 @@ class MTMManager:
             logger.error(error_msg, exc_info=True)
             raise MemoryStorageError(error_msg) from e
     
-    async def consolidate_from_stm(self, stm_memories: List[MemoryItem]) -> List[str]:
+    async def consolidate_from_stm(self, stm_memories: list[MemoryItem]) -> list[str]:
         """
         Consolidate memories from Short-Term Memory into Medium-Term Memory.
         
@@ -435,7 +434,7 @@ class MTMManager:
             logger.error(error_msg, exc_info=True)
             raise MemoryStorageError(error_msg) from e
     
-    async def run_maintenance(self) -> Dict[str, Any]:
+    async def run_maintenance(self) -> dict[str, Any]:
         """
         Run maintenance processes on the Medium-Term Memory.
         
@@ -487,7 +486,7 @@ class MTMManager:
             stats["end_time"] = datetime.datetime.now().isoformat()
             return stats
     
-    async def get_ltm_candidates(self) -> List[MTMMemory]:
+    async def get_ltm_candidates(self) -> list[MTMMemory]:
         """
         Get memories that are candidates for transfer to Long-Term Memory.
         
@@ -503,7 +502,7 @@ class MTMManager:
             logger.error(error_msg, exc_info=True)
             raise MemoryStorageError(error_msg) from e
     
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the Medium-Term Memory.
         
@@ -733,7 +732,7 @@ class MTMManager:
         
         return consolidated_count
     
-    async def _identify_ltm_candidates(self) -> List[MTMMemory]:
+    async def _identify_ltm_candidates(self) -> list[MTMMemory]:
         """
         Identify memories that are candidates for transfer to Long-Term Memory.
         

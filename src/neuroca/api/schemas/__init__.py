@@ -31,12 +31,21 @@ serialization controls.
 """
 
 import logging
-from typing import Dict, List, Optional, Union, Any, Type
+from typing import Optional
 
 # Import Pydantic for schema definitions
 try:
-    from pydantic import BaseModel, Field, validator, root_validator
-    from pydantic import ValidationError, Extra, constr, conint, confloat
+    from pydantic import (
+        BaseModel,
+        Extra,
+        Field,
+        ValidationError,
+        confloat,
+        conint,
+        constr,
+        root_validator,
+        validator,
+    )
 except ImportError:
     logging.critical("Pydantic is required for API schema definitions. Please install it with: pip install pydantic")
     raise
@@ -50,52 +59,48 @@ __version__ = "0.1.0"
 # Import all schema modules to make them available through the package
 try:
     # Base schemas
-    from .base import BaseSchema, ErrorSchema, PaginationSchema, ResponseEnvelope
-
-    # Domain-specific schemas
-    from .memory import (
-        MemorySchema, 
-        WorkingMemorySchema, 
-        LongTermMemorySchema, 
-        EpisodicMemorySchema,
-        SemanticMemorySchema,
-        ProceduralMemorySchema,
-        MemoryQuerySchema,
-        MemoryUpdateSchema
+    # User and auth schemas
+    from .auth import (
+        LoginRequestSchema,
+        PermissionSchema,
+        RegisterRequestSchema,
+        TokenSchema,
+        UserSchema,
     )
-    
+    from .base import BaseSchema, ErrorSchema, PaginationSchema, ResponseEnvelope
     from .cognitive import (
-        CognitiveStateSchema,
         AttentionSchema,
+        BeliefSchema,
+        CognitiveStateSchema,
         EmotionSchema,
         GoalSchema,
-        BeliefSchema,
-        IntentionSchema
+        IntentionSchema,
     )
-    
     from .health import (
-        HealthSchema,
         EnergyLevelSchema,
         FatigueSchema,
+        HealthSchema,
+        HealthStatusSchema,
         StressSchema,
-        HealthStatusSchema
     )
-    
     from .integration import (
+        CompletionSchema,
+        EmbeddingSchema,
         LLMRequestSchema,
         LLMResponseSchema,
         PromptSchema,
-        CompletionSchema,
-        EmbeddingSchema
     )
-    
-    # User and auth schemas
-    from .auth import (
-        UserSchema,
-        TokenSchema,
-        LoginRequestSchema,
-        RegisterRequestSchema,
-        PermissionSchema
+
+    # Domain-specific schemas
+    from .memory import (
+        EpisodicMemorySchema,
+        LongTermMemorySchema,
+        MemoryQuerySchema,
+        MemorySchema,
+        MemoryUpdateSchema,
+        ProceduralMemorySchema,
+        SemanticMemorySchema,
+        WorkingMemorySchema,
     )
 
     # Export all schemas in a flat namespace for easy imports
@@ -133,9 +138,9 @@ except ImportError as e:
 
 
 # Schema registry for dynamic schema lookup
-_schema_registry: Dict[str, Type[BaseModel]] = {}
+_schema_registry: dict[str, type[BaseModel]] = {}
 
-def register_schema(schema_class: Type[BaseModel]) -> Type[BaseModel]:
+def register_schema(schema_class: type[BaseModel]) -> type[BaseModel]:
     """
     Register a schema class in the global schema registry.
     
@@ -163,7 +168,7 @@ def register_schema(schema_class: Type[BaseModel]) -> Type[BaseModel]:
     return schema_class
 
 
-def get_schema(schema_name: str) -> Optional[Type[BaseModel]]:
+def get_schema(schema_name: str) -> Optional[type[BaseModel]]:
     """
     Retrieve a schema class by name from the registry.
     
@@ -184,7 +189,7 @@ def get_schema(schema_name: str) -> Optional[Type[BaseModel]]:
     return schema
 
 
-def list_schemas() -> List[str]:
+def list_schemas() -> list[str]:
     """
     List all registered schema names.
     

@@ -14,18 +14,19 @@ Key functionalities:
 """
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Optional
+
+from neuroca.core.health.dynamics import HealthState  # Example for context checking
 
 # Import necessary components for potential integration
-from neuroca.memory.manager import MemoryManager, MemoryType, MemoryItem # Example
-from neuroca.core.health.dynamics import HealthState # Example for context checking
+from neuroca.memory.manager import MemoryItem, MemoryType  # Example
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 class PlanStep:
     """Represents a single step within a larger plan."""
-    def __init__(self, action: str, parameters: Optional[Dict[str, Any]] = None, estimated_cost: float = 0.1):
+    def __init__(self, action: str, parameters: Optional[dict[str, Any]] = None, estimated_cost: float = 0.1):
         self.action = action
         self.parameters = parameters or {}
         self.estimated_cost = estimated_cost # e.g., estimated energy/time cost
@@ -33,7 +34,7 @@ class PlanStep:
 
 class Plan:
     """Represents a sequence of actions to achieve a goal."""
-    def __init__(self, goal: str, steps: List[PlanStep]):
+    def __init__(self, goal: str, steps: list[PlanStep]):
         self.goal = goal
         self.steps = steps
         self.current_step_index = 0
@@ -89,10 +90,10 @@ class Planner:
         self.memory_manager = memory_manager
         self.health_manager = health_manager
         self.goal_manager = goal_manager
-        self.goal_manager = goal_manager
-        # TODO: Implement dependency injection properly later
+        # NOTE: Consider implementing a proper dependency injection framework
+        # for managing manager instances instead of direct constructor passing.
 
-    def generate_plan(self, goal_description: str, context: Optional[Dict[str, Any]] = None) -> Optional[Plan]:
+    def generate_plan(self, goal_description: str, context: Optional[dict[str, Any]] = None) -> Optional[Plan]:
         """
         Generate a plan to achieve the specified goal description given the context.
 
@@ -109,7 +110,7 @@ class Planner:
         # --- Enhanced Placeholder Planning Logic ---
 
         # 0. Get Goal Details (if GoalManager is available)
-        goal_priority = context.get("goal_priority", 5) # Default priority
+        context.get("goal_priority", 5) # Default priority
         # if self.goal_manager:
         #     active_goal = self.goal_manager.get_goal_by_description(goal_description) # Assumes such a method exists
         #     if active_goal:
@@ -129,8 +130,8 @@ class Planner:
             return None # Cannot plan in severely impaired state
 
         # 2. Retrieve Relevant Knowledge
-        semantic_knowledge: List[MemoryItem] = []
-        episodic_knowledge: List[MemoryItem] = []
+        semantic_knowledge: list[MemoryItem] = []
+        episodic_knowledge: list[MemoryItem] = []
         if self.memory_manager:
             try:
                 # Search semantic memory for general plans/procedures
@@ -219,7 +220,7 @@ class Planner:
                  
                  logger.info(f"Created generic 3-step plan based on goal words: {action_verb}, {action_object}")
             else:
-                 logger.warning(f"Cannot decompose empty goal description.")
+                 logger.warning("Cannot decompose empty goal description.")
                  
             # --- Sub-goal Decomposition Placeholder (Could be integrated here) ---
             # if self.goal_manager and len(steps) > 5: # Example: If plan is too long, try sub-goals
@@ -264,7 +265,9 @@ class Planner:
 
         # 4. Final Checks & Return (Resource validation, etc.)
         if plan:
-             # TODO: Add plan validation (e.g., resource checks)
+             # NOTE: Implement plan validation before returning.
+             # This should check estimated resource costs against available resources
+             # reported by the health_manager.
              logger.info(f"Generated plan with {len(plan.steps)} steps for goal: {goal_description} (Health State: {health_state.value})")
              return plan
         else:
@@ -272,7 +275,7 @@ class Planner:
              return None
         # --- End Enhanced Placeholder ---
 
-    def replan(self, failed_plan: Plan, reason: str, context: Optional[Dict[str, Any]] = None) -> Optional[Plan]:
+    def replan(self, failed_plan: Plan, reason: str, context: Optional[dict[str, Any]] = None) -> Optional[Plan]:
         """
         Generate a new plan after a previous plan failed.
 

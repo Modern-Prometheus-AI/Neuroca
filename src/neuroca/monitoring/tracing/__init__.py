@@ -47,17 +47,17 @@ import os
 import sys
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
+from typing import Any, Callable, Optional, TypeVar, Union, cast
 
 # OpenTelemetry imports
 try:
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-    from opentelemetry.instrumentation.requests import RequestsInstrumentor
-    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
     from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     from opentelemetry.instrumentation.redis import RedisInstrumentor
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
@@ -66,8 +66,8 @@ try:
         SimpleSpanProcessor,
     )
     from opentelemetry.sdk.trace.sampling import (
-        ALWAYS_ON,
         ALWAYS_OFF,
+        ALWAYS_ON,
         ParentBased,
         TraceIdRatioBased,
     )
@@ -174,7 +174,7 @@ def configure_tracing(
     jaeger_host: Optional[str] = None,
     jaeger_port: Optional[int] = None,
     zipkin_endpoint: Optional[str] = None,
-    additional_attributes: Optional[Dict[str, str]] = None,
+    additional_attributes: Optional[dict[str, str]] = None,
     auto_instrument_libraries: bool = True,
 ) -> bool:
     """
@@ -368,7 +368,7 @@ def configure_tracing(
 
 def trace(
     name: Optional[str] = None,
-    attributes: Optional[Dict[str, Any]] = None,
+    attributes: Optional[dict[str, Any]] = None,
     kind: Optional[Any] = None,
 ) -> Callable[[F], F]:
     """
@@ -445,7 +445,7 @@ def trace(
 
 def trace_async(
     name: Optional[str] = None,
-    attributes: Optional[Dict[str, Any]] = None,
+    attributes: Optional[dict[str, Any]] = None,
     kind: Optional[Any] = None,
 ) -> Callable[[F], F]:
     """
@@ -520,7 +520,7 @@ def trace_async(
     
     return decorator
 
-def add_span_attributes(attributes: Dict[str, Any]) -> None:
+def add_span_attributes(attributes: dict[str, Any]) -> None:
     """
     Add attributes to the current active span.
     
@@ -542,7 +542,7 @@ def add_span_attributes(attributes: Dict[str, Any]) -> None:
     for key, value in attributes.items():
         current_span.set_attribute(key, value)
 
-def record_exception(exception: Exception, attributes: Optional[Dict[str, Any]] = None) -> None:
+def record_exception(exception: Exception, attributes: Optional[dict[str, Any]] = None) -> None:
     """
     Record an exception in the current active span.
     
@@ -594,7 +594,7 @@ def set_span_status(status_code: Any, description: Optional[str] = None) -> None
 @contextmanager
 def start_span(
     name: str,
-    attributes: Optional[Dict[str, Any]] = None,
+    attributes: Optional[dict[str, Any]] = None,
     kind: Optional[Any] = None,
     tracer_name: Optional[str] = None,
 ) -> Any:

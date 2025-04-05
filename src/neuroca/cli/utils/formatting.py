@@ -30,7 +30,7 @@ import re
 import textwrap
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -169,8 +169,8 @@ def highlight_text(text: str, pattern: str, color: TextColor = TextColor.YELLOW)
 
 
 def format_table(
-    headers: List[str],
-    rows: List[List[str]],
+    headers: list[str],
+    rows: list[list[str]],
     max_width: Optional[int] = None,
     title: Optional[str] = None
 ) -> str:
@@ -282,7 +282,7 @@ def format_table(
 
 
 def format_json(
-    data: Union[Dict, List],
+    data: Union[dict, list],
     indent: int = 2,
     sort_keys: bool = False,
     colorize: bool = True,
@@ -356,7 +356,7 @@ def format_json(
 
 
 def format_list(
-    items: List[str],
+    items: list[str],
     bullet: str = "•",
     indentation: int = 2,
     nested_level: int = 0
@@ -643,7 +643,7 @@ def format_progress_bar(
 
 
 def format_key_value(
-    data: Dict[str, Any],
+    data: dict[str, Any],
     separator: str = ": ",
     indent: int = 0,
     key_color: Optional[TextColor] = TextColor.CYAN

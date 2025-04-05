@@ -27,9 +27,8 @@ import os
 import time
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Any, Callable, Optional, TypeVar, Union
 
-import redis
 from redis.client import Pipeline, Redis
 from redis.connection import ConnectionPool
 from redis.exceptions import ConnectionError, RedisError, TimeoutError
@@ -42,7 +41,7 @@ logger = logging.getLogger(__name__)
 # Type variables for better type hinting
 T = TypeVar('T')
 RedisValue = Union[str, bytes, int, float, None]
-RedisMappingType = Dict[str, Any]
+RedisMappingType = dict[str, Any]
 
 # Default connection settings
 DEFAULT_REDIS_HOST = "localhost"
@@ -426,7 +425,7 @@ class RedisConnection:
         return self.deserialize(value) if deserialize and value is not None else value
 
     @retry_on_connection_error()
-    def hmset(self, name: str, mapping: Dict[str, Any], serialize: bool = True) -> bool:
+    def hmset(self, name: str, mapping: dict[str, Any], serialize: bool = True) -> bool:
         """
         Set multiple hash fields to multiple values.
         
@@ -445,7 +444,7 @@ class RedisConnection:
         return bool(self.client.hset(name, mapping=serialized_mapping))
 
     @retry_on_connection_error()
-    def hmget(self, name: str, keys: List[str], deserialize: bool = True) -> List[Any]:
+    def hmget(self, name: str, keys: list[str], deserialize: bool = True) -> list[Any]:
         """
         Get the values of all given hash fields.
         
@@ -463,7 +462,7 @@ class RedisConnection:
         return values
 
     @retry_on_connection_error()
-    def hgetall(self, name: str, deserialize: bool = True) -> Dict[str, Any]:
+    def hgetall(self, name: str, deserialize: bool = True) -> dict[str, Any]:
         """
         Get all fields and values in a hash.
         
@@ -517,10 +516,7 @@ class RedisConnection:
         if not values:
             return 0
             
-        if serialize:
-            serialized_values = [self.serialize(v) for v in values]
-        else:
-            serialized_values = values
+        serialized_values = [self.serialize(v) for v in values] if serialize else values
         return self.client.lpush(name, *serialized_values)
 
     @retry_on_connection_error()
@@ -539,10 +535,7 @@ class RedisConnection:
         if not values:
             return 0
             
-        if serialize:
-            serialized_values = [self.serialize(v) for v in values]
-        else:
-            serialized_values = values
+        serialized_values = [self.serialize(v) for v in values] if serialize else values
         return self.client.rpush(name, *serialized_values)
 
     @retry_on_connection_error()
@@ -576,7 +569,7 @@ class RedisConnection:
         return self.deserialize(value) if deserialize and value is not None else value
 
     @retry_on_connection_error()
-    def lrange(self, name: str, start: int, end: int, deserialize: bool = True) -> List[Any]:
+    def lrange(self, name: str, start: int, end: int, deserialize: bool = True) -> list[Any]:
         """
         Get a range of elements from a list.
         
@@ -611,10 +604,7 @@ class RedisConnection:
         if not values:
             return 0
             
-        if serialize:
-            serialized_values = [self.serialize(v) for v in values]
-        else:
-            serialized_values = values
+        serialized_values = [self.serialize(v) for v in values] if serialize else values
         return self.client.sadd(name, *serialized_values)
 
     @retry_on_connection_error()
@@ -650,15 +640,12 @@ class RedisConnection:
         if not values:
             return 0
             
-        if serialize:
-            serialized_values = [self.serialize(v) for v in values]
-        else:
-            serialized_values = values
+        serialized_values = [self.serialize(v) for v in values] if serialize else values
         return self.client.srem(name, *serialized_values)
 
     # Sorted set operations
     @retry_on_connection_error()
-    def zadd(self, name: str, mapping: Dict[Any, float], serialize_keys: bool = True) -> int:
+    def zadd(self, name: str, mapping: dict[Any, float], serialize_keys: bool = True) -> int:
         """
         Add members to a sorted set, or update their scores.
         
@@ -688,7 +675,7 @@ class RedisConnection:
         desc: bool = False, 
         withscores: bool = False,
         deserialize: bool = True
-    ) -> Union[List[Any], List[Tuple[Any, float]]]:
+    ) -> Union[list[Any], list[tuple[Any, float]]]:
         """
         Get a range of members from a sorted set.
         
@@ -733,10 +720,7 @@ class RedisConnection:
         if not values:
             return 0
             
-        if serialize:
-            serialized_values = [self.serialize(v) for v in values]
-        else:
-            serialized_values = values
+        serialized_values = [self.serialize(v) for v in values] if serialize else values
         return self.client.zrem(name, *serialized_values)
 
     # Pub/Sub operations
@@ -769,7 +753,7 @@ class RedisConnection:
         except RedisError:
             return False
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """
         Perform a comprehensive health check on the Redis connection.
         

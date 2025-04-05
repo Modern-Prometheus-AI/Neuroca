@@ -28,16 +28,16 @@ Usage:
     formatted_prompt = cot_prompt.format(problem="What is 25 * 13?")
 """
 
+import json
 import logging
 import re
-import json
-from typing import Dict, List, Optional, Union, Any, Callable
-from enum import Enum
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Optional, Union
 
-from neuroca.integration.prompts.base import BasePromptTemplate
 from neuroca.core.exceptions import PromptValidationError, ReasoningError
-from neuroca.core.utils.validation import validate_string, validate_list
+from neuroca.core.utils.validation import validate_list, validate_string
+from neuroca.integration.prompts.base import BasePromptTemplate
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ class ReasoningExample:
     problem: str
     reasoning: str
     answer: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
         """Validate the example fields after initialization."""
@@ -77,9 +77,9 @@ class BaseReasoningPrompt(BasePromptTemplate):
         self,
         strategy: ReasoningStrategy,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
         instruction_template: str = "",
-        output_format: Optional[Dict[str, Any]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         max_reasoning_steps: int = 5,
         **kwargs
     ):
@@ -221,8 +221,8 @@ class ChainOfThoughtPrompt(BaseReasoningPrompt):
     def __init__(
         self,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
-        output_format: Optional[Dict[str, Any]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -261,10 +261,10 @@ class TreeOfThoughtPrompt(BaseReasoningPrompt):
     def __init__(
         self,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
         num_branches: int = 3,
         depth: int = 2,
-        output_format: Optional[Dict[str, Any]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -309,8 +309,8 @@ class StepByStepPrompt(BaseReasoningPrompt):
     def __init__(
         self,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
-        output_format: Optional[Dict[str, Any]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -353,9 +353,9 @@ class AnalogicalPrompt(BaseReasoningPrompt):
     def __init__(
         self,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
-        analogies: Optional[List[Dict[str, str]]] = None,
-        output_format: Optional[Dict[str, Any]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
+        analogies: Optional[list[dict[str, str]]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -405,9 +405,9 @@ class CounterfactualPrompt(BaseReasoningPrompt):
     def __init__(
         self,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
-        counterfactuals: Optional[List[str]] = None,
-        output_format: Optional[Dict[str, Any]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
+        counterfactuals: Optional[list[str]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -458,8 +458,8 @@ class CausalPrompt(BaseReasoningPrompt):
     def __init__(
         self,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
-        output_format: Optional[Dict[str, Any]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -502,9 +502,9 @@ class FirstPrinciplesPrompt(BaseReasoningPrompt):
     def __init__(
         self,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
-        principles: Optional[List[str]] = None,
-        output_format: Optional[Dict[str, Any]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
+        principles: Optional[list[str]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -556,9 +556,9 @@ class SocraticPrompt(BaseReasoningPrompt):
     def __init__(
         self,
         task_description: str,
-        examples: Optional[List[Union[Dict[str, Any], ReasoningExample]]] = None,
-        guiding_questions: Optional[List[str]] = None,
-        output_format: Optional[Dict[str, Any]] = None,
+        examples: Optional[list[Union[dict[str, Any], ReasoningExample]]] = None,
+        guiding_questions: Optional[list[str]] = None,
+        output_format: Optional[dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -651,7 +651,7 @@ def create_reasoning_prompt(
     return prompt_class(task_description=task_description, **kwargs)
 
 
-def extract_reasoning_steps(response: str) -> List[str]:
+def extract_reasoning_steps(response: str) -> list[str]:
     """
     Extract reasoning steps from a model response.
     

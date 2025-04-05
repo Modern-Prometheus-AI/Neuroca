@@ -34,16 +34,15 @@ Usage Examples:
     register_prompt("text_analysis", template)
 """
 
-import logging
-import os
-import json
-import re
-from pathlib import Path
-from typing import Dict, List, Optional, Union, Any, Set, Callable
-from dataclasses import dataclass, field
-import importlib.resources
-from datetime import datetime
 import hashlib
+import importlib.resources
+import json
+import logging
+import re
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional, Union
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -68,9 +67,9 @@ class PromptTemplate:
         updated_at (datetime): When this prompt template was last modified
     """
     template: str
-    required_vars: Set[str] = field(default_factory=set)
-    optional_vars: Set[str] = field(default_factory=set)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    required_vars: set[str] = field(default_factory=set)
+    optional_vars: set[str] = field(default_factory=set)
+    metadata: dict[str, Any] = field(default_factory=dict)
     version: str = "1.0.0"
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
@@ -92,7 +91,7 @@ class PromptTemplate:
         if self.version == "1.0.0":
             self.version = self._generate_version_hash()
     
-    def _extract_variables(self) -> Set[str]:
+    def _extract_variables(self) -> set[str]:
         """Extract all variable names from the template."""
         return set(re.findall(VARIABLE_PATTERN, self.template))
     
@@ -102,7 +101,7 @@ class PromptTemplate:
         timestamp = datetime.now().strftime("%Y%m%d")
         return f"{timestamp}-{content_hash}"
     
-    def render(self, context: Dict[str, Any]) -> str:
+    def render(self, context: dict[str, Any]) -> str:
         """
         Render the template by substituting variables with values from context.
         
@@ -128,7 +127,7 @@ class PromptTemplate:
         
         return result
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the template to a dictionary for serialization."""
         return {
             "template": self.template,
@@ -141,7 +140,7 @@ class PromptTemplate:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptTemplate':
+    def from_dict(cls, data: dict[str, Any]) -> 'PromptTemplate':
         """Create a PromptTemplate instance from a dictionary."""
         # Convert string dates back to datetime objects
         if isinstance(data.get("created_at"), str):
@@ -167,7 +166,7 @@ class PromptRegistry:
     """
     def __init__(self):
         """Initialize an empty prompt registry."""
-        self._prompts: Dict[str, PromptTemplate] = {}
+        self._prompts: dict[str, PromptTemplate] = {}
         self._loaded = False
         self._prompt_dir = None
     
@@ -209,7 +208,7 @@ class PromptRegistry:
         
         return self._prompts[name]
     
-    def render(self, name: str, context: Dict[str, Any]) -> str:
+    def render(self, name: str, context: dict[str, Any]) -> str:
         """
         Render a prompt template with the given context.
         
@@ -227,7 +226,7 @@ class PromptRegistry:
         template = self.get(name)
         return template.render(context)
     
-    def list_prompts(self) -> List[str]:
+    def list_prompts(self) -> list[str]:
         """
         List all registered prompt names.
         
@@ -291,7 +290,7 @@ class PromptRegistry:
         for file_path in directory.glob(f"*{PROMPT_FILE_EXTENSION}"):
             try:
                 prompt_name = file_path.stem
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, encoding='utf-8') as f:
                     prompt_data = json.load(f)
                 
                 template = PromptTemplate.from_dict(prompt_data)
@@ -325,7 +324,7 @@ _registry = PromptRegistry()
 
 # Public API functions
 
-def get_prompt(name: str, context: Optional[Dict[str, Any]] = None) -> Union[PromptTemplate, str]:
+def get_prompt(name: str, context: Optional[dict[str, Any]] = None) -> Union[PromptTemplate, str]:
     """
     Get a prompt template or render it with the provided context.
     
@@ -346,9 +345,9 @@ def get_prompt(name: str, context: Optional[Dict[str, Any]] = None) -> Union[Pro
     return _registry.get(name)
 
 def register_prompt(name: str, template: Union[str, PromptTemplate], 
-                   required_vars: Optional[List[str]] = None,
-                   optional_vars: Optional[List[str]] = None,
-                   metadata: Optional[Dict[str, Any]] = None) -> None:
+                   required_vars: Optional[list[str]] = None,
+                   optional_vars: Optional[list[str]] = None,
+                   metadata: Optional[dict[str, Any]] = None) -> None:
     """
     Register a new prompt template.
     
@@ -372,7 +371,7 @@ def register_prompt(name: str, template: Union[str, PromptTemplate],
     
     _registry.register(name, template)
 
-def list_prompts() -> List[str]:
+def list_prompts() -> list[str]:
     """
     List all registered prompt names.
     

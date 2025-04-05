@@ -43,7 +43,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Callable, Dict, Generic, List, Optional, Protocol, Tuple, TypeVar, Union
+from typing import Any, Callable, Generic, Optional, Protocol, TypeVar
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -354,13 +354,13 @@ class AnnealingResult(Generic[T, E]):
     final_temperature: float
     
     # History of energy values (if tracking enabled)
-    energy_history: Optional[List[E]] = None
+    energy_history: Optional[list[E]] = None
     
     # History of acceptance rates (if tracking enabled)
-    acceptance_history: Optional[List[float]] = None
+    acceptance_history: Optional[list[float]] = None
     
     # Additional metrics and information
-    metrics: Dict[str, Any] = None
+    metrics: dict[str, Any] = None
     
     def __post_init__(self):
         """Initialize default values for optional fields."""

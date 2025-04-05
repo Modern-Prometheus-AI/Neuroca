@@ -33,7 +33,7 @@ import importlib
 import logging
 import os
 import pkgutil
-from typing import Dict, List, Callable, Any, Optional, Union
+from typing import Any, Callable, Optional
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -42,23 +42,23 @@ logger = logging.getLogger(__name__)
 CommandFunction = Callable[..., Any]
 
 # Dictionary to store all registered commands
-ALL_COMMANDS: Dict[str, CommandFunction] = {}
+ALL_COMMANDS: dict[str, CommandFunction] = {}
 
 # Dictionary to store command groups
-COMMAND_GROUPS: Dict[str, Dict[str, CommandFunction]] = {}
+COMMAND_GROUPS: dict[str, dict[str, CommandFunction]] = {}
 
 # Dictionary to store command help information
-COMMAND_HELP: Dict[str, str] = {}
+COMMAND_HELP: dict[str, str] = {}
 
 # Dictionary to store command examples
-COMMAND_EXAMPLES: Dict[str, List[str]] = {}
+COMMAND_EXAMPLES: dict[str, list[str]] = {}
 
 
 def register_command(
     name: str, 
     group: str = "general", 
     help_text: str = "", 
-    examples: Optional[List[str]] = None
+    examples: Optional[list[str]] = None
 ) -> Callable[[CommandFunction], CommandFunction]:
     """
     Decorator to register a function as a CLI command.
@@ -133,7 +133,7 @@ def get_command(name: str) -> Optional[CommandFunction]:
     return ALL_COMMANDS.get(name)
 
 
-def get_commands_in_group(group: str) -> Dict[str, CommandFunction]:
+def get_commands_in_group(group: str) -> dict[str, CommandFunction]:
     """
     Get all commands in a specific group.
     
@@ -172,7 +172,7 @@ def get_command_help(name: str) -> str:
     return COMMAND_HELP.get(name, "")
 
 
-def get_command_examples(name: str) -> List[str]:
+def get_command_examples(name: str) -> list[str]:
     """
     Get usage examples for a command.
     
@@ -192,7 +192,7 @@ def get_command_examples(name: str) -> List[str]:
     return COMMAND_EXAMPLES.get(name, [])
 
 
-def list_all_commands() -> Dict[str, Dict[str, str]]:
+def list_all_commands() -> dict[str, dict[str, str]]:
     """
     List all available commands organized by group with their help text.
     
@@ -208,7 +208,7 @@ def list_all_commands() -> Dict[str, Dict[str, str]]:
                 print(f"  {name}: {help_text}")
         ```
     """
-    result: Dict[str, Dict[str, str]] = {}
+    result: dict[str, dict[str, str]] = {}
     
     for group, commands in COMMAND_GROUPS.items():
         result[group] = {}
@@ -233,7 +233,7 @@ def _discover_and_load_commands() -> None:
     # Get the directory of the current package
     package_dir = os.path.dirname(__file__)
     
-    for _, module_name, is_pkg in pkgutil.iter_modules([package_dir]):
+    for _, module_name, _is_pkg in pkgutil.iter_modules([package_dir]):
         # Skip __init__.py and other special modules
         if module_name.startswith('_'):
             continue

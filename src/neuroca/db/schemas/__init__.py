@@ -28,10 +28,10 @@ import importlib
 import logging
 import os
 import pkgutil
-from typing import Dict, List, Type, Any, Optional
+from typing import Optional
 
 from sqlalchemy import MetaData
-from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
+from sqlalchemy.ext.declarative import declarative_base
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -52,9 +52,9 @@ metadata = MetaData(naming_convention=convention)
 Base = declarative_base(metadata=metadata)
 
 # Dictionary to store all model classes
-_models: Dict[str, Type[Base]] = {}
+_models: dict[str, type[Base]] = {}
 
-def register_model(model_class: Type[Base]) -> None:
+def register_model(model_class: type[Base]) -> None:
     """
     Register a model class in the global models registry.
     
@@ -74,7 +74,7 @@ def register_model(model_class: Type[Base]) -> None:
     _models[model_name] = model_class
     logger.debug(f"Registered model: {model_name}")
 
-def get_model(model_name: str) -> Optional[Type[Base]]:
+def get_model(model_name: str) -> Optional[type[Base]]:
     """
     Get a model class by its name.
     
@@ -86,7 +86,7 @@ def get_model(model_name: str) -> Optional[Type[Base]]:
     """
     return _models.get(model_name)
 
-def get_all_models() -> Dict[str, Type[Base]]:
+def get_all_models() -> dict[str, type[Base]]:
     """
     Get all registered model classes.
     

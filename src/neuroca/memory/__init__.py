@@ -46,7 +46,7 @@ See Also:
 """
 
 import logging
-from typing import Dict, Any, Optional, List, Union, Tuple
+from typing import Any, Optional, Union
 
 # Configure module-level logger
 logger = logging.getLogger(__name__)
@@ -54,27 +54,27 @@ logger = logging.getLogger(__name__)
 # Import memory components
 # These imports will be implemented in separate files within the memory package
 try:
-    from .working_memory import WorkingMemory
     from .episodic_memory import EpisodicMemory
-    from .semantic_memory import SemanticMemory
-    from .memory_consolidation import MemoryConsolidation
-    from .memory_retrieval import MemoryRetrieval
-    from .memory_decay import MemoryDecay
     from .exceptions import (
         MemoryCapacityError,
+        MemoryConsolidationError,
+        MemoryDecayError,
         MemoryRetrievalError,
         MemoryStorageError,
-        MemoryConsolidationError,
-        MemoryDecayError
     )
+    from .memory_consolidation import MemoryConsolidation
+    from .memory_decay import MemoryDecay
+    from .memory_retrieval import MemoryRetrieval
     from .models import (
-        MemoryItem,
-        WorkingMemoryItem,
         EpisodicMemoryItem,
-        SemanticMemoryItem,
+        MemoryItem,
         MemoryQuery,
-        MemoryRetrievalResult
+        MemoryRetrievalResult,
+        SemanticMemoryItem,
+        WorkingMemoryItem,
     )
+    from .semantic_memory import SemanticMemory
+    from .working_memory import WorkingMemory
 except ImportError as e:
     logger.warning(f"Some memory components could not be imported: {e}")
     # Define placeholder classes to prevent crashes if components are not yet implemented
@@ -158,7 +158,7 @@ class MemorySystem:
         ```
     """
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize the memory system with all memory tiers and supporting components.
         
@@ -209,10 +209,10 @@ class MemorySystem:
             raise RuntimeError(f"Memory system initialization failed: {str(e)}") from e
     
     def retrieve(self, 
-                 query: Union[str, Dict[str, Any], MemoryQuery], 
-                 tiers: Optional[List[str]] = None,
+                 query: Union[str, dict[str, Any], MemoryQuery], 
+                 tiers: Optional[list[str]] = None,
                  limit: int = 10,
-                 threshold: float = 0.0) -> List[MemoryRetrievalResult]:
+                 threshold: float = 0.0) -> list[MemoryRetrievalResult]:
         """
         Retrieve information from multiple memory tiers based on the query.
         
@@ -262,7 +262,7 @@ class MemorySystem:
             logger.error(error_msg, exc_info=True)
             raise MemoryRetrievalError(error_msg) from e
     
-    def consolidate(self) -> Dict[str, Any]:
+    def consolidate(self) -> dict[str, Any]:
         """
         Trigger memory consolidation process across all tiers.
         
@@ -287,7 +287,7 @@ class MemorySystem:
             logger.error(error_msg, exc_info=True)
             raise MemoryConsolidationError(error_msg) from e
     
-    def apply_decay(self) -> Dict[str, Any]:
+    def apply_decay(self) -> dict[str, Any]:
         """
         Apply memory decay (forgetting) across all memory tiers.
         
@@ -312,7 +312,7 @@ class MemorySystem:
             logger.error(error_msg, exc_info=True)
             raise MemoryDecayError(error_msg) from e
     
-    def clear(self, tiers: Optional[List[str]] = None) -> None:
+    def clear(self, tiers: Optional[list[str]] = None) -> None:
         """
         Clear specified memory tiers or all tiers if none specified.
         

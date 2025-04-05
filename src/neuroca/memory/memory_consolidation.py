@@ -5,10 +5,11 @@ This module handles the process of memory consolidation, which moves information
 from short-term memory to long-term memory with appropriate transformations.
 """
 
-from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
+from typing import Any
 
-def consolidate_memory(memory_data: Dict[str, Any], memory_type: str = "episodic") -> Dict[str, Any]:
+
+def consolidate_memory(memory_data: dict[str, Any], memory_type: str = "episodic") -> dict[str, Any]:
     """
     Consolidate a memory from short-term to long-term storage.
     
@@ -31,7 +32,7 @@ def consolidate_memory(memory_data: Dict[str, Any], memory_type: str = "episodic
     return consolidated
 
 
-def batch_consolidate_memories(memories: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def batch_consolidate_memories(memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Consolidate a batch of memories.
     
@@ -44,7 +45,7 @@ def batch_consolidate_memories(memories: List[Dict[str, Any]]) -> List[Dict[str,
     return [consolidate_memory(memory) for memory in memories]
 
 
-def extract_semantic_knowledge(episodic_memories: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def extract_semantic_knowledge(episodic_memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Extract semantic knowledge from a collection of episodic memories.
     
@@ -72,8 +73,8 @@ def extract_semantic_knowledge(episodic_memories: List[Dict[str, Any]]) -> List[
     return semantic_knowledge
 
 
-def prioritize_memories_for_consolidation(memories: List[Dict[str, Any]], 
-                                          limit: int = 10) -> List[Dict[str, Any]]:
+def prioritize_memories_for_consolidation(memories: list[dict[str, Any]], 
+                                          limit: int = 10) -> list[dict[str, Any]]:
     """
     Prioritize memories for consolidation based on importance, recency, etc.
     
@@ -87,7 +88,7 @@ def prioritize_memories_for_consolidation(memories: List[Dict[str, Any]],
     # This is a simplified implementation - a real system would use more factors
     
     # Sort by importance and recency (using access count as a proxy)
-    def priority_score(memory: Dict[str, Any]) -> float:
+    def priority_score(memory: dict[str, Any]) -> float:
         importance = memory.get("importance", 0.5)
         access_count = memory.get("access_count", 0)
         # Memories with high importance and low access count get higher priority

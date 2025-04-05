@@ -38,7 +38,7 @@ from datetime import datetime
 from enum import Enum
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TypeVar, Union, cast
+from typing import Any, Callable, Optional, TypeVar, Union
 
 # Type variables for generic functions
 T = TypeVar('T')
@@ -121,18 +121,18 @@ def setup_logging(
             )
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(f"Failed to set up log file at {log_file}: {str(e)}")
     
     return logger
 
 def validate_input(
     data: Any,
-    required_fields: Optional[List[str]] = None,
-    field_types: Optional[Dict[str, type]] = None,
-    min_length: Optional[Dict[str, int]] = None,
-    max_length: Optional[Dict[str, int]] = None,
-    regex_patterns: Optional[Dict[str, str]] = None
+    required_fields: Optional[list[str]] = None,
+    field_types: Optional[dict[str, type]] = None,
+    min_length: Optional[dict[str, int]] = None,
+    max_length: Optional[dict[str, int]] = None,
+    regex_patterns: Optional[dict[str, str]] = None
 ) -> None:
     """
     Validate input data against specified requirements.
@@ -236,7 +236,7 @@ def measure_execution_time(
             self.start_time = time.time()
             self.metadata = {}
             
-        def set_metadata(self, metadata: Dict[str, Any]) -> None:
+        def set_metadata(self, metadata: dict[str, Any]) -> None:
             """Add metadata to be included in the log message."""
             self.metadata.update(metadata)
     
@@ -260,7 +260,7 @@ def retry_operation(
     max_attempts: int = 3,
     retry_delay: float = 1.0,
     backoff_factor: float = 2.0,
-    exceptions_to_retry: Tuple[Exception, ...] = (Exception,),
+    exceptions_to_retry: tuple[Exception, ...] = (Exception,),
     logger: Optional[logging.Logger] = None
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
@@ -406,7 +406,7 @@ def generate_hash(data: Union[str, bytes], algorithm: str = 'sha256') -> str:
     except ValueError as e:
         raise ValueError(f"Invalid hashing algorithm: {algorithm}") from e
 
-def get_caller_info() -> Dict[str, Any]:
+def get_caller_info() -> dict[str, Any]:
     """
     Get information about the caller of a function.
     Useful for debugging and logging.

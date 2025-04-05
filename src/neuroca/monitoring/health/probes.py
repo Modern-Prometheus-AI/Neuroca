@@ -30,14 +30,14 @@ Usage:
 import abc
 import datetime
 import logging
-import os
 import platform
-import psutil
 import socket
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
+
+import psutil
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -73,10 +73,10 @@ class HealthCheckResult:
     component: str
     timestamp: datetime.datetime = field(default_factory=datetime.datetime.now)
     details: str = ""
-    metrics: Dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, Any] = field(default_factory=dict)
     error: Optional[str] = None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the health check result to a dictionary for serialization."""
         return {
             "status": self.status.value,
@@ -125,7 +125,7 @@ class HealthProbe(abc.ABC):
         self, 
         status: HealthStatus, 
         details: str = "", 
-        metrics: Optional[Dict[str, Any]] = None,
+        metrics: Optional[dict[str, Any]] = None,
         error: Optional[str] = None
     ) -> HealthCheckResult:
         """
@@ -245,7 +245,7 @@ class MemoryHealthProbe(HealthProbe):
         self.threshold_percentage = threshold_percentage
         self.leak_detection_enabled = leak_detection_enabled
         self.sample_interval_seconds = sample_interval_seconds
-        self._previous_samples: List[Tuple[datetime.datetime, float]] = []
+        self._previous_samples: list[tuple[datetime.datetime, float]] = []
     
     def check(self) -> HealthCheckResult:
         """
@@ -442,7 +442,7 @@ class CompositeHealthProbe(HealthProbe):
     individual probes and groups of probes uniformly.
     """
     
-    def __init__(self, probes: List[HealthProbe]):
+    def __init__(self, probes: list[HealthProbe]):
         """
         Initialize the composite health probe.
         
@@ -535,7 +535,7 @@ class NetworkHealthProbe(HealthProbe):
     
     def __init__(
         self, 
-        targets: List[str] = None,
+        targets: list[str] = None,
         timeout_seconds: float = 2.0,
         packet_count: int = 3
     ):
@@ -612,7 +612,7 @@ class NetworkHealthProbe(HealthProbe):
                 error=str(e)
             )
     
-    def _ping_target(self, target: str) -> Dict[str, Any]:
+    def _ping_target(self, target: str) -> dict[str, Any]:
         """
         Ping a specific network target and measure response.
         
@@ -624,8 +624,8 @@ class NetworkHealthProbe(HealthProbe):
         """
         # This is a simplified ping implementation
         # In production, consider using a more robust approach or library
-        import subprocess
         import platform
+        import subprocess
         
         try:
             # Determine ping command based on platform
@@ -693,7 +693,7 @@ class NetworkHealthProbe(HealthProbe):
 # Factory function to create a standard set of health probes
 def create_standard_health_probes(
     db_connection_string: Optional[str] = None,
-    network_targets: Optional[List[str]] = None
+    network_targets: Optional[list[str]] = None
 ) -> CompositeHealthProbe:
     """
     Create a standard set of health probes for the NeuroCognitive Architecture.

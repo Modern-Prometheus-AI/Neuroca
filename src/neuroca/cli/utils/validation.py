@@ -19,16 +19,17 @@ Usage examples:
     ...     print("Config file is valid")
 """
 
+import ipaddress
+import json
+import logging
 import os
 import re
-import json
-import yaml
-import logging
-import ipaddress
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Tuple, Set
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional, Union
 from uuid import UUID
+
+import yaml
 
 # Setup module logger
 logger = logging.getLogger(__name__)
@@ -95,10 +96,10 @@ def validate_config_file(file_path: Union[str, Path]) -> bool:
     extension = path.suffix.lower()
     try:
         if extension == '.yaml' or extension == '.yml':
-            with open(path, 'r') as f:
+            with open(path) as f:
                 yaml.safe_load(f)
         elif extension == '.json':
-            with open(path, 'r') as f:
+            with open(path) as f:
                 json.load(f)
         else:
             raise ValidationError(f"Unsupported configuration file format: {extension}")
@@ -237,9 +238,8 @@ def validate_directory_path(dir_path: Union[str, Path], must_exist: bool = True,
         if not path.is_dir():
             raise ValidationError(f"Path is not a directory: {path}")
     
-    if writable and path.exists():
-        if not os.access(path, os.W_OK):
-            raise ValidationError(f"Directory is not writable: {path}")
+    if writable and path.exists() and not os.access(path, os.W_OK):
+        raise ValidationError(f"Directory is not writable: {path}")
     
     logger.debug(f"Directory path validated successfully: {path}")
     return True
@@ -269,9 +269,8 @@ def validate_file_path(file_path: Union[str, Path], must_exist: bool = True,
         if not path.is_file():
             raise ValidationError(f"Path is not a file: {path}")
     
-    if readable and path.exists():
-        if not os.access(path, os.R_OK):
-            raise ValidationError(f"File is not readable: {path}")
+    if readable and path.exists() and not os.access(path, os.R_OK):
+        raise ValidationError(f"File is not readable: {path}")
     
     logger.debug(f"File path validated successfully: {path}")
     return True
@@ -388,7 +387,7 @@ def validate_string_length(string: str, min_length: Optional[int] = None,
     return True
 
 
-def validate_required_keys(data: Dict[str, Any], required_keys: List[str]) -> bool:
+def validate_required_keys(data: dict[str, Any], required_keys: list[str]) -> bool:
     """
     Validate that a dictionary contains all required keys.
     
@@ -410,11 +409,11 @@ def validate_required_keys(data: Dict[str, Any], required_keys: List[str]) -> bo
     if missing_keys:
         raise ValidationError(f"Missing required keys: {', '.join(missing_keys)}")
     
-    logger.debug(f"All required keys present in data dictionary")
+    logger.debug("All required keys present in data dictionary")
     return True
 
 
-def validate_enum_value(value: Any, valid_values: Set[Any]) -> bool:
+def validate_enum_value(value: Any, valid_values: set[Any]) -> bool:
     """
     Validate that a value is one of a set of valid values.
     
@@ -437,7 +436,7 @@ def validate_enum_value(value: Any, valid_values: Set[Any]) -> bool:
     return True
 
 
-def validate_json_string(json_str: str) -> Dict[str, Any]:
+def validate_json_string(json_str: str) -> dict[str, Any]:
     """
     Validate that a string is valid JSON and return the parsed object.
     
@@ -461,7 +460,7 @@ def validate_json_string(json_str: str) -> Dict[str, Any]:
         raise ValidationError(f"Invalid JSON format: {str(e)}")
 
 
-def validate_yaml_string(yaml_str: str) -> Dict[str, Any]:
+def validate_yaml_string(yaml_str: str) -> dict[str, Any]:
     """
     Validate that a string is valid YAML and return the parsed object.
     

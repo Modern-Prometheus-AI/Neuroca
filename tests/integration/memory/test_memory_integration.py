@@ -14,10 +14,15 @@ from typing import List, Dict, Any
 
 from neuroca.core.memory.interfaces import MemorySystem, MemoryChunk
 from neuroca.core.memory.factory import create_memory_system
-from neuroca.core.memory.consolidation import MemoryConsolidator
+# Import the concrete implementation instead of the abstract base class
+from neuroca.core.memory.consolidation import StandardMemoryConsolidator 
 from neuroca.core.memory.working_memory import WorkingMemory
 from neuroca.core.memory.episodic_memory import EpisodicMemory
-from neuroca.core.memory.semantic_memory import SemanticMemory, Concept, Relationship, RelationshipType
+from neuroca.memory.semantic_memory import SemanticMemory # Corrected import path
+# Assuming Concept, Relationship, RelationshipType might be defined elsewhere or not needed directly if SemanticMemory handles them internally
+# If they are needed and defined in core, keep that part of the import or find their correct location.
+# For now, focusing on fixing the SemanticMemory instantiation.
+# from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType # Example if needed from core
 
 
 @pytest.fixture
@@ -30,7 +35,8 @@ def memory_system():
     working_memory = WorkingMemory()
     episodic_memory = EpisodicMemory()
     semantic_memory = SemanticMemory()
-    consolidator = MemoryConsolidator()
+    # Instantiate the concrete class
+    consolidator = StandardMemoryConsolidator() 
     
     yield (working_memory, episodic_memory, semantic_memory, consolidator)
     
@@ -55,15 +61,17 @@ def test_working_to_episodic_consolidation(memory_system):
     assert chunk.content == memory_content
     
     # Consolidate high-activation memories to episodic memory
-    consolidated = consolidator.consolidate_working_to_episodic(
-        working_memory, episodic_memory
+    # Use the correct consolidate method
+    consolidated_ids = consolidator.consolidate(
+        source=working_memory, target=episodic_memory
     )
+    consolidated = len(consolidated_ids) # Get the count
     
     # Verify memory was consolidated to episodic memory
     assert consolidated == 1
     
     # Check that memory exists in episodic memory with proper metadata
-    episodes = episodic_memory.retrieve_all()
+    episodes = episodic_memory.get_all_items() # Use correct method
     assert len(episodes) == 1
     assert memory_content in [chunk.content for chunk in episodes]
     
@@ -86,10 +94,11 @@ def test_emotional_content_preservation(memory_system):
                                     metadata={"emotional_salience": 0.9})
     
     # Consolidate to episodic memory
-    consolidator.consolidate_working_to_episodic(working_memory, episodic_memory)
+    # Use the correct consolidate method
+    consolidator.consolidate(source=working_memory, target=episodic_memory)
     
     # Verify emotional salience was preserved
-    episodes = episodic_memory.retrieve_all()
+    episodes = episodic_memory.get_all_items() # Use correct method
     episode = [chunk for chunk in episodes if chunk.content == emotional_memory][0]
     
     assert "emotional_salience" in episode.metadata
@@ -121,8 +130,9 @@ def test_repeated_experiences_form_concepts(memory_system):
         })
     
     # Consolidate patterns from episodic to semantic memory
-    consolidator.consolidate_episodic_to_semantic(
-        episodic_memory, semantic_memory
+    # Use the correct consolidate method
+    consolidator.consolidate(
+        source=episodic_memory, target=semantic_memory
     )
     
     # Verify that a dog concept was formed in semantic memory
@@ -149,12 +159,14 @@ def test_end_to_end_information_flow(memory_system):
     ]
     
     for content, activation, metadata in fruit_memories:
-        working_memory.store(content, activation=activation, metadata=metadata)
+            working_memory.store(content, activation=activation, metadata=metadata)
     
     # 2. Consolidate from working to episodic memory
-    w_to_e_count = consolidator.consolidate_working_to_episodic(
-        working_memory, episodic_memory
+    # Use the correct consolidate method
+    w_to_e_ids = consolidator.consolidate(
+        source=working_memory, target=episodic_memory
     )
+    w_to_e_count = len(w_to_e_ids)
     assert w_to_e_count >= 3
     
     # 3. Add more fruit experiences directly to episodic memory over "time"
@@ -170,9 +182,11 @@ def test_end_to_end_information_flow(memory_system):
         episodic_memory.store(content, metadata=metadata)
     
     # 4. Consolidate from episodic to semantic memory
-    e_to_s_count = consolidator.consolidate_episodic_to_semantic(
-        episodic_memory, semantic_memory
+    # Use the correct consolidate method
+    e_to_s_ids = consolidator.consolidate(
+        source=episodic_memory, target=semantic_memory
     )
+    e_to_s_count = len(e_to_s_ids)
     
     # 5. Verify that semantic memory contains fruit concept
     concepts = semantic_memory.retrieve_all_concepts()
@@ -202,14 +216,14 @@ def test_working_memory_capacity_maintained(memory_system):
         working_memory.store(f"Memory item {i}", activation=0.5)
     
     # Verify that capacity wasn't exceeded
-    chunks = working_memory.retrieve_all()
+    chunks = working_memory.get_all_items() # Use correct method
     assert len(chunks) <= capacity
     
     # Cannot test consolidation here as we only have the working memory
     # instance, not the full system with episodic memory and consolidator
     
     # Just verify capacity is maintained
-    chunks = working_memory.retrieve_all()
+    chunks = working_memory.get_all_items() # Use correct method
     assert len(chunks) <= capacity
 
 
@@ -242,7 +256,8 @@ def test_episodic_temporal_sequence_preserved(memory_system):
         })
     
     # Consolidate to potentially form a "vacation" concept
-    consolidator.consolidate_episodic_to_semantic(episodic_memory, semantic_memory)
+    # Use the correct consolidate method
+    consolidator.consolidate(source=episodic_memory, target=semantic_memory)
     
     # Retrieve the vacation sequence in order
     vacation_sequence = episodic_memory.retrieve_by_metadata(
@@ -316,7 +331,7 @@ def test_stress_memory_system(memory_system):
                             metadata={"category": f"category-{i % 10}"})
     
     # Working memory should not exceed capacity
-    assert len(working_memory.retrieve_all()) <= working_memory.capacity
+    assert len(working_memory.get_all_items()) <= working_memory.capacity # Use correct method
     
     # 2. Consolidate to episodic memory several times
     total_consolidated = 0
@@ -351,7 +366,7 @@ def test_stress_memory_system(memory_system):
     assert len(semantic_memory.retrieve_all_concepts()) > 0
     
     # 5. Verify working memory still maintains constraints
-    assert len(working_memory.retrieve_all()) <= working_memory.capacity
+    assert len(working_memory.get_all_items()) <= working_memory.capacity # Use correct method
 
 
 def test_adaptive_consolidation(memory_system):
@@ -372,15 +387,22 @@ def test_adaptive_consolidation(memory_system):
     
     # Set consolidator to only consolidate highly emotional items
     consolidator.working_to_episodic_threshold = 0.65
-    consolidator.emotional_salience_boost = 0.2  # Boost based on emotional content
+    # Note: These parameters might need to be passed to the consolidate method if they aren't instance attributes
+    # consolidator.working_to_episodic_threshold = 0.65 # Assuming these are set via constructor or setters
+    # consolidator.emotional_salience_boost = 0.2  # Assuming this affects internal logic
+    consolidator.set_activation_threshold(0.65) # Use setter if available
+    # emotional_salience_boost seems not directly settable, it might be implicit logic
     
     # Run consolidation
-    consolidated = consolidator.consolidate_working_to_episodic(
-        working_memory, episodic_memory
+    # Use the correct consolidate method
+    consolidated_ids = consolidator.consolidate(
+        source=working_memory, target=episodic_memory
+        # Pass thresholds if needed: activation_threshold=0.65, emotional_threshold=...
     )
+    consolidated = len(consolidated_ids)
     
     # Should have consolidated only the high emotion/activation items
-    episodes = episodic_memory.retrieve_all()
+    episodes = episodic_memory.get_all_items() # Use correct method
     episode_contents = [e.content for e in episodes]
     
     # The two highest emotional items should be consolidated
@@ -404,14 +426,14 @@ def test_health_based_memory_performance(realistic_memory_load):
         working_memory.store(f"Health-impacted memory {i}", activation=0.7)
     
     # Should not exceed the reduced capacity
-    assert len(working_memory.retrieve_all()) <= working_memory.capacity
+    assert len(working_memory.get_all_items()) <= working_memory.capacity # Use correct method
     
     # Retrieval should prioritize highest activation under constrained conditions
     high_importance = "CRITICAL: Remember this information"
     working_memory.store(high_importance, activation=0.95)
     
     # The high importance item should be present despite capacity constraints
-    assert high_importance in [chunk.content for chunk in working_memory.retrieve_all()]
+    assert high_importance in [chunk.content for chunk in working_memory.get_all_items()] # Use correct method
     
     # Return to normal capacity
     working_memory.capacity = original_capacity

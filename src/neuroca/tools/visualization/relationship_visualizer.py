@@ -24,20 +24,19 @@ Usage Examples:
     memory_viz.render("memory_system.png")
 """
 
-import os
-import logging
 import json
-from typing import Dict, List, Optional, Tuple, Union, Any, Set
-from enum import Enum
+import logging
+import os
 import tempfile
 from datetime import datetime
-from pathlib import Path
+from enum import Enum
+from typing import Any, Optional, Union
 
 # Visualization libraries
 try:
-    import networkx as nx
-    import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
+    import matplotlib.pyplot as plt
+    import networkx as nx
     from matplotlib.patches import Patch
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
@@ -45,8 +44,8 @@ except ImportError:
     logging.warning("Matplotlib not available. Some visualization features will be limited.")
 
 try:
-    import plotly.graph_objects as go
     import plotly.express as px
+    import plotly.graph_objects as go
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
@@ -122,9 +121,9 @@ class RelationshipVisualizer:
             title: Title for the visualization
         """
         self.title = title
-        self.nodes: Dict[str, Dict[str, Any]] = {}
-        self.edges: List[Dict[str, Any]] = []
-        self.node_groups: Dict[str, List[str]] = {}
+        self.nodes: dict[str, dict[str, Any]] = {}
+        self.edges: list[dict[str, Any]] = []
+        self.node_groups: dict[str, list[str]] = {}
         self._nx_graph = None
         self._node_positions = None
         self.last_update = datetime.now()
@@ -146,7 +145,7 @@ class RelationshipVisualizer:
     def add_node(self, node_id: str, 
                  node_type: Union[str, NodeType] = NodeType.GENERIC, 
                  label: Optional[str] = None,
-                 attributes: Optional[Dict[str, Any]] = None,
+                 attributes: Optional[dict[str, Any]] = None,
                  group: Optional[str] = None) -> None:
         """
         Add a node to the visualization.
@@ -192,7 +191,7 @@ class RelationshipVisualizer:
     def add_edge(self, source_id: str, target_id: str, 
                  relationship: Union[str, EdgeType] = EdgeType.GENERIC,
                  weight: float = 1.0,
-                 attributes: Optional[Dict[str, Any]] = None,
+                 attributes: Optional[dict[str, Any]] = None,
                  bidirectional: bool = False) -> None:
         """
         Add an edge between two nodes.
@@ -307,7 +306,7 @@ class RelationshipVisualizer:
         self._nx_graph = G
         return G
     
-    def _get_node_positions(self, layout: str = None) -> Dict[str, Tuple[float, float]]:
+    def _get_node_positions(self, layout: str = None) -> dict[str, tuple[float, float]]:
         """
         Calculate node positions based on the specified layout algorithm.
         
@@ -335,7 +334,7 @@ class RelationshipVisualizer:
         elif layout == "shell":
             # Group nodes by type for shell layout
             shells = []
-            node_types = set(node["type"] for node in self.nodes.values())
+            node_types = {node["type"] for node in self.nodes.values()}
             for node_type in node_types:
                 shell = [node_id for node_id, data in self.nodes.items() 
                         if data["type"] == node_type]
@@ -349,7 +348,7 @@ class RelationshipVisualizer:
         return pos
     
     def render_matplotlib(self, output_path: str = None, 
-                         figsize: Tuple[int, int] = (12, 10)) -> None:
+                         figsize: tuple[int, int] = (12, 10)) -> None:
         """
         Render the visualization using Matplotlib.
         
@@ -375,9 +374,8 @@ class RelationshipVisualizer:
         plt.title(self.title)
         
         # Prepare node colors by type
-        node_types = set(data["type"] for data in self.nodes.values())
-        color_map = {node_type: color for node_type, color in 
-                    zip(node_types, plt.cm.tab10.colors)}
+        node_types = {data["type"] for data in self.nodes.values()}
+        color_map = dict(zip(node_types, plt.cm.tab10.colors))
         
         # Draw nodes
         for node_type in node_types:
@@ -393,7 +391,7 @@ class RelationshipVisualizer:
             )
         
         # Draw edges with different styles based on relationship
-        edge_types = set(edge["relationship"] for edge in self.edges)
+        edge_types = {edge["relationship"] for edge in self.edges}
         edge_styles = ['-', '--', '-.', ':']
         
         for i, edge_type in enumerate(edge_types):
@@ -477,7 +475,7 @@ class RelationshipVisualizer:
         node_color = []
         
         # Map node types to colors
-        node_types = list(set(data["type"] for data in self.nodes.values()))
+        node_types = list({data["type"] for data in self.nodes.values()})
         color_map = {node_type: i for i, node_type in enumerate(node_types)}
         
         for node_id, node_data in self.nodes.items():
@@ -502,13 +500,13 @@ class RelationshipVisualizer:
             text=[data["label"] for data in self.nodes.values()] if self.settings["show_labels"] else None,
             textposition="top center",
             hovertext=node_text,
-            marker=dict(
-                showscale=True,
-                colorscale='Viridis',
-                color=node_color,
-                size=self.settings["node_size"] * 2,
-                line=dict(width=2, color='#FFFFFF')
-            )
+            marker={
+                "showscale": True,
+                "colorscale": 'Viridis',
+                "color": node_color,
+                "size": self.settings["node_size"] * 2,
+                "line": {"width": 2, "color": '#FFFFFF'}
+            }
         )
         
         # Create edge traces
@@ -523,7 +521,7 @@ class RelationshipVisualizer:
                 x=[source_pos[0], target_pos[0], None],
                 y=[source_pos[1], target_pos[1], None],
                 mode='lines',
-                line=dict(width=edge["weight"] * self.settings["edge_width"], color='#888'),
+                line={"width": edge["weight"] * self.settings["edge_width"], "color": '#888'},
                 hoverinfo='text',
                 hovertext=f"Relationship: {edge['relationship']}<br>Weight: {edge['weight']}"
             )
@@ -536,9 +534,9 @@ class RelationshipVisualizer:
                 title=self.title,
                 showlegend=False,
                 hovermode='closest',
-                margin=dict(b=20, l=5, r=5, t=40),
-                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                margin={"b": 20, "l": 5, "r": 5, "t": 40},
+                xaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
+                yaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
                 plot_bgcolor=('#FFFFFF' if self.settings["theme"] == "light" else '#1E1E1E')
             )
         )
@@ -549,7 +547,7 @@ class RelationshipVisualizer:
                 fig.add_trace(go.Scatter(
                     x=[None], y=[None],
                     mode='markers',
-                    marker=dict(size=10, color=color_idx, colorscale='Viridis'),
+                    marker={"size": 10, "color": color_idx, "colorscale": 'Viridis'},
                     showlegend=True,
                     name=node_type
                 ))
@@ -587,7 +585,7 @@ class RelationshipVisualizer:
         )
         
         # Map node types to colors
-        node_types = list(set(data["type"] for data in self.nodes.values()))
+        node_types = list({data["type"] for data in self.nodes.values()})
         color_palette = ["#3366CC", "#DC3912", "#FF9900", "#109618", "#990099", 
                          "#0099C6", "#DD4477", "#66AA00", "#B82E2E", "#316395"]
         color_map = {node_type: color_palette[i % len(color_palette)] 
@@ -684,7 +682,7 @@ class RelationshipVisualizer:
             FileNotFoundError: If the file doesn't exist
             json.JSONDecodeError: If the file is not valid JSON
         """
-        with open(input_path, 'r', encoding='utf-8') as f:
+        with open(input_path, encoding='utf-8') as f:
             data = json.load(f)
         
         self.title = data.get("title", "NCA Relationship Visualization")
@@ -868,7 +866,7 @@ class MemoryRelationshipVisualizer(RelationshipVisualizer):
             logger.error(f"Error loading memory data: {str(e)}")
             raise
     
-    def highlight_active_memories(self, active_ids: List[str], color: str = "#FF5733") -> None:
+    def highlight_active_memories(self, active_ids: list[str], color: str = "#FF5733") -> None:
         """
         Highlight currently active memories in the visualization.
         
@@ -910,7 +908,7 @@ class CognitiveProcessVisualizer(RelationshipVisualizer):
         
         logger.debug("Initialized CognitiveProcessVisualizer")
     
-    def add_process_flow(self, process_steps: List[Dict[str, Any]]) -> None:
+    def add_process_flow(self, process_steps: list[dict[str, Any]]) -> None:
         """
         Add a sequence of cognitive process steps to the visualization.
         

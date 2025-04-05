@@ -17,35 +17,29 @@ Security:
     Authorization is checked for each memory operation.
 """
 
-import logging
-from typing import Dict, List, Optional, Union, Any
+from typing import Any, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
 
 from neuroca.api.auth.dependencies import get_current_user
 from neuroca.api.models.memory import (
-    MemoryBase,
     MemoryCreate,
-    MemoryUpdate,
     MemoryResponse,
-    WorkingMemoryItem,
-    EpisodicMemoryItem,
-    SemanticMemoryItem,
     MemorySearchParams,
-    MemoryTier
+    MemoryTier,
+    MemoryUpdate,
 )
 from neuroca.api.models.user import User
 from neuroca.core.exceptions import (
-    MemoryNotFoundError,
     MemoryAccessDeniedError,
+    MemoryNotFoundError,
     MemoryStorageError,
-    MemoryTierFullError
+    MemoryTierFullError,
 )
-from neuroca.memory.service import MemoryService
 from neuroca.core.logging import get_logger
+from neuroca.memory.service import MemoryService
 
 # Initialize router with prefix and tags for OpenAPI documentation
 router = APIRouter(
@@ -184,19 +178,19 @@ async def get_memory(
 
 @router.get(
     "/",
-    response_model=List[MemoryResponse],
+    response_model=list[MemoryResponse],
     summary="List memories",
     description="Retrieves a list of memories based on the provided filters."
 )
 async def list_memories(
     tier: Optional[MemoryTier] = Query(None, description="Filter by memory tier"),
     query: Optional[str] = Query(None, description="Search query for memory content"),
-    tags: Optional[List[str]] = Query(None, description="Filter by tags"),
+    tags: Optional[list[str]] = Query(None, description="Filter by tags"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of memories to return"),
     offset: int = Query(0, ge=0, description="Number of memories to skip"),
     current_user: User = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
-) -> List[MemoryResponse]:
+) -> list[MemoryResponse]:
     """
     List memories with optional filtering.
     
@@ -346,7 +340,7 @@ async def delete_memory(
         await memory_service.delete_memory(memory_id)
         
         logger.info(f"Memory {memory_id} deleted successfully")
-        return None
+        return
         
     except MemoryNotFoundError:
         logger.warning(f"Memory {memory_id} not found for deletion")
@@ -448,17 +442,17 @@ async def transfer_memory(
 
 @router.post(
     "/consolidate",
-    response_model=List[MemoryResponse],
+    response_model=list[MemoryResponse],
     summary="Consolidate memories",
     description="Consolidates multiple memories into a new semantic memory."
 )
 async def consolidate_memories(
-    memory_ids: List[UUID] = Body(..., description="List of memory IDs to consolidate"),
+    memory_ids: list[UUID] = Body(..., description="List of memory IDs to consolidate"),
     summary: str = Body(..., description="Summary of the consolidated memory"),
-    tags: Optional[List[str]] = Body(None, description="Tags for the consolidated memory"),
+    tags: Optional[list[str]] = Body(None, description="Tags for the consolidated memory"),
     current_user: User = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
-) -> List[MemoryResponse]:
+) -> list[MemoryResponse]:
     """
     Consolidate multiple memories into a new semantic memory.
     
@@ -530,14 +524,14 @@ async def consolidate_memories(
 
 @router.get(
     "/stats",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Get memory statistics",
     description="Retrieves statistics about the user's memory usage across tiers."
 )
 async def get_memory_stats(
     current_user: User = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get statistics about the user's memory usage.
     

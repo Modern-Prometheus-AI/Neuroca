@@ -28,7 +28,7 @@ import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Optional
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -338,7 +338,7 @@ class AdaptiveScheduler(AnnealingScheduler):
         self.adjustment_rate = adjustment_rate
         self.history_window = history_window
         self.current_temp = start_temp
-        self.acceptance_history: List[bool] = []
+        self.acceptance_history: list[bool] = []
         self._validate_parameters()
     
     def _validate_parameters(self) -> None:

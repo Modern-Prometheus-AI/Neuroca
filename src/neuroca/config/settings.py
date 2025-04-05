@@ -31,19 +31,16 @@ Example:
     test_settings = Settings(env="test")
 """
 
-import os
-import sys
-import json
-import yaml
 import logging
+import os
 import pathlib
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union, cast
-from dataclasses import dataclass, field
 from functools import lru_cache
+from typing import Any, Optional, Union
 
 import dotenv
-from pydantic import BaseSettings, Field, validator, SecretStr, PostgresDsn, AnyHttpUrl
+import yaml
+from pydantic import AnyHttpUrl, BaseSettings, Field, PostgresDsn, SecretStr, validator
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -167,7 +164,7 @@ class LLMIntegrationSettings(BaseSettings):
     CACHE_TTL: int = 3600  # Cache time-to-live in seconds
     
     @validator("API_KEY")
-    def validate_api_key(cls, v: Optional[SecretStr], values: Dict[str, Any]) -> Optional[SecretStr]:
+    def validate_api_key(cls, v: Optional[SecretStr], values: dict[str, Any]) -> Optional[SecretStr]:
         """Validate that API key is provided for external LLM providers."""
         provider = values.get("PROVIDER", "").lower()
         if provider in ["openai", "anthropic", "cohere"] and not v:
@@ -189,9 +186,9 @@ class APISettings(BaseSettings):
     
     # Security settings
     SECRET_KEY: SecretStr = Field(default_factory=lambda: SecretStr(os.urandom(32).hex()))
-    ALLOWED_ORIGINS: List[str] = ["*"]
-    ALLOWED_METHODS: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    ALLOWED_HEADERS: List[str] = ["*"]
+    ALLOWED_ORIGINS: list[str] = ["*"]
+    ALLOWED_METHODS: list[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    ALLOWED_HEADERS: list[str] = ["*"]
     
     # Rate limiting
     RATE_LIMIT_ENABLED: bool = True
@@ -316,7 +313,7 @@ class Settings(BaseSettings):
         # Log initialization
         logger.info(f"Initialized {self.APP_NAME} settings for environment: {self.ENV}")
     
-    def _load_config_files(self, env: Union[str, EnvironmentType]) -> Dict[str, Any]:
+    def _load_config_files(self, env: Union[str, EnvironmentType]) -> dict[str, Any]:
         """
         Load configuration from YAML files based on environment.
         
@@ -326,7 +323,7 @@ class Settings(BaseSettings):
         Returns:
             Dict of configuration values
         """
-        config: Dict[str, Any] = {}
+        config: dict[str, Any] = {}
         
         # Convert string env to enum if needed
         if isinstance(env, str):
@@ -339,7 +336,7 @@ class Settings(BaseSettings):
         # Load default config
         if DEFAULT_CONFIG_PATH.exists():
             try:
-                with open(DEFAULT_CONFIG_PATH, "r") as f:
+                with open(DEFAULT_CONFIG_PATH) as f:
                     config.update(yaml.safe_load(f) or {})
                 logger.debug(f"Loaded default configuration from {DEFAULT_CONFIG_PATH}")
             except Exception as e:
@@ -349,7 +346,7 @@ class Settings(BaseSettings):
         env_config_path = ENV_CONFIG_PATHS.get(env)
         if env_config_path and env_config_path.exists():
             try:
-                with open(env_config_path, "r") as f:
+                with open(env_config_path) as f:
                     config.update(yaml.safe_load(f) or {})
                 logger.debug(f"Loaded {env} configuration from {env_config_path}")
             except Exception as e:
@@ -358,7 +355,7 @@ class Settings(BaseSettings):
         # Load local override if it exists
         if LOCAL_OVERRIDE_PATH.exists():
             try:
-                with open(LOCAL_OVERRIDE_PATH, "r") as f:
+                with open(LOCAL_OVERRIDE_PATH) as f:
                     config.update(yaml.safe_load(f) or {})
                 logger.debug(f"Loaded local override configuration from {LOCAL_OVERRIDE_PATH}")
             except Exception as e:
@@ -430,14 +427,14 @@ class Settings(BaseSettings):
         """Check if running in production environment."""
         return self.ENV == EnvironmentType.PRODUCTION
     
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Convert settings to dictionary (with secrets redacted)."""
         def _process_value(v: Any) -> Any:
             if isinstance(v, SecretStr):
                 return "**REDACTED**"
-            elif hasattr(v, "as_dict") and callable(getattr(v, "as_dict")):
+            elif hasattr(v, "as_dict") and callable(v.as_dict):
                 return v.as_dict()
-            elif hasattr(v, "dict") and callable(getattr(v, "dict")):
+            elif hasattr(v, "dict") and callable(v.dict):
                 return v.dict()
             return v
         
@@ -460,7 +457,7 @@ class Settings(BaseSettings):
 
 
 # Create a singleton instance of Settings
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Get cached settings instance.

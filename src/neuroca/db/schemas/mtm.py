@@ -20,18 +20,24 @@ Usage:
 import datetime
 import enum
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, Enum, Float, ForeignKey, 
-    Index, Integer, String, Table, Text, UniqueConstraint
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    UniqueConstraint,
 )
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from neuroca.db.base import Base
 from neuroca.core.exceptions import ValidationError
+from neuroca.db.base import Base
 
 logger = logging.getLogger(__name__)
 
@@ -394,7 +400,7 @@ def create_bidirectional_concept_association(
     concept_id2: int,
     strength: float = 0.5,
     association_type: AssociationType = AssociationType.SEMANTIC
-) -> List[ConceptConceptAssociation]:
+) -> list[ConceptConceptAssociation]:
     """
     Create bidirectional associations between two concepts.
     
@@ -441,7 +447,7 @@ def create_bidirectional_concept_association(
 
 
 def decay_associations(session: Any, decay_factor: float = 0.05, 
-                      older_than_days: int = 7) -> Dict[str, int]:
+                      older_than_days: int = 7) -> dict[str, int]:
     """
     Apply decay to association strengths based on time since last activation.
     

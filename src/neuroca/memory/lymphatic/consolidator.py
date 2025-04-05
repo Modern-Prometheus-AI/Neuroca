@@ -21,24 +21,20 @@ Usage:
 Author: NeuroCognitive Architecture Team
 """
 
-import logging
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set, Tuple, Union, Any
-import heapq
-import json
-import uuid
-import threading
-from pathlib import Path
 import asyncio
+import heapq
+import logging
+import threading
+import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
+from typing import Any
 
-from neuroca.memory.base import BaseMemory, MemoryType
-from neuroca.memory.models import Memory, MemoryCluster, ConsolidationMetrics
-from neuroca.memory.utils import memory_utils
-from neuroca.core.exceptions import ConsolidationError, MemoryAccessError
 from neuroca.config.settings import get_settings
-from neuroca.monitoring.metrics import track_operation, record_metric
+from neuroca.core.exceptions import ConsolidationError
+from neuroca.memory.models import ConsolidationMetrics, Memory
+from neuroca.monitoring.metrics import record_metric, track_operation
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -47,7 +43,7 @@ logger = logging.getLogger(__name__)
 class ConsolidationStrategy:
     """Base class for memory consolidation strategies."""
     
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         """
         Initialize the consolidation strategy.
         
@@ -56,7 +52,7 @@ class ConsolidationStrategy:
         """
         self.config = config or {}
         
-    def apply(self, memories: List[Memory]) -> List[Memory]:
+    def apply(self, memories: list[Memory]) -> list[Memory]:
         """
         Apply the consolidation strategy to a list of memories.
         
@@ -72,7 +68,7 @@ class ConsolidationStrategy:
 class ImportanceBasedStrategy(ConsolidationStrategy):
     """Consolidates memories based on their importance scores."""
     
-    def apply(self, memories: List[Memory]) -> List[Memory]:
+    def apply(self, memories: list[Memory]) -> list[Memory]:
         """
         Filter memories based on importance threshold.
         
@@ -91,7 +87,7 @@ class ImportanceBasedStrategy(ConsolidationStrategy):
 class SemanticClusteringStrategy(ConsolidationStrategy):
     """Consolidates memories by clustering semantically related items."""
     
-    def apply(self, memories: List[Memory]) -> List[Memory]:
+    def apply(self, memories: list[Memory]) -> list[Memory]:
         """
         Group semantically similar memories and create consolidated representations.
         
@@ -116,7 +112,7 @@ class SemanticClusteringStrategy(ConsolidationStrategy):
         
         # Create consolidated memories from clusters
         consolidated = []
-        for cluster_key, cluster_memories in clusters.items():
+        for _cluster_key, cluster_memories in clusters.items():
             if len(cluster_memories) <= 1:
                 consolidated.extend(cluster_memories)
             else:
@@ -132,7 +128,7 @@ class SemanticClusteringStrategy(ConsolidationStrategy):
 class TemporalDecayStrategy(ConsolidationStrategy):
     """Applies temporal decay to memories based on their age."""
     
-    def apply(self, memories: List[Memory]) -> List[Memory]:
+    def apply(self, memories: list[Memory]) -> list[Memory]:
         """
         Adjust memory strength based on age and decay parameters.
         
@@ -173,7 +169,7 @@ class MemoryConsolidator:
     into long-term storage using various biologically-inspired strategies.
     """
     
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         """
         Initialize the memory consolidator with configuration.
         
@@ -190,7 +186,7 @@ class MemoryConsolidator:
         
         logger.info("Memory consolidator initialized with %d strategies", len(self.strategies))
     
-    def _initialize_strategies(self) -> List[ConsolidationStrategy]:
+    def _initialize_strategies(self) -> list[ConsolidationStrategy]:
         """
         Initialize consolidation strategies based on configuration.
         
@@ -217,7 +213,7 @@ class MemoryConsolidator:
         return strategies
     
     @track_operation("memory_consolidation")
-    def consolidate(self, memories: List[Memory]) -> List[Memory]:
+    def consolidate(self, memories: list[Memory]) -> list[Memory]:
         """
         Consolidate a list of memories by applying all enabled strategies.
         
@@ -276,7 +272,7 @@ class MemoryConsolidator:
             logger.error(f"Consolidation failed: {str(e)}", exc_info=True)
             raise ConsolidationError(f"Memory consolidation failed: {str(e)}") from e
     
-    def schedule_consolidation(self, memories: List[Memory], delay: int = 3600) -> str:
+    def schedule_consolidation(self, memories: list[Memory], delay: int = 3600) -> str:
         """
         Schedule memories for future consolidation.
         
@@ -368,7 +364,7 @@ class MemoryConsolidator:
         if self._scheduler_thread and self._scheduler_thread.is_alive():
             self._scheduler_thread.join(timeout=5)
             
-    async def consolidate_async(self, memories: List[Memory]) -> List[Memory]:
+    async def consolidate_async(self, memories: list[Memory]) -> list[Memory]:
         """
         Asynchronous version of the consolidate method.
         
@@ -382,7 +378,7 @@ class MemoryConsolidator:
         with ThreadPoolExecutor() as executor:
             return await loop.run_in_executor(executor, self.consolidate, memories)
     
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Get current consolidation metrics.
         

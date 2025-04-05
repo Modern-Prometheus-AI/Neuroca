@@ -16,7 +16,7 @@ Classes:
 import dataclasses
 import enum
 import time
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 
 class ResponseType(enum.Enum):
@@ -55,12 +55,12 @@ class TokenUsage:
     completion_tokens: int = 0
     total_tokens: int = 0
     
-    def to_dict(self) -> Dict[str, int]:
+    def to_dict(self) -> dict[str, int]:
         """Convert to dictionary for serialization."""
         return dataclasses.asdict(self)
     
     @classmethod
-    def from_dict(cls, data: Dict[str, int]) -> 'TokenUsage':
+    def from_dict(cls, data: dict[str, int]) -> 'TokenUsage':
         """Create from dictionary."""
         return cls(**data)
 
@@ -88,10 +88,10 @@ class ProviderConfig:
     request_timeout: float = 60.0
     max_retries: int = 3
     proxy: Optional[str] = None
-    additional_headers: Dict[str, str] = dataclasses.field(default_factory=dict)
-    additional_params: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    additional_headers: dict[str, str] = dataclasses.field(default_factory=dict)
+    additional_params: dict[str, Any] = dataclasses.field(default_factory=dict)
     
-    def to_dict(self, mask_secrets: bool = True) -> Dict[str, Any]:
+    def to_dict(self, mask_secrets: bool = True) -> dict[str, Any]:
         """
         Convert to dictionary for serialization.
         
@@ -107,7 +107,7 @@ class ProviderConfig:
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ProviderConfig':
+    def from_dict(cls, data: dict[str, Any]) -> 'ProviderConfig':
         """Create from dictionary."""
         return cls(**data)
 
@@ -140,16 +140,16 @@ class LLMRequest:
     top_k: Optional[int] = None
     presence_penalty: Optional[float] = None
     frequency_penalty: Optional[float] = None
-    stop_sequences: Optional[List[str]] = None
-    additional_params: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    stop_sequences: Optional[list[str]] = None
+    additional_params: dict[str, Any] = dataclasses.field(default_factory=dict)
     created_at: float = dataclasses.field(default_factory=time.time)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return dataclasses.asdict(self)
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'LLMRequest':
+    def from_dict(cls, data: dict[str, Any]) -> 'LLMRequest':
         """Create from dictionary."""
         return cls(**data)
 
@@ -175,7 +175,7 @@ class LLMResponse:
     model: str
     content: Any
     raw_response: Optional[Any] = None
-    metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    metadata: dict[str, Any] = dataclasses.field(default_factory=dict)
     usage: Optional[TokenUsage] = None
     cost: Optional[float] = None
     request: Optional[LLMRequest] = None
@@ -183,7 +183,7 @@ class LLMResponse:
     elapsed_time: Optional[float] = None
     response_type: ResponseType = ResponseType.TEXT
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         result = dataclasses.asdict(self)
         
@@ -198,7 +198,7 @@ class LLMResponse:
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'LLMResponse':
+    def from_dict(cls, data: dict[str, Any]) -> 'LLMResponse':
         """Create from dictionary."""
         # Handle special types
         if "usage" in data and isinstance(data["usage"], dict):
@@ -231,7 +231,7 @@ class LLMError:
     created_at: float = dataclasses.field(default_factory=time.time)
     retryable: bool = False
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         result = dataclasses.asdict(self)
         
@@ -242,7 +242,7 @@ class LLMError:
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'LLMError':
+    def from_dict(cls, data: dict[str, Any]) -> 'LLMError':
         """Create from dictionary."""
         # Handle special types
         if "request" in data and isinstance(data["request"], dict):

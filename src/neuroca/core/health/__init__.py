@@ -14,20 +14,41 @@ to biological systems that maintain homeostasis.
 """
 
 # Import key components for easier access
-from neuroca.core.health.component import ComponentStatus, ComponentHealthStatus, ComponentHealthMetrics
-from neuroca.core.health.monitor import (
-    HealthMonitor, HealthCheck, HealthCheckResult, HealthCheckStatus, 
-    get_health_monitor, get_health_report, register_health_check, run_health_check,
-    MemoryHealthCheck
-)
-from neuroca.core.health.registry import (
-    HealthRegistry, get_health_registry, register_component, register_check,
-    health_check, register_component_checks
+from neuroca.core.health.component import (
+    ComponentHealthMetrics,
+    ComponentHealthStatus,
+    ComponentStatus,
 )
 from neuroca.core.health.dynamics import (
-    HealthParameterType, HealthState, HealthEventType, HealthParameter,
-    HealthEvent, ComponentHealth, HealthDynamicsManager, get_health_dynamics,
-    register_component_for_health_tracking, record_cognitive_operation
+    ComponentHealth,
+    HealthDynamicsManager,
+    HealthEvent,
+    HealthEventType,
+    HealthParameter,
+    HealthParameterType,
+    HealthState,
+    get_health_dynamics,
+    record_cognitive_operation,
+    register_component_for_health_tracking,
+)
+from neuroca.core.health.monitor import (
+    HealthCheck,
+    HealthCheckResult,
+    HealthCheckStatus,
+    HealthMonitor,
+    MemoryHealthCheck,
+    get_health_monitor,
+    get_health_report,
+    register_health_check,
+    run_health_check,
+)
+from neuroca.core.health.registry import (
+    HealthRegistry,
+    get_health_registry,
+    health_check,
+    register_check,
+    register_component,
+    register_component_checks,
 )
 
 __all__ = [

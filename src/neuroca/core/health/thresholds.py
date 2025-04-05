@@ -41,11 +41,10 @@ import enum
 import json
 import logging
 import math
-import time
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -77,7 +76,7 @@ class ThresholdResult:
     detail: str = ""
     timestamp: datetime = field(default_factory=datetime.now)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the threshold result to a dictionary for serialization."""
         result = asdict(self)
         result["status"] = self.status.value
@@ -85,7 +84,7 @@ class ThresholdResult:
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ThresholdResult':
+    def from_dict(cls, data: dict[str, Any]) -> 'ThresholdResult':
         """Create a ThresholdResult instance from a dictionary."""
         status = ThresholdStatus(data.pop("status"))
         timestamp = datetime.fromisoformat(data.pop("timestamp"))
@@ -136,7 +135,7 @@ class Threshold(ABC):
         """
         pass
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the threshold to a dictionary for serialization."""
         result = {
             "type": self.__class__.__name__,
@@ -152,7 +151,7 @@ class Threshold(ABC):
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Threshold':
+    def from_dict(cls, data: dict[str, Any]) -> 'Threshold':
         """
         Create a Threshold instance from a dictionary.
         
@@ -291,7 +290,7 @@ class AbsoluteThreshold(Threshold):
         
         return result
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the threshold to a dictionary for serialization."""
         result = super().to_dict()
         result.update({
@@ -302,7 +301,7 @@ class AbsoluteThreshold(Threshold):
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AbsoluteThreshold':
+    def from_dict(cls, data: dict[str, Any]) -> 'AbsoluteThreshold':
         """Create an AbsoluteThreshold instance from a dictionary."""
         last_check_data = data.pop("last_check", None)
         threshold = cls(**{k: v for k, v in data.items() if k != "type"})
@@ -451,7 +450,7 @@ class RelativeThreshold(Threshold):
         
         return result
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the threshold to a dictionary for serialization."""
         result = super().to_dict()
         result.update({
@@ -463,7 +462,7 @@ class RelativeThreshold(Threshold):
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'RelativeThreshold':
+    def from_dict(cls, data: dict[str, Any]) -> 'RelativeThreshold':
         """Create a RelativeThreshold instance from a dictionary."""
         last_check_data = data.pop("last_check", None)
         threshold = cls(**{k: v for k, v in data.items() if k != "type"})
@@ -539,7 +538,7 @@ class AdaptiveThreshold(Threshold):
         self.adaptation_window = adaptation_window
         self.adaptation_factor = adaptation_factor
         self.is_lower_bound = is_lower_bound
-        self.history: List[Tuple[datetime, float]] = []
+        self.history: list[tuple[datetime, float]] = []
         self.history_size = history_size
         self.last_adaptation: Optional[datetime] = None
         
@@ -698,7 +697,7 @@ class AdaptiveThreshold(Threshold):
         
         return result
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the threshold to a dictionary for serialization."""
         result = super().to_dict()
         result.update({
@@ -719,7 +718,7 @@ class AdaptiveThreshold(Threshold):
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AdaptiveThreshold':
+    def from_dict(cls, data: dict[str, Any]) -> 'AdaptiveThreshold':
         """Create an AdaptiveThreshold instance from a dictionary."""
         # Extract and convert special fields
         adaptation_window = timedelta(seconds=data.pop("adaptation_window_seconds"))
@@ -763,7 +762,7 @@ class ThresholdRegistry:
     
     def __init__(self):
         """Initialize an empty threshold registry."""
-        self._thresholds: Dict[str, Threshold] = {}
+        self._thresholds: dict[str, Threshold] = {}
         logger.debug("Initialized ThresholdRegistry")
     
     def register(self, threshold: Threshold) -> None:
@@ -833,7 +832,7 @@ class ThresholdRegistry:
         threshold = self.get(metric_name)
         return threshold.check_value(value)
     
-    def list_metrics(self) -> List[str]:
+    def list_metrics(self) -> list[str]:
         """
         Get a list of all registered metric names.
         
@@ -878,7 +877,7 @@ class ThresholdRegistry:
             ValueError: If the file contains invalid threshold data
         """
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath) as f:
                 data = json.load(f)
             
             # Clear existing thresholds

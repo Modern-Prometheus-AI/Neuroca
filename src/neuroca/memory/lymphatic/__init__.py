@@ -36,19 +36,18 @@ Usage:
 """
 
 import logging
-import time
-from typing import Any, Dict, List, Optional, Union, Tuple
-from datetime import datetime, timedelta
 import uuid
+from datetime import datetime
+from typing import Any, Optional, Union
 
 from neuroca.config import LymphaticMemoryConfig
 from neuroca.core.exceptions import (
-    MemoryStorageError,
-    MemoryRetrievalError,
-    MemoryConsolidationError,
     InvalidMemoryItemError,
+    MemoryConsolidationError,
+    MemoryRetrievalError,
+    MemoryStorageError,
 )
-from neuroca.memory.base import BaseMemory, MemoryItem, MemoryQuery, MemoryPriority
+from neuroca.memory.base import BaseMemory, MemoryItem, MemoryPriority, MemoryQuery
 
 # Configure logger for the lymphatic memory subsystem
 logger = logging.getLogger(__name__)
@@ -89,7 +88,7 @@ class LymphaticMemory(BaseMemory):
         self.capacity = self.config.capacity
         
         # Initialize internal storage
-        self.memory_store: Dict[str, MemoryItem] = {}
+        self.memory_store: dict[str, MemoryItem] = {}
         
         # Tracking timestamps for maintenance operations
         self.last_consolidation = datetime.now()
@@ -98,7 +97,7 @@ class LymphaticMemory(BaseMemory):
         logger.info("Lymphatic memory system initialized with capacity %d and retention period %s",
                    self.capacity, self.retention_period)
     
-    def store(self, item: Union[MemoryItem, Dict[str, Any]]) -> str:
+    def store(self, item: Union[MemoryItem, dict[str, Any]]) -> str:
         """
         Store a memory item in the lymphatic memory system.
         
@@ -149,7 +148,7 @@ class LymphaticMemory(BaseMemory):
             logger.error("Failed to store memory item: %s", str(e), exc_info=True)
             raise MemoryStorageError(f"Failed to store memory item: {str(e)}") from e
     
-    def retrieve(self, query: MemoryQuery) -> List[MemoryItem]:
+    def retrieve(self, query: MemoryQuery) -> list[MemoryItem]:
         """
         Retrieve memory items matching the given query.
         
@@ -196,7 +195,7 @@ class LymphaticMemory(BaseMemory):
             logger.error("Failed to retrieve memory items: %s", str(e), exc_info=True)
             raise MemoryRetrievalError(f"Failed to retrieve memory items: {str(e)}") from e
     
-    def consolidate(self) -> Tuple[int, int]:
+    def consolidate(self) -> tuple[int, int]:
         """
         Consolidate important memories to long-term storage.
         
@@ -287,7 +286,7 @@ class LymphaticMemory(BaseMemory):
             logger.error("Failed to clean up memories: %s", str(e), exc_info=True)
             raise MemoryStorageError(f"Failed to clean up memories: {str(e)}") from e
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the current state of the lymphatic memory.
         

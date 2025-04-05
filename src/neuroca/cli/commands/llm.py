@@ -17,17 +17,17 @@ import logging
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Annotated
+from typing import Annotated, Optional
 
 import typer
 import yaml
 from rich.console import Console
 
-from neuroca.integration.manager import LLMIntegrationManager
-from neuroca.integration.exceptions import LLMIntegrationError, ProviderNotFoundError
-from neuroca.memory.factory import create_memory_system
-from neuroca.core.health.dynamics import HealthDynamicsManager
 from neuroca.core.cognitive_control.goal_manager import GoalManager
+from neuroca.core.health.dynamics import HealthDynamicsManager
+from neuroca.integration.exceptions import LLMIntegrationError, ProviderNotFoundError
+from neuroca.integration.manager import LLMIntegrationManager
+from neuroca.memory.factory import create_memory_system
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ llm_app = typer.Typer(name="llm", help="Commands for interacting with LLMs throu
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "neuroca" / "llm_config.yaml"
 
 
-def load_config(config_path: Optional[Path] = None) -> Dict:
+def load_config(config_path: Optional[Path] = None) -> dict:
     """
     Load LLM integration configuration.
     
@@ -87,7 +87,7 @@ def load_config(config_path: Optional[Path] = None) -> Dict:
     
     # Load configuration
     try:
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
             
         return config or {}
@@ -96,7 +96,7 @@ def load_config(config_path: Optional[Path] = None) -> Dict:
         return {}
 
 
-async def get_managers(config: Dict) -> Tuple[LLMIntegrationManager, Optional[Dict]]:
+async def get_managers(config: dict) -> tuple[LLMIntegrationManager, Optional[dict]]:
     """
     Create and initialize managers needed for LLM integration.
     
@@ -422,7 +422,7 @@ def manage_config(
         
         # Generate masked config for display
         display_config = config.copy()
-        for p_name, p_config in display_config.get("providers", {}).items():
+        for _p_name, p_config in display_config.get("providers", {}).items():
             if "api_key" in p_config and p_config["api_key"]:
                 p_config["api_key"] = "****" + p_config["api_key"][-4:] if len(p_config["api_key"]) > 4 else "********"
         

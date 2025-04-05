@@ -36,14 +36,12 @@ import logging
 import os
 import time
 import uuid
-from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 import aiofiles
 from pydantic import BaseModel, Field, ValidationError
 
-from neuroca.config.settings import get_settings
 from neuroca.core.exceptions import (
     LTMConfigError,
     LTMConnectionError,
@@ -58,8 +56,6 @@ from neuroca.core.models.memory import (
     MemoryRecord,
     MemoryStatus,
 )
-from neuroca.db.connections import get_database_connection
-from neuroca.memory.ltm.backends.base import LTMBackend
 from neuroca.memory.ltm.backends.factory import create_ltm_backend
 from neuroca.memory.ltm.indexing import MemoryIndexer
 from neuroca.memory.ltm.policies import ConsolidationPolicy, RetentionPolicy
@@ -123,7 +119,7 @@ class LTMManager:
     - Backup and recovery
     """
     
-    def __init__(self, config: Optional[Union[Dict[str, Any], LTMManagerConfig]] = None):
+    def __init__(self, config: Optional[Union[dict[str, Any], LTMManagerConfig]] = None):
         """
         Initialize the LTM Manager with the provided configuration.
         
@@ -230,8 +226,8 @@ class LTMManager:
         except Exception as e:
             logger.error(f"Error disconnecting from backend: {e}", exc_info=True)
     
-    async def store(self, content: Union[Dict[str, Any], MemoryContent], 
-                   metadata: Optional[Union[Dict[str, Any], MemoryMetadata]] = None) -> str:
+    async def store(self, content: Union[dict[str, Any], MemoryContent], 
+                   metadata: Optional[Union[dict[str, Any], MemoryMetadata]] = None) -> str:
         """
         Store a new memory in the long-term memory store.
         
@@ -349,7 +345,7 @@ class LTMManager:
             raise LTMOperationError(f"Failed to retrieve memory: {e}")
     
     async def search(self, query: str, limit: int = 10, 
-                    filters: Optional[Dict[str, Any]] = None) -> List[MemoryRecord]:
+                    filters: Optional[dict[str, Any]] = None) -> list[MemoryRecord]:
         """
         Search for memories matching the given query.
         
@@ -407,8 +403,8 @@ class LTMManager:
             raise LTMOperationError(f"Failed to search memories: {e}")
     
     async def update(self, memory_id: str, 
-                    content: Optional[Union[Dict[str, Any], MemoryContent]] = None,
-                    metadata: Optional[Union[Dict[str, Any], MemoryMetadata]] = None) -> None:
+                    content: Optional[Union[dict[str, Any], MemoryContent]] = None,
+                    metadata: Optional[Union[dict[str, Any], MemoryMetadata]] = None) -> None:
         """
         Update an existing memory.
         
@@ -708,7 +704,7 @@ class LTMManager:
             ltm_metrics.memory_restore_errors.inc()
             raise LTMOperationError(f"Failed to restore from backup: {e}")
     
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the long-term memory store.
         
@@ -836,7 +832,7 @@ class LTMManager:
                 # Sleep before retrying to avoid tight error loops
                 await asyncio.sleep(300)
     
-    async def _get_memories_for_consolidation(self) -> List[MemoryRecord]:
+    async def _get_memories_for_consolidation(self) -> list[MemoryRecord]:
         """
         Get memories that need consolidation based on the consolidation policy.
         
@@ -858,7 +854,7 @@ class LTMManager:
         memories = await self.backend.search("", limit=self.config.max_batch_size, filters=filters)
         return memories
     
-    async def _apply_retention_policy(self, memories: List[MemoryRecord]) -> Tuple[List[MemoryRecord], List[MemoryRecord]]:
+    async def _apply_retention_policy(self, memories: list[MemoryRecord]) -> tuple[list[MemoryRecord], list[MemoryRecord]]:
         """
         Apply the retention policy to determine which memories to keep and which to archive.
         
@@ -886,7 +882,7 @@ class LTMManager:
         
         return memories_to_keep, memories_to_archive
     
-    async def _batch_update_memories(self, memories: List[MemoryRecord]) -> None:
+    async def _batch_update_memories(self, memories: list[MemoryRecord]) -> None:
         """
         Update multiple memories in batches.
         

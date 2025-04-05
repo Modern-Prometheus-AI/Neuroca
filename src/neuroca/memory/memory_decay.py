@@ -5,11 +5,12 @@ This module handles the decay of memories over time to simulate
 the natural forgetting process of human memory.
 """
 
-from typing import Dict, Any, List, Optional
 import math
 from datetime import datetime, timedelta
+from typing import Any, Optional
 
-def calculate_decay(memory: Dict[str, Any], current_time: Optional[datetime] = None) -> float:
+
+def calculate_decay(memory: dict[str, Any], current_time: Optional[datetime] = None) -> float:
     """
     Calculate the decay value for a memory based on its age and access patterns.
     
@@ -31,7 +32,7 @@ def calculate_decay(memory: Dict[str, Any], current_time: Optional[datetime] = N
     return max(0.0, min(1.0, decay_factor))
 
 
-def apply_decay_to_memories(memories: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def apply_decay_to_memories(memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Apply decay to a list of memories.
     

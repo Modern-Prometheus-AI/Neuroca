@@ -35,13 +35,13 @@ Usage:
 
 """
 
+import contextlib
+import functools
 import logging
 import os
-import time
 import threading
-import functools
-import contextlib
-from typing import Dict, List, Optional, Any, Callable, Union, ContextManager, TypeVar, cast
+import time
+from typing import Any, Callable, ContextManager, Optional, TypeVar
 
 # Setup module logger
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class MetricsClient:
     """
     
     def __init__(self, service_name: str = "neuroca", 
-                 tags: Optional[Dict[str, str]] = None,
+                 tags: Optional[dict[str, str]] = None,
                  export_interval_seconds: int = 10):
         """
         Initialize a new metrics client.
@@ -132,7 +132,7 @@ class MetricsClient:
         if self._metrics_store:
             logger.debug(f"Would export {len(self._metrics_store)} metrics")
     
-    def _merge_tags(self, tags: Optional[Dict[str, str]]) -> Dict[str, str]:
+    def _merge_tags(self, tags: Optional[dict[str, str]]) -> dict[str, str]:
         """Merge provided tags with default tags."""
         if tags is None:
             return self.default_tags.copy()
@@ -141,7 +141,7 @@ class MetricsClient:
         return result
     
     def increment(self, metric_name: str, value: int = 1, 
-                  tags: Optional[Dict[str, str]] = None) -> None:
+                  tags: Optional[dict[str, str]] = None) -> None:
         """
         Increment a counter metric.
         
@@ -163,7 +163,7 @@ class MetricsClient:
         self._metrics_store[key] += value
     
     def gauge(self, metric_name: str, value: float, 
-              tags: Optional[Dict[str, str]] = None) -> None:
+              tags: Optional[dict[str, str]] = None) -> None:
         """
         Set a gauge metric to a specific value.
         
@@ -182,7 +182,7 @@ class MetricsClient:
         self._metrics_store[key] = value
     
     def histogram(self, metric_name: str, value: float, 
-                  tags: Optional[Dict[str, str]] = None) -> None:
+                  tags: Optional[dict[str, str]] = None) -> None:
         """
         Record a value in a histogram metric.
         
@@ -203,7 +203,7 @@ class MetricsClient:
         self._metrics_store[key].append(value)
     
     @contextlib.contextmanager
-    def timer(self, metric_name: str, tags: Optional[Dict[str, str]] = None) -> ContextManager[None]:
+    def timer(self, metric_name: str, tags: Optional[dict[str, str]] = None) -> ContextManager[None]:
         """
         Context manager for timing operations and recording the duration.
         
@@ -222,7 +222,7 @@ class MetricsClient:
             duration = time.time() - start_time
             self.histogram(metric_name, duration, tags)
     
-    def timed(self, metric_name: str, tags: Optional[Dict[str, str]] = None) -> Callable[[Callable[..., R]], Callable[..., R]]:
+    def timed(self, metric_name: str, tags: Optional[dict[str, str]] = None) -> Callable[[Callable[..., R]], Callable[..., R]]:
         """
         Decorator for timing function execution.
         
@@ -253,7 +253,7 @@ class HealthCheck:
     correctly and to provide diagnostic information when they are not.
     """
     
-    def __init__(self, name: str, check_func: Callable[[], Dict[str, Any]], 
+    def __init__(self, name: str, check_func: Callable[[], dict[str, Any]], 
                  interval_seconds: int = 60, timeout_seconds: float = 5.0):
         """
         Initialize a new health check.
@@ -274,7 +274,7 @@ class HealthCheck:
         
         logger.debug(f"Registered health check '{name}' with {interval_seconds}s interval")
     
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
         Execute the health check and return the result.
         
@@ -329,7 +329,7 @@ class HealthCheck:
         finally:
             self.is_running = False
     
-    def _run_with_timeout(self) -> Dict[str, Any]:
+    def _run_with_timeout(self) -> dict[str, Any]:
         """Run the check function with a timeout."""
         # This is a simplified implementation - in production code,
         # you would use a more robust approach like concurrent.futures
@@ -346,7 +346,7 @@ class HealthRegistry:
     
     def __init__(self):
         """Initialize a new health registry."""
-        self.checks: Dict[str, HealthCheck] = {}
+        self.checks: dict[str, HealthCheck] = {}
         self._scheduler_thread = None
         self._stop_event = threading.Event()
         logger.debug("Initialized health registry")
@@ -377,7 +377,7 @@ class HealthRegistry:
         else:
             logger.warning(f"Attempted to unregister unknown health check '{name}'")
     
-    def run_check(self, name: str) -> Dict[str, Any]:
+    def run_check(self, name: str) -> dict[str, Any]:
         """
         Run a specific health check by name.
         
@@ -395,7 +395,7 @@ class HealthRegistry:
         
         return self.checks[name].run()
     
-    def run_all_checks(self) -> Dict[str, Dict[str, Any]]:
+    def run_all_checks(self) -> dict[str, dict[str, Any]]:
         """
         Run all registered health checks and return their results.
         
@@ -408,7 +408,7 @@ class HealthRegistry:
         
         return results
     
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """
         Get overall system health status based on all checks.
         
@@ -488,7 +488,7 @@ def setup_monitoring(
     enable_metrics: bool = True,
     enable_tracing: bool = True,
     enable_health_checks: bool = True,
-    default_tags: Optional[Dict[str, str]] = None,
+    default_tags: Optional[dict[str, str]] = None,
     log_level: int = logging.INFO
 ) -> None:
     """
@@ -631,7 +631,7 @@ def get_health_registry() -> HealthRegistry:
 
 def register_health_check(
     name: str,
-    check_func: Callable[[], Dict[str, Any]],
+    check_func: Callable[[], dict[str, Any]],
     interval_seconds: int = 60,
     timeout_seconds: float = 5.0
 ) -> None:

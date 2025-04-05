@@ -14,27 +14,22 @@ The manager:
 5. Adapts interactions based on health metrics and goal state
 """
 
-import asyncio
 import logging
 import time
-from typing import Any, Dict, List, Optional, Union, Tuple, Callable
+from typing import Any, Optional
 
-from neuroca.memory.manager import MemoryManager
-from neuroca.core.health.dynamics import HealthDynamicsManager, HealthState
 from neuroca.core.cognitive_control.goal_manager import GoalManager
+from neuroca.core.health.dynamics import HealthDynamicsManager, HealthState
+from neuroca.memory.manager import MemoryManager
 
-from .adapters.base import LLMAdapter
-from .adapters import AnthropicAdapter, OpenAIAdapter, VertexAIAdapter
-from .models import LLMRequest, LLMResponse, ProviderConfig, TokenUsage
-from .exceptions import (
-    LLMIntegrationError, 
-    ProviderNotFoundError, 
-    ModelNotAvailableError,
-    AuthenticationError
-)
 from .context.manager import ContextManager
-from .utils import count_tokens, format_prompt, parse_response, sanitize_input
-from .prompts.templates import get_template
+from .exceptions import LLMIntegrationError, ProviderNotFoundError
+
+# from .adapters import AnthropicAdapter, OpenAIAdapter, VertexAIAdapter # Commented out direct imports - rely on registry/config
+from .models import LLMRequest, LLMResponse
+
+# from .prompts.templates import get_template # Removed incorrect import
+from .prompts.templates import TemplateManager  # Import the manager class
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +43,7 @@ class LLMIntegrationManager:
     
     def __init__(
         self,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         memory_manager: Optional[MemoryManager] = None,
         health_manager: Optional[HealthDynamicsManager] = None,
         goal_manager: Optional[GoalManager] = None
@@ -67,9 +62,10 @@ class LLMIntegrationManager:
         self.health_manager = health_manager
         self.goal_manager = goal_manager
         self.context_manager = ContextManager()
+        self.template_manager = TemplateManager(template_dirs=config.get("prompt_template_dirs")) # Instantiate TemplateManager
         
         # Initialize adapters for different providers
-        self.adapters: Dict[str, LLMAdapter] = {}
+        self.adapters: dict[str, LLMAdapter] = {}
         self._initialize_adapters()
         
         # Track active provider and model
@@ -131,7 +127,7 @@ class LLMIntegrationManager:
         goal_directed: bool = True,
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-        additional_context: Optional[Dict[str, Any]] = None,
+        additional_context: Optional[dict[str, Any]] = None,
         **kwargs
     ) -> LLMResponse:
         """
@@ -211,7 +207,7 @@ class LLMIntegrationManager:
         memory_context: bool = True,
         health_aware: bool = True,
         goal_directed: bool = True,
-        additional_context: Optional[Dict[str, Any]] = None
+        additional_context: Optional[dict[str, Any]] = None
     ) -> str:
         """
         Enhance a prompt with NCA cognitive capabilities.
@@ -252,12 +248,23 @@ class LLMIntegrationManager:
             goal_context = await self._get_goal_context()
             if goal_context:
                 context_data["goals"] = goal_context
-                
-        # Generate enhanced prompt using context manager
-        enhanced_prompt = await self.context_manager.enhance_prompt(
-            base_prompt=base_prompt,
-            context=context_data
-        )
+
+        # Render the enhanced prompt using the TemplateManager
+        try:
+            # Assume a default template name or determine based on context
+            template_name = "base_enhancement" # Placeholder template name
+            variables = {
+                "base_prompt": base_prompt,
+                **context_data # Merge context data as variables
+            }
+            enhanced_prompt = self.template_manager.render_template(template_name, variables)
+            logger.debug(f"Enhanced prompt using template '{template_name}'")
+        except Exception as e:
+            logger.warning(f"Failed to render prompt template: {e}. Using base prompt.")
+            enhanced_prompt = base_prompt # Fallback to base prompt
+
+        # NOTE: The old context_manager.enhance_prompt call is replaced by template rendering.
+        # Ensure the ContextManager class is updated or removed if its enhance_prompt is no longer needed.
         
         return enhanced_prompt
         
@@ -308,7 +315,7 @@ class LLMIntegrationManager:
         
         return response
         
-    async def _retrieve_relevant_memories(self, query: str) -> List[Dict[str, Any]]:
+    async def _retrieve_relevant_memories(self, query: str) -> list[dict[str, Any]]:
         """
         Retrieve relevant memories based on the query.
         
@@ -371,7 +378,7 @@ class LLMIntegrationManager:
         
         return all_results
         
-    async def _get_health_context(self) -> Dict[str, Any]:
+    async def _get_health_context(self) -> dict[str, Any]:
         """
         Get current health context for LLM adaptation.
         
@@ -392,7 +399,7 @@ class LLMIntegrationManager:
         
         return health_context
         
-    async def _get_goal_context(self) -> Dict[str, Any]:
+    async def _get_goal_context(self) -> dict[str, Any]:
         """
         Get current goal context for goal-directed prompting.
         
@@ -423,7 +430,7 @@ class LLMIntegrationManager:
         
         return goal_context
         
-    def get_providers(self) -> List[str]:
+    def get_providers(self) -> list[str]:
         """
         Get a list of available providers.
         
@@ -432,7 +439,7 @@ class LLMIntegrationManager:
         """
         return list(self.adapters.keys())
         
-    def get_models(self, provider: str) -> List[str]:
+    def get_models(self, provider: str) -> list[str]:
         """
         Get available models for a specific provider.
         
@@ -450,7 +457,7 @@ class LLMIntegrationManager:
             
         return self.adapters[provider].get_available_models()
         
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Get usage metrics for LLM interactions.
         

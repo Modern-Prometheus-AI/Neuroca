@@ -5,10 +5,10 @@ This module provides the ComponentStatus class and related utilities for trackin
 the health and operational status of different architecture components.
 """
 
-from enum import Enum
-from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
 import time
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Optional
 
 
 class ComponentStatus(Enum):
@@ -49,7 +49,7 @@ class ComponentHealthMetrics:
     throughput: float = 0.0
     saturation: float = 0.0
     last_updated: float = field(default_factory=time.time)
-    custom_metrics: Dict[str, Any] = field(default_factory=dict)
+    custom_metrics: dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
         """Validate metrics are within expected ranges."""
@@ -69,7 +69,7 @@ class ComponentHealthMetrics:
         
         self.last_updated = time.time()
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert metrics to dictionary for serialization."""
         result = {
             'component_id': self.component_id,
@@ -100,9 +100,9 @@ class ComponentHealthStatus:
     component_id: str
     status: ComponentStatus = ComponentStatus.UNKNOWN
     metrics: ComponentHealthMetrics = None
-    issues: List[str] = field(default_factory=list)
+    issues: list[str] = field(default_factory=list)
     last_status_change: float = field(default_factory=time.time)
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
         """Initialize metrics if not provided."""
@@ -143,7 +143,7 @@ class ComponentHealthStatus:
         """
         return self.status in [ComponentStatus.OPTIMAL, ComponentStatus.FUNCTIONAL]
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert component health status to dictionary for serialization."""
         return {
             'component_id': self.component_id,

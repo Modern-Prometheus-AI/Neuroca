@@ -14,12 +14,11 @@ Key functionalities:
 
 import logging
 import time
-from typing import Dict, Any, Optional, List, Tuple, Set
+from typing import Any, Optional
+
+from neuroca.core.health.dynamics import HealthState
 
 # Import necessary components for integration
-from .goal_manager import GoalManager, Goal
-from neuroca.core.health.dynamics import HealthState, HealthDynamicsManager
-from neuroca.memory.manager import MemoryManager
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -57,7 +56,7 @@ class AttentionManager:
         self.consecutive_shifts = 0    # Track rapid attention shifts (possible attention deficit)
         self.last_shift_time = 0       # When attention was last shifted
 
-    def allocate_attention(self, potential_targets: List[Tuple[str, str, float]], context: Optional[Dict[str, Any]] = None) -> Optional[AttentionFocus]:
+    def allocate_attention(self, potential_targets: list[tuple[str, str, float]], context: Optional[dict[str, Any]] = None) -> Optional[AttentionFocus]:
         """
         Allocate attention to the most relevant target based on priority and context.
 
@@ -85,7 +84,6 @@ class AttentionManager:
         #     comp_health = self.health_manager.get_component_health("attention_manager") # Hypothetical
         #     if comp_health: health_state = comp_health.state
 
-        active_goals: List[Goal] = []
         # if self.goal_manager:
         #     active_goals = self.goal_manager.get_active_goals(sorted_by_priority=True)
 
@@ -131,7 +129,7 @@ class AttentionManager:
         return self.current_focus
         # --- End Enhanced Placeholder ---
 
-    def filter_distraction(self, stimulus_id: str, salience: float, context: Optional[Dict[str, Any]] = None) -> bool:
+    def filter_distraction(self, stimulus_id: str, salience: float, context: Optional[dict[str, Any]] = None) -> bool:
         """
         Determine if a stimulus should be filtered out as a distraction.
 
@@ -171,7 +169,7 @@ class AttentionManager:
         # --- End Placeholder ---
 
     def shift_attention(self, new_target_type: str, new_target_id: str, urgency: float = 0.5,
-                       context: Optional[Dict[str, Any]] = None) -> Tuple[bool, Optional[AttentionFocus]]:
+                       context: Optional[dict[str, Any]] = None) -> tuple[bool, Optional[AttentionFocus]]:
         """
         Shift attention to a new target based on context and biological constraints.
         
@@ -203,9 +201,8 @@ class AttentionManager:
                 health_state = comp_health.state
         
         # Calculate focus duration
-        focus_duration = 0
         if self.focus_start_time:
-            focus_duration = current_time - self.focus_start_time
+            current_time - self.focus_start_time
         
         # 2. Calculate shift cost (biological constraint)
         # Cost factors:
@@ -336,7 +333,7 @@ class AttentionManager:
             self.focus_start_time = time.time()
             self.last_shift_time = time.time()
 
-    def get_attention_history(self, limit: int = 5) -> List[Dict[str, Any]]:
+    def get_attention_history(self, limit: int = 5) -> list[dict[str, Any]]:
         """
         Retrieve recent attention shift history from memory.
         
@@ -379,7 +376,7 @@ class AttentionManager:
         """Return the current focus of attention."""
         return self.current_focus
         
-    def get_attention_stats(self) -> Dict[str, Any]:
+    def get_attention_stats(self) -> dict[str, Any]:
         """
         Get statistics about attention performance.
         

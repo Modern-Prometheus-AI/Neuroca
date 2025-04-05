@@ -31,7 +31,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 
@@ -71,8 +71,8 @@ class OptimizationStats:
     accepted_moves: int
     rejected_moves: int
     duration_seconds: float
-    temperature_history: List[float]
-    energy_history: List[float]
+    temperature_history: list[float]
+    energy_history: list[float]
     
     @property
     def acceptance_ratio(self) -> float:
@@ -88,7 +88,7 @@ class OptimizationStats:
             return 0.0
         return (self.initial_energy - self.final_energy) / self.initial_energy * 100
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert stats to dictionary for serialization."""
         return {
             "initial_energy": self.initial_energy,
@@ -249,7 +249,7 @@ class AdaptiveAnnealingSchedule(AnnealingSchedule):
         self.target_acceptance = target_acceptance
         self.adjustment_rate = adjustment_rate
         self.current_temp = start_temp
-        self.acceptance_history: List[bool] = []
+        self.acceptance_history: list[bool] = []
         
     def record_acceptance(self, accepted: bool) -> None:
         """
@@ -310,7 +310,7 @@ class AnnealingOptimizer:
     
     def __init__(
         self,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
         annealing_schedule: Optional[AnnealingSchedule] = None,
         strategy: OptimizationStrategy = OptimizationStrategy.STANDARD,
         max_iterations: int = 1000,
@@ -364,9 +364,9 @@ class AnnealingOptimizer:
         
     def optimize(
         self,
-        memories: Union[List[MemoryFragment], MemoryStore],
-        callbacks: Optional[List[Callable[[Dict[str, Any]], None]]] = None
-    ) -> Tuple[Union[List[MemoryFragment], MemoryStore], OptimizationStats]:
+        memories: Union[list[MemoryFragment], MemoryStore],
+        callbacks: Optional[list[Callable[[dict[str, Any]], None]]] = None
+    ) -> tuple[Union[list[MemoryFragment], MemoryStore], OptimizationStats]:
         """
         Optimize memory fragments using simulated annealing.
         
@@ -545,7 +545,7 @@ class AnnealingOptimizer:
             logger.exception("Error during memory optimization")
             raise OptimizationError(f"Memory optimization failed: {str(e)}") from e
     
-    def _clone_memories(self, memories: List[MemoryFragment]) -> List[MemoryFragment]:
+    def _clone_memories(self, memories: list[MemoryFragment]) -> list[MemoryFragment]:
         """
         Create a deep copy of memory fragments for optimization.
         
@@ -557,7 +557,7 @@ class AnnealingOptimizer:
         """
         return [memory.clone() for memory in memories]
     
-    def _calculate_energy(self, state: List[MemoryFragment]) -> float:
+    def _calculate_energy(self, state: list[MemoryFragment]) -> float:
         """
         Calculate the energy (cost function) of the current state.
         
@@ -583,7 +583,7 @@ class AnnealingOptimizer:
         
         # Calculate redundancy between memories
         for i, mem1 in enumerate(state):
-            for j, mem2 in enumerate(state[i+1:], i+1):
+            for _j, mem2 in enumerate(state[i+1:], i+1):
                 sim = similarity_score(mem1, mem2)
                 redundancy_energy += sim * sim
         
@@ -646,7 +646,7 @@ class AnnealingOptimizer:
         
         return total_energy
     
-    def _build_connection_graph(self, state: List[MemoryFragment]) -> Dict[int, Set[int]]:
+    def _build_connection_graph(self, state: list[MemoryFragment]) -> dict[int, set[int]]:
         """
         Build a graph of connections between memory fragments.
         
@@ -656,7 +656,7 @@ class AnnealingOptimizer:
         Returns:
             Dictionary mapping memory indices to sets of connected memory indices
         """
-        connection_graph: Dict[int, Set[int]] = {i: set() for i in range(len(state))}
+        connection_graph: dict[int, set[int]] = {i: set() for i in range(len(state))}
         
         # Connect memories with similarity above threshold
         similarity_threshold = 0.3
@@ -668,7 +668,7 @@ class AnnealingOptimizer:
         
         return connection_graph
     
-    def _calculate_fragmentation(self, connection_graph: Dict[int, Set[int]]) -> float:
+    def _calculate_fragmentation(self, connection_graph: dict[int, set[int]]) -> float:
         """
         Calculate fragmentation score based on connection graph.
         
@@ -693,7 +693,7 @@ class AnnealingOptimizer:
         # Normalize by number of nodes
         return (components - 1) / max(1, len(connection_graph))
     
-    def _dfs(self, node: int, graph: Dict[int, Set[int]], visited: Set[int]) -> None:
+    def _dfs(self, node: int, graph: dict[int, set[int]], visited: set[int]) -> None:
         """
         Depth-first search to find connected components.
         
@@ -707,7 +707,7 @@ class AnnealingOptimizer:
             if neighbor not in visited:
                 self._dfs(neighbor, graph, visited)
     
-    def _generate_neighbor(self, state: List[MemoryFragment]) -> List[MemoryFragment]:
+    def _generate_neighbor(self, state: list[MemoryFragment]) -> list[MemoryFragment]:
         """
         Generate a neighboring state by applying a random transformation.
         
@@ -815,11 +815,11 @@ class AnnealingOptimizer:
             # Use longer content as base
             merged.content = mem1.content
             # Add unique information from mem2
-            if not mem2.content in mem1.content:
+            if mem2.content not in mem1.content:
                 merged.content += f" {mem2.content}"
         else:
             merged.content = mem2.content
-            if not mem1.content in mem2.content:
+            if mem1.content not in mem2.content:
                 merged.content = f"{mem1.content} {merged.content}"
                 
         # Take max of creation times
@@ -833,7 +833,7 @@ class AnnealingOptimizer:
         
         return merged
     
-    def _split_memory(self, memory: MemoryFragment) -> List[MemoryFragment]:
+    def _split_memory(self, memory: MemoryFragment) -> list[MemoryFragment]:
         """
         Split a memory fragment into multiple components.
         
@@ -871,7 +871,7 @@ class AnnealingOptimizer:
             
         return components
     
-    def _post_process(self, state: List[MemoryFragment]) -> List[MemoryFragment]:
+    def _post_process(self, state: list[MemoryFragment]) -> list[MemoryFragment]:
         """
         Perform final post-processing on the optimized state.
         
@@ -904,7 +904,7 @@ class AnnealingOptimizer:
 
 
 def create_optimizer(
-    config: Optional[Dict[str, Any]] = None,
+    config: Optional[dict[str, Any]] = None,
     strategy: str = "STANDARD",
     schedule_type: str = "exponential",
     **kwargs

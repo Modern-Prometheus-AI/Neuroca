@@ -31,15 +31,14 @@ Usage:
     )
 """
 
-import os
-import re
-import sys
-import json
-import logging
 import argparse
 import datetime
+import json
+import logging
+import re
+import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Union, Tuple
+from typing import Any, Optional, Union
 
 import jinja2
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -130,17 +129,17 @@ class CodeGenerator:
             config_path = Path(config_file).resolve()
             if config_path.exists():
                 try:
-                    with open(config_path, 'r') as f:
+                    with open(config_path) as f:
                         self.config = json.load(f)
                     logger.debug(f"Loaded configuration from {config_path}")
-                except json.JSONDecodeError as e:
+                except json.JSONDecodeError:
                     logger.error(f"Invalid JSON in config file: {config_path}")
                     raise
             else:
                 logger.warning(f"Config file not found: {config_path}")
     
     def generate_component(self, component_type: str, component_name: str, 
-                          output_dir: str, options: Optional[Dict[str, Any]] = None) -> List[str]:
+                          output_dir: str, options: Optional[dict[str, Any]] = None) -> list[str]:
         """
         Generate code for a specific component type.
         
@@ -224,7 +223,7 @@ class CodeGenerator:
         return generated_files
     
     def generate_from_template(self, template_path: str, output_path: str, 
-                              context: Dict[str, Any]) -> str:
+                              context: dict[str, Any]) -> str:
         """
         Generate a file from a specific template with custom context.
         
@@ -278,7 +277,7 @@ class CodeGenerator:
             raise OutputError(f"Error writing to {output_path}: {str(e)}")
     
     def generate_project_structure(self, base_dir: str, 
-                                  structure_config: Optional[Union[Dict, str]] = None) -> List[str]:
+                                  structure_config: Optional[Union[dict, str]] = None) -> list[str]:
         """
         Generate a project structure based on a configuration.
         
@@ -303,7 +302,7 @@ class CodeGenerator:
         elif isinstance(structure_config, str):
             # Load from file
             try:
-                with open(structure_config, 'r') as f:
+                with open(structure_config) as f:
                     structure = json.load(f)
             except (json.JSONDecodeError, OSError) as e:
                 logger.error(f"Error loading structure config from {structure_config}: {str(e)}")
@@ -332,7 +331,7 @@ class CodeGenerator:
             logger.error(f"Error creating project structure: {str(e)}")
             raise OutputError(f"Error creating project structure: {str(e)}")
     
-    def _create_structure(self, parent_dir: Path, structure: Dict, created_items: List[str]) -> None:
+    def _create_structure(self, parent_dir: Path, structure: dict, created_items: list[str]) -> None:
         """
         Recursively create directories and files based on structure definition.
         
@@ -381,7 +380,7 @@ class CodeGenerator:
             else:
                 logger.warning(f"Unsupported structure item: {name}: {content}")
     
-    def _render_template(self, template_name: str, context: Dict[str, Any]) -> str:
+    def _render_template(self, template_name: str, context: dict[str, Any]) -> str:
         """
         Render a template with the given context.
         

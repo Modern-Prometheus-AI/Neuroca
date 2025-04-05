@@ -37,19 +37,15 @@ Functions:
 """
 
 import logging
-import math
-import os
 import time
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Callable, Any
+from typing import Any, Optional, Union
 
 import numpy as np
 from scipy import sparse
 
-from neuroca.core.exceptions import WeightOperationError, ValidationError
-from neuroca.memory.utils.serialization import serialize_array, deserialize_array
-from neuroca.config.settings import get_settings
+from neuroca.core.exceptions import ValidationError, WeightOperationError
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -85,7 +81,7 @@ class WeightInitializer:
     """
     
     @staticmethod
-    def initialize(shape: Tuple[int, ...], strategy: Union[str, InitStrategy], 
+    def initialize(shape: tuple[int, ...], strategy: Union[str, InitStrategy], 
                    **kwargs) -> np.ndarray:
         """
         Initialize a weight matrix using the specified strategy.
@@ -256,7 +252,7 @@ class WeightMatrix:
     """
     
     def __init__(self, 
-                 dimensions: Tuple[int, ...], 
+                 dimensions: tuple[int, ...], 
                  init_strategy: Union[str, InitStrategy] = "zeros",
                  use_sparse: bool = False,
                  name: Optional[str] = None,
@@ -634,7 +630,7 @@ class WeightMatrix:
             
         except Exception as e:
             logger.error(f"Failed to save weights to {filepath}: {str(e)}")
-            raise IOError(f"Failed to save weights: {str(e)}") from e
+            raise OSError(f"Failed to save weights: {str(e)}") from e
     
     @classmethod
     def load(cls, filepath: Union[str, Path]) -> 'WeightMatrix':
@@ -652,7 +648,7 @@ class WeightMatrix:
         """
         filepath = Path(filepath)
         if not filepath.exists():
-            raise IOError(f"Weight file not found: {filepath}")
+            raise OSError(f"Weight file not found: {filepath}")
         
         try:
             # Check if this is a sparse matrix
@@ -709,9 +705,9 @@ class WeightMatrix:
             
         except Exception as e:
             logger.error(f"Failed to load weights from {filepath}: {str(e)}")
-            raise IOError(f"Failed to load weights: {str(e)}") from e
+            raise OSError(f"Failed to load weights: {str(e)}") from e
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get comprehensive statistics about the weight matrix.
         
@@ -746,7 +742,7 @@ class WeightMatrix:
                 f"use_sparse={self.use_sparse}, updates={self.update_count})")
 
 
-def merge_weight_matrices(matrices: List[WeightMatrix], 
+def merge_weight_matrices(matrices: list[WeightMatrix], 
                          strategy: str = "average") -> WeightMatrix:
     """
     Merge multiple weight matrices into a single matrix.

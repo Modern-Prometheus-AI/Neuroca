@@ -25,31 +25,31 @@ Usage:
 
 import logging
 import time
-from typing import Dict, List, Optional, Tuple, Union, Any
 from dataclasses import dataclass
-import numpy as np
 from datetime import datetime, timedelta
+from typing import Any, Optional
 
-from neuroca.core.health.models import (
-    HealthMetrics, 
-    HealthStatus,
-    ComponentHealth,
-    SystemHealth,
-    HealthTrend
+import numpy as np
+
+from neuroca.core.exceptions import (
+    ComponentNotFoundError,
+    HealthCalculationError,
+    InvalidMetricsError,
 )
 from neuroca.core.health.constants import (
     CRITICAL_THRESHOLD,
-    WARNING_THRESHOLD,
-    OPTIMAL_THRESHOLD,
     DEFAULT_DECAY_RATE,
     DEFAULT_RECOVERY_RATE,
     MAX_HEALTH_VALUE,
-    MIN_HEALTH_VALUE
+    MIN_HEALTH_VALUE,
+    OPTIMAL_THRESHOLD,
+    WARNING_THRESHOLD,
 )
-from neuroca.core.exceptions import (
-    HealthCalculationError,
-    InvalidMetricsError,
-    ComponentNotFoundError
+from neuroca.core.health.models import (
+    ComponentHealth,
+    HealthStatus,
+    HealthTrend,
+    SystemHealth,
 )
 
 # Configure logger
@@ -88,7 +88,7 @@ class HealthCalculator:
         self._last_calculation_time = None
         logger.debug("HealthCalculator initialized with parameters: %s", self.parameters)
     
-    def calculate_system_health(self, metrics: Dict[str, Any]) -> SystemHealth:
+    def calculate_system_health(self, metrics: dict[str, Any]) -> SystemHealth:
         """
         Calculate the overall health of the NCA system.
         
@@ -180,7 +180,7 @@ class HealthCalculator:
     def calculate_component_health(
         self, 
         component_id: str, 
-        metrics: Dict[str, Any]
+        metrics: dict[str, Any]
     ) -> ComponentHealth:
         """
         Calculate health metrics for a specific component.
@@ -241,7 +241,7 @@ class HealthCalculator:
     
     def analyze_health_trends(
         self, 
-        historical_data: List[SystemHealth],
+        historical_data: list[SystemHealth],
         time_window: Optional[timedelta] = None
     ) -> HealthTrend:
         """
@@ -327,9 +327,9 @@ class HealthCalculator:
     def predict_future_health(
         self, 
         current_health: SystemHealth,
-        historical_data: List[SystemHealth],
+        historical_data: list[SystemHealth],
         prediction_window: timedelta
-    ) -> Dict[datetime, float]:
+    ) -> dict[datetime, float]:
         """
         Predict future health scores based on current health and historical trends.
         
@@ -392,7 +392,7 @@ class HealthCalculator:
             logger.exception(error_msg)
             raise HealthCalculationError(error_msg) from e
     
-    def _validate_system_metrics(self, metrics: Dict[str, Any]) -> None:
+    def _validate_system_metrics(self, metrics: dict[str, Any]) -> None:
         """
         Validate that the provided metrics contain all required fields.
         
@@ -478,7 +478,7 @@ class HealthCalculator:
     
     def _calculate_memory_health(
         self, 
-        memory_usage: Dict[str, Dict[str, float]], 
+        memory_usage: dict[str, dict[str, float]], 
         time_factor: float
     ) -> float:
         """
@@ -548,8 +548,8 @@ class HealthCalculator:
     
     def _calculate_processing_health(
         self, 
-        response_times: List[float],
-        error_rates: Dict[str, int],
+        response_times: list[float],
+        error_rates: dict[str, int],
         time_factor: float
     ) -> float:
         """
@@ -605,7 +605,7 @@ class HealthCalculator:
         
         return max(MIN_HEALTH_VALUE, min(MAX_HEALTH_VALUE, adjusted_score))
     
-    def _calculate_generic_component_health(self, metrics: Dict[str, Any]) -> float:
+    def _calculate_generic_component_health(self, metrics: dict[str, Any]) -> float:
         """
         Calculate health for a generic component based on provided metrics.
         
@@ -630,7 +630,7 @@ class HealthCalculator:
         
         return max(MIN_HEALTH_VALUE, min(MAX_HEALTH_VALUE, base_score))
     
-    def _calculate_overall_health(self, component_scores: Dict[str, float]) -> float:
+    def _calculate_overall_health(self, component_scores: dict[str, float]) -> float:
         """
         Calculate overall system health from component scores.
         
@@ -688,8 +688,8 @@ class HealthCalculator:
     
     def _calculate_trend_slope(
         self, 
-        timestamps: List[datetime], 
-        scores: List[float]
+        timestamps: list[datetime], 
+        scores: list[float]
     ) -> float:
         """
         Calculate the slope of health trend over time.
@@ -723,7 +723,7 @@ class HealthCalculator:
         
         return slope
     
-    def _calculate_volatility(self, scores: List[float]) -> float:
+    def _calculate_volatility(self, scores: list[float]) -> float:
         """
         Calculate the volatility (standard deviation) of health scores.
         
@@ -740,8 +740,8 @@ class HealthCalculator:
     
     def _calculate_component_trends(
         self, 
-        historical_data: List[SystemHealth]
-    ) -> Dict[str, Dict[str, float]]:
+        historical_data: list[SystemHealth]
+    ) -> dict[str, dict[str, float]]:
         """
         Calculate trends for individual components.
         
@@ -786,7 +786,7 @@ default_calculator = HealthCalculator()
 
 # Convenience functions that use the default calculator
 
-def calculate_system_health(metrics: Dict[str, Any]) -> SystemHealth:
+def calculate_system_health(metrics: dict[str, Any]) -> SystemHealth:
     """
     Calculate system health using the default calculator.
     
@@ -800,7 +800,7 @@ def calculate_system_health(metrics: Dict[str, Any]) -> SystemHealth:
 
 def calculate_component_health(
     component_id: str, 
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
 ) -> ComponentHealth:
     """
     Calculate component health using the default calculator.
@@ -815,7 +815,7 @@ def calculate_component_health(
     return default_calculator.calculate_component_health(component_id, metrics)
 
 def analyze_health_trends(
-    historical_data: List[SystemHealth],
+    historical_data: list[SystemHealth],
     time_window: Optional[timedelta] = None
 ) -> HealthTrend:
     """
@@ -832,9 +832,9 @@ def analyze_health_trends(
 
 def predict_future_health(
     current_health: SystemHealth,
-    historical_data: List[SystemHealth],
+    historical_data: list[SystemHealth],
     prediction_window: timedelta
-) -> Dict[datetime, float]:
+) -> dict[datetime, float]:
     """
     Predict future health using the default calculator.
     

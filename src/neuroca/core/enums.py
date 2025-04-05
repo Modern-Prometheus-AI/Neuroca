@@ -19,8 +19,8 @@ Usage:
     agent.set_state(CognitiveState.FOCUSED)
 """
 
-from enum import Enum, auto, unique
 import logging
+from enum import Enum, auto, unique
 
 logger = logging.getLogger(__name__)
 

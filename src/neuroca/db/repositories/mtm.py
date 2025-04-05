@@ -30,21 +30,20 @@ Usage:
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Type, Union, Literal
-from datetime import datetime
 from contextlib import contextmanager
+from datetime import datetime
+from typing import Any, Literal, Optional
 
-from sqlalchemy import and_, or_, select, delete, update
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy import and_, delete, select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.sql.expression import true, false
 
 from neuroca.core.exceptions import (
     DatabaseError,
     EntityNotFoundError,
     InvalidInputError,
-    RepositoryError
+    RepositoryError,
 )
 
 # Configure logger
@@ -70,9 +69,9 @@ class MTMRepository:
     def __init__(
         self,
         db_session: Session,
-        association_model: Type[DeclarativeMeta],
-        left_model: Type[DeclarativeMeta],
-        right_model: Type[DeclarativeMeta],
+        association_model: type[DeclarativeMeta],
+        left_model: type[DeclarativeMeta],
+        right_model: type[DeclarativeMeta],
         left_fk_name: str = "left_id",
         right_fk_name: str = "right_id"
     ):
@@ -128,7 +127,7 @@ class MTMRepository:
             logger.error(f"Unexpected error in MTM repository transaction: {str(e)}")
             raise RepositoryError(f"Repository operation failed: {str(e)}") from e
     
-    def _validate_entity_exists(self, entity_id: Any, model: Type[DeclarativeMeta], entity_name: str) -> None:
+    def _validate_entity_exists(self, entity_id: Any, model: type[DeclarativeMeta], entity_name: str) -> None:
         """
         Validate that an entity with the given ID exists in the database.
         
@@ -160,7 +159,7 @@ class MTMRepository:
         self, 
         left_id: Any, 
         right_id: Any, 
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         validate_entities: bool = True
     ) -> Any:
         """
@@ -254,10 +253,10 @@ class MTMRepository:
         entity_id: Any, 
         side: Literal["left", "right"],
         include_related: bool = False,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None
-    ) -> List[Any]:
+    ) -> list[Any]:
         """
         Get all associations for a specific entity.
         
@@ -318,10 +317,10 @@ class MTMRepository:
         self, 
         entity_id: Any, 
         side: Literal["left", "right"],
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None
-    ) -> List[Any]:
+    ) -> list[Any]:
         """
         Get all related entities for a specific entity.
         
@@ -379,7 +378,7 @@ class MTMRepository:
         self, 
         left_id: Any, 
         right_id: Any, 
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Optional[Any]:
         """
         Update the metadata for an existing association.
@@ -510,7 +509,7 @@ class MTMRepository:
         self, 
         entity_id: Any, 
         side: Literal["left", "right"],
-        filters: Optional[Dict[str, Any]] = None
+        filters: Optional[dict[str, Any]] = None
     ) -> int:
         """
         Count the number of associations for a specific entity.
@@ -557,9 +556,9 @@ class MTMRepository:
     
     def bulk_associate(
         self, 
-        associations: List[Dict[str, Any]],
+        associations: list[dict[str, Any]],
         validate_entities: bool = True
-    ) -> List[Any]:
+    ) -> list[Any]:
         """
         Create multiple associations in bulk.
         
@@ -585,8 +584,8 @@ class MTMRepository:
         
         # Validate entities if requested
         if validate_entities:
-            left_ids = set(assoc['left_id'] for assoc in associations)
-            right_ids = set(assoc['right_id'] for assoc in associations)
+            left_ids = {assoc['left_id'] for assoc in associations}
+            right_ids = {assoc['right_id'] for assoc in associations}
             
             # Check left entities
             for left_id in left_ids:
@@ -642,7 +641,7 @@ class MTMRepository:
     
     def bulk_dissociate(
         self, 
-        associations: List[Dict[str, Any]]
+        associations: list[dict[str, Any]]
     ) -> int:
         """
         Remove multiple associations in bulk.

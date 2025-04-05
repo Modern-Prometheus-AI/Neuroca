@@ -24,29 +24,30 @@ Usage:
         result = conn.query("MATCH (n) RETURN n LIMIT 10")
 """
 
-import os
-import time
 import logging
-from typing import Any, Dict, List, Optional, Union, Callable, Generator, Tuple
-from contextlib import contextmanager
-from queue import Queue, Empty
+import os
 import threading
+import time
+from collections.abc import Generator
+from contextlib import contextmanager
+from queue import Empty, Queue
+from typing import Any
 from urllib.parse import urlparse
 
 # Neo4j driver imports
 try:
-    from neo4j import GraphDatabase, Driver, Session, Transaction, Result
+    from neo4j import Driver, GraphDatabase, Result, Session, Transaction
     from neo4j.exceptions import (
-        ServiceUnavailable, 
-        AuthError, 
-        DatabaseUnavailable,
+        AuthError,
         ClientError,
-        TransientError,
-        DatabaseError,
         ConstraintError,
         CypherSyntaxError,
         CypherTypeError,
-        Neo4jError
+        DatabaseError,
+        DatabaseUnavailable,
+        Neo4jError,
+        ServiceUnavailable,
+        TransientError,
     )
 except ImportError:
     raise ImportError(
@@ -250,10 +251,10 @@ class Neo4jConnection:
     def query(
         self, 
         query: str, 
-        parameters: Dict[str, Any] = None, 
+        parameters: dict[str, Any] = None, 
         database: str = None,
         read_only: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute a Cypher query and return the results.
         
@@ -334,7 +335,7 @@ class Neo4jConnection:
             raise Neo4jQueryError(error_msg)
     
     @staticmethod
-    def _execute_query(tx: Transaction, query: str, parameters: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _execute_query(tx: Transaction, query: str, parameters: dict[str, Any]) -> list[dict[str, Any]]:
         """
         Execute a query within a transaction.
         
@@ -405,7 +406,7 @@ class Neo4jConnection:
             logger.debug(f"Connection check failed: {str(e)}")
             return False
     
-    def get_server_info(self) -> Dict[str, Any]:
+    def get_server_info(self) -> dict[str, Any]:
         """
         Get information about the Neo4j server.
         

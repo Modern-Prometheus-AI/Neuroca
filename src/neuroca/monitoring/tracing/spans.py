@@ -31,24 +31,23 @@ Usage:
 
 import functools
 import inspect
-import logging
 import time
 import traceback
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Optional, Union, TypeVar, cast
+from typing import Any, Callable, Optional, TypeVar, Union
 
 # OpenTelemetry imports
 from opentelemetry import trace
+from opentelemetry.context import Context, get_current
 from opentelemetry.trace import Span, SpanKind, StatusCode
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-from opentelemetry.context import Context, get_current
 
 # Local imports
 from neuroca.monitoring.logging.logger import get_logger
 
 # Type definitions
 T = TypeVar('T')
-Attributes = Dict[str, Union[str, bool, int, float, List[str]]]
+Attributes = dict[str, Union[str, bool, int, float, list[str]]]
 
 # Configure module logger
 logger = get_logger(__name__)
@@ -62,7 +61,7 @@ def create_span(
     name: str,
     kind: SpanKind = SpanKind.INTERNAL,
     attributes: Optional[Attributes] = None,
-    links: Optional[List[trace.Link]] = None,
+    links: Optional[list[trace.Link]] = None,
     record_exception: bool = True,
     parent: Optional[Union[Span, Context]] = None,
 ) -> Span:
@@ -271,7 +270,7 @@ def set_span_status(status: StatusCode, description: Optional[str] = None) -> No
     span.set_status(status, description)
 
 
-def set_span_attribute(key: str, value: Union[str, bool, int, float, List[str]]) -> None:
+def set_span_attribute(key: str, value: Union[str, bool, int, float, list[str]]) -> None:
     """
     Set an attribute on the current span.
     
@@ -286,7 +285,7 @@ def set_span_attribute(key: str, value: Union[str, bool, int, float, List[str]])
     span.set_attribute(key, value)
 
 
-def extract_context_from_headers(headers: Dict[str, str]) -> Context:
+def extract_context_from_headers(headers: dict[str, str]) -> Context:
     """
     Extract trace context from HTTP headers.
     
@@ -305,7 +304,7 @@ def extract_context_from_headers(headers: Dict[str, str]) -> Context:
     return propagator.extract(get_current(), headers)
 
 
-def inject_context_into_headers(headers: Dict[str, str]) -> Dict[str, str]:
+def inject_context_into_headers(headers: dict[str, str]) -> dict[str, str]:
     """
     Inject the current trace context into HTTP headers.
     
@@ -372,7 +371,7 @@ class SpanContextManager:
         name: str,
         kind: Optional[SpanKind] = None,
         attributes: Optional[Attributes] = None,
-        links: Optional[List[trace.Link]] = None,
+        links: Optional[list[trace.Link]] = None,
         record_exception: Optional[bool] = None,
         parent: Optional[Union[Span, Context]] = None,
     ) -> Span:

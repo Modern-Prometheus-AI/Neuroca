@@ -21,7 +21,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any
 
 from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem
 
@@ -54,16 +54,16 @@ class Concept:
     
     id: str
     name: str
-    description: Optional[str] = None
-    properties: Dict[str, Any] = field(default_factory=dict)
+    description: str | None = None
+    properties: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     confidence: float = 1.0  # Confidence score (0.0 to 1.0)
     # Sources that contributed to this concept (e.g., episodic memory IDs)
-    sources: List[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
     # Alternative forms/synonyms of the concept
-    forms: List[str] = field(default_factory=list)
+    forms: list[str] = field(default_factory=list)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert concept to dictionary representation."""
         return {
             "id": self.id,
@@ -77,7 +77,7 @@ class Concept:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> Concept:
+    def from_dict(cls, data: dict[str, Any]) -> Concept:
         """Create concept from dictionary representation."""
         created_at = data.get("created_at")
         if isinstance(created_at, str):
@@ -106,12 +106,12 @@ class Relationship:
     relationship_type: RelationshipType
     confidence: float = 1.0  # Confidence score (0.0 to 1.0)
     # Sources that contributed to this relationship (e.g., episodic memory IDs)
-    sources: List[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
     # Additional attributes specific to this relationship
-    attributes: Dict[str, Any] = field(default_factory=dict)
+    attributes: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert relationship to dictionary representation."""
         return {
             "source_id": self.source_id,
@@ -124,7 +124,7 @@ class Relationship:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> Relationship:
+    def from_dict(cls, data: dict[str, Any]) -> Relationship:
         """Create relationship from dictionary representation."""
         created_at = data.get("created_at")
         if isinstance(created_at, str):
@@ -149,9 +149,9 @@ class SemanticMemoryChunk(MemoryChunk):
     def __init__(
         self, 
         chunk_id: str, 
-        content: Union[Concept, Relationship],
+        content: Concept | Relationship,
         created_at: float = None,
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ):
         """Initialize a semantic memory chunk.
         
@@ -198,27 +198,27 @@ class SemanticMemory(MemorySystem):
     def __init__(self):
         """Initialize the semantic memory system."""
         # Maps concept IDs to SemanticMemoryChunks containing Concepts
-        self._concepts: Dict[str, SemanticMemoryChunk] = {}
+        self._concepts: dict[str, SemanticMemoryChunk] = {}
         
         # Maps (source_id, relationship_type, target_id) to SemanticMemoryChunks containing Relationships
-        self._relationships: Dict[Tuple[str, RelationshipType, str], SemanticMemoryChunk] = {}
+        self._relationships: dict[tuple[str, RelationshipType, str], SemanticMemoryChunk] = {}
         
         # Index of outgoing relationships for each concept
-        self._outgoing_relationships: Dict[str, Dict[RelationshipType, List[str]]] = defaultdict(
+        self._outgoing_relationships: dict[str, dict[RelationshipType, list[str]]] = defaultdict(
             lambda: defaultdict(list)
         )
         
         # Index of incoming relationships for each concept
-        self._incoming_relationships: Dict[str, Dict[RelationshipType, List[str]]] = defaultdict(
+        self._incoming_relationships: dict[str, dict[RelationshipType, list[str]]] = defaultdict(
             lambda: defaultdict(list)
         )
         
         # Contradiction detection cache
-        self._contradiction_cache: Dict[str, Set[str]] = defaultdict(set)
+        self._contradiction_cache: dict[str, set[str]] = defaultdict(set)
         
         logger.info("Semantic memory system initialized")
     
-    def store(self, content: Union[Concept, Relationship, Dict[str, Any]], **metadata) -> str:
+    def store(self, content: Concept | Relationship | dict[str, Any], **metadata) -> str:
         """Store a concept or relationship in semantic memory.
         
         Args:
@@ -285,7 +285,7 @@ class SemanticMemory(MemorySystem):
         
         return chunk_id
     
-    def retrieve(self, query: Any, **parameters) -> List[MemoryChunk]:
+    def retrieve(self, query: Any, **parameters) -> list[MemoryChunk]:
         """Retrieve semantic memory chunks based on a query.
         
         Args:
@@ -425,13 +425,13 @@ class SemanticMemory(MemorySystem):
             if concept_id in self._concepts:
                 # Check if there are any relationships involving this concept
                 has_relationships = False
-                for src, _, _ in self._relationships.keys():
+                for src, _, _ in self._relationships:
                     if src == concept_id:
                         has_relationships = True
                         break
                 
                 if not has_relationships:
-                    for _, _, tgt in self._relationships.keys():
+                    for _, _, tgt in self._relationships:
                         if tgt == concept_id:
                             has_relationships = True
                             break
@@ -497,7 +497,7 @@ class SemanticMemory(MemorySystem):
         self._contradiction_cache.clear()
         logger.info("Cleared semantic memory")
     
-    def get_concept(self, concept_id: str) -> Optional[Concept]:
+    def get_concept(self, concept_id: str) -> Concept | None:
         """Get a concept by its ID.
         
         Args:
@@ -509,7 +509,7 @@ class SemanticMemory(MemorySystem):
         chunk = self._concepts.get(concept_id)
         return chunk.content if chunk else None
     
-    def get_relationship(self, source_id: str, relationship_type: RelationshipType, target_id: str) -> Optional[Relationship]:
+    def get_relationship(self, source_id: str, relationship_type: RelationshipType, target_id: str) -> Relationship | None:
         """Get a specific relationship.
         
         Args:
@@ -524,7 +524,7 @@ class SemanticMemory(MemorySystem):
         chunk = self._relationships.get(rel_key)
         return chunk.content if chunk else None
     
-    def get_related_concepts(self, concept_id: str, relationship_types: List[RelationshipType] = None) -> Dict[RelationshipType, List[Concept]]:
+    def get_related_concepts(self, concept_id: str, relationship_types: list[RelationshipType] = None) -> dict[RelationshipType, list[Concept]]:
         """Get concepts related to the given concept.
         
         Args:
@@ -554,7 +554,7 @@ class SemanticMemory(MemorySystem):
         
         return dict(result)
     
-    def infer_path(self, start_concept_id: str, end_concept_id: str, max_depth: int = 5) -> List[List[Tuple[Relationship, bool]]]:
+    def infer_path(self, start_concept_id: str, end_concept_id: str, max_depth: int = 5) -> list[list[tuple[Relationship, bool]]]:
         """Find paths between two concepts in the knowledge graph.
         
         Args:
@@ -605,7 +605,7 @@ class SemanticMemory(MemorySystem):
         
         return paths
     
-    def infer_concept_properties(self, concept_id: str) -> Dict[str, Any]:
+    def infer_concept_properties(self, concept_id: str) -> dict[str, Any]:
         """Infer properties for a concept based on its relationships.
         
         This method uses the IS_A hierarchy to inherit properties from parent concepts.
@@ -635,7 +635,7 @@ class SemanticMemory(MemorySystem):
         
         return inferred_properties
     
-    def abstract_from_episodic(self, episodic_chunks: List[MemoryChunk], min_occurrences: int = 3) -> List[str]:
+    def abstract_from_episodic(self, episodic_chunks: list[MemoryChunk], min_occurrences: int = 3) -> list[str]:
         """Abstract semantic knowledge from episodic memories.
         
         This method identifies patterns in episodic memories and creates
@@ -665,7 +665,7 @@ class SemanticMemory(MemorySystem):
         logger.info(f"Abstracted {len(created_chunk_ids)} new semantic chunks from episodic memories")
         return created_chunk_ids
     
-    def check_consistency(self) -> List[Dict[str, Any]]:
+    def check_consistency(self) -> list[dict[str, Any]]:
         """Check the knowledge graph for inconsistencies and contradictions.
         
         Returns:
@@ -713,7 +713,7 @@ class SemanticMemory(MemorySystem):
         
         return inconsistencies
     
-    def _update_concept(self, concept: Concept, metadata: Dict[str, Any]) -> None:
+    def _update_concept(self, concept: Concept, metadata: dict[str, Any]) -> None:
         """Update an existing concept with new information."""
         existing_chunk = self._concepts[concept.id]
         existing_concept = existing_chunk.content
@@ -752,7 +752,7 @@ class SemanticMemory(MemorySystem):
         
         logger.debug(f"Updated concept {concept.id} with new information")
     
-    def _update_relationship(self, relationship: Relationship, metadata: Dict[str, Any]) -> None:
+    def _update_relationship(self, relationship: Relationship, metadata: dict[str, Any]) -> None:
         """Update an existing relationship with new information."""
         rel_key = (relationship.source_id, relationship.relationship_type, relationship.target_id)
         existing_chunk = self._relationships[rel_key]
@@ -783,7 +783,7 @@ class SemanticMemory(MemorySystem):
         logger.debug(f"Updated relationship {relationship.source_id} {relationship.relationship_type.name} "
                     f"{relationship.target_id} with new information")
     
-    def _get_related_concepts(self, concept_id: str, relationship_types: List[RelationshipType] = None) -> List[MemoryChunk]:
+    def _get_related_concepts(self, concept_id: str, relationship_types: list[RelationshipType] = None) -> list[MemoryChunk]:
         """Get memory chunks for concepts related to the given concept."""
         related_chunks = []
         

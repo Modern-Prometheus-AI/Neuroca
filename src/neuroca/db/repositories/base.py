@@ -21,7 +21,7 @@ Usage:
 import logging
 from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager
-from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Generic, Optional, TypeVar
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -75,7 +75,7 @@ class RepositoryInterface(Generic[T, ID], ABC):
         pass
     
     @abstractmethod
-    def get_all(self) -> List[T]:
+    def get_all(self) -> list[T]:
         """Retrieve all entities."""
         pass
     
@@ -107,7 +107,7 @@ class BaseRepository(Generic[T, ID], RepositoryInterface[T, ID]):
         session_factory: A callable that returns a SQLAlchemy session context manager
     """
     
-    def __init__(self, model: Type[T], session_factory: Callable[..., AbstractContextManager[Session]]):
+    def __init__(self, model: type[T], session_factory: Callable[..., AbstractContextManager[Session]]):
         """
         Initialize the repository with a model class and session factory.
         
@@ -164,7 +164,7 @@ class BaseRepository(Generic[T, ID], RepositoryInterface[T, ID]):
             raise EntityNotFoundError(self.model.__name__, entity_id)
         return entity
     
-    def get_all(self) -> List[T]:
+    def get_all(self) -> list[T]:
         """
         Retrieve all entities of this type.
         
@@ -326,7 +326,7 @@ class BaseRepository(Generic[T, ID], RepositoryInterface[T, ID]):
             logger.error(f"Error checking existence of {self.model.__name__} with ID {entity_id}: {str(e)}")
             raise RepositoryError(f"Failed to check if {self.model.__name__} exists") from e
     
-    def find_by_attributes(self, **kwargs) -> List[T]:
+    def find_by_attributes(self, **kwargs) -> list[T]:
         """
         Find entities matching the given attributes.
         
@@ -358,7 +358,7 @@ class BaseRepository(Generic[T, ID], RepositoryInterface[T, ID]):
             logger.error(f"Error finding {self.model.__name__} by attributes {kwargs}: {str(e)}")
             raise RepositoryError(f"Failed to find {self.model.__name__} by attributes") from e
     
-    def bulk_create(self, entities: List[T]) -> List[T]:
+    def bulk_create(self, entities: list[T]) -> list[T]:
         """
         Create multiple entities in a single transaction.
         
@@ -394,7 +394,7 @@ class BaseRepository(Generic[T, ID], RepositoryInterface[T, ID]):
             logger.error(f"Error during bulk creation of {self.model.__name__}: {str(e)}")
             raise RepositoryError(f"Failed to bulk create {self.model.__name__} entities") from e
     
-    def bulk_delete(self, entity_ids: List[ID]) -> int:
+    def bulk_delete(self, entity_ids: list[ID]) -> int:
         """
         Delete multiple entities by their IDs in a single transaction.
         

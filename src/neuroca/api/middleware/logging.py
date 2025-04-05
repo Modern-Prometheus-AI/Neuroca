@@ -43,7 +43,7 @@ import logging
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Callable, Optional, Union
 
 from fastapi import FastAPI, Request, Response
 from fastapi.routing import APIRoute
@@ -57,7 +57,7 @@ correlation_id_context: ContextVar[str] = ContextVar("correlation_id", default="
 logger = logging.getLogger("neuroca.api.middleware.logging")
 
 # Default paths that won't be logged (health checks, metrics, etc.)
-DEFAULT_EXCLUDE_PATHS: Set[str] = {
+DEFAULT_EXCLUDE_PATHS: set[str] = {
     "/health", 
     "/metrics", 
     "/ping", 
@@ -68,7 +68,7 @@ DEFAULT_EXCLUDE_PATHS: Set[str] = {
 }
 
 # Default headers that should be redacted from logs
-SENSITIVE_HEADERS: Set[str] = {
+SENSITIVE_HEADERS: set[str] = {
     "authorization", 
     "x-api-key", 
     "api-key", 
@@ -79,7 +79,7 @@ SENSITIVE_HEADERS: Set[str] = {
 }
 
 # Default fields in request/response bodies that should be redacted
-SENSITIVE_FIELDS: Set[str] = {
+SENSITIVE_FIELDS: set[str] = {
     "password", 
     "token", 
     "secret", 
@@ -145,7 +145,7 @@ def get_request_logger() -> logging.Logger:
     return request_logger
 
 
-def sanitize_headers(headers: Dict[str, str]) -> Dict[str, str]:
+def sanitize_headers(headers: dict[str, str]) -> dict[str, str]:
     """
     Sanitize headers by redacting sensitive information.
     
@@ -165,7 +165,7 @@ def sanitize_headers(headers: Dict[str, str]) -> Dict[str, str]:
     return sanitized
 
 
-def sanitize_body(body: Union[Dict[str, Any], List[Any], str, None]) -> Union[Dict[str, Any], List[Any], str, None]:
+def sanitize_body(body: Union[dict[str, Any], list[Any], str, None]) -> Union[dict[str, Any], list[Any], str, None]:
     """
     Sanitize request/response body by redacting sensitive fields.
     
@@ -217,7 +217,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     def __init__(
         self, 
         app: ASGIApp, 
-        exclude_paths: Optional[Set[str]] = None,
+        exclude_paths: Optional[set[str]] = None,
         log_request_body: bool = True,
         log_response_body: bool = True,
         log_level: int = logging.INFO,
@@ -469,7 +469,7 @@ class LoggingRoute(APIRoute):
 
 def setup_request_logging(
     app: FastAPI,
-    exclude_paths: Optional[Set[str]] = None,
+    exclude_paths: Optional[set[str]] = None,
     log_request_body: bool = True,
     log_response_body: bool = True,
     log_level: int = logging.INFO,

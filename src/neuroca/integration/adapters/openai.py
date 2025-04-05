@@ -39,13 +39,11 @@ Usage:
 import json
 import logging
 import os
-import time
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Tuple, Callable
+from typing import Any, Optional, Union
 
 import httpx
-import backoff
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from neuroca.integration.adapters.base import BaseModelAdapter
 from neuroca.integration.exceptions import (
@@ -136,7 +134,7 @@ class OpenAIAdapter(BaseModelAdapter):
         
         logger.debug("OpenAI adapter initialized with API base: %s", api_base)
     
-    def _get_default_headers(self) -> Dict[str, str]:
+    def _get_default_headers(self) -> dict[str, str]:
         """
         Get default headers for API requests.
         
@@ -189,9 +187,9 @@ class OpenAIAdapter(BaseModelAdapter):
         self, 
         method: str, 
         endpoint: Union[str, OpenAIEndpoints], 
-        data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        data: Optional[dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Make an HTTP request to the OpenAI API with retry logic.
         
@@ -286,9 +284,9 @@ class OpenAIAdapter(BaseModelAdapter):
         top_p: float = 1.0,
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
-        stop: Optional[Union[str, List[str]]] = None,
+        stop: Optional[Union[str, list[str]]] = None,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a text completion using OpenAI's completion API.
         
@@ -357,22 +355,22 @@ class OpenAIAdapter(BaseModelAdapter):
     
     def chat_complete(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "gpt-3.5-turbo",
         temperature: float = 0.7,
         top_p: float = 1.0,
         n: int = 1,
         stream: bool = False,
-        stop: Optional[Union[str, List[str]]] = None,
+        stop: Optional[Union[str, list[str]]] = None,
         max_tokens: Optional[int] = None,
         presence_penalty: float = 0.0,
         frequency_penalty: float = 0.0,
-        functions: Optional[List[Dict[str, Any]]] = None,
-        function_call: Optional[Union[str, Dict[str, str]]] = None,
-        tools: Optional[List[Dict[str, Any]]] = None,
-        tool_choice: Optional[Union[str, Dict[str, Any]]] = None,
+        functions: Optional[list[dict[str, Any]]] = None,
+        function_call: Optional[Union[str, dict[str, str]]] = None,
+        tools: Optional[list[dict[str, Any]]] = None,
+        tool_choice: Optional[Union[str, dict[str, Any]]] = None,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a chat completion using OpenAI's chat completion API.
         
@@ -467,10 +465,10 @@ class OpenAIAdapter(BaseModelAdapter):
     
     def generate_embeddings(
         self,
-        texts: Union[str, List[str]],
+        texts: Union[str, list[str]],
         model: str = "text-embedding-ada-002",
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate embeddings for the given texts using OpenAI's embeddings API.
         
@@ -515,7 +513,7 @@ class OpenAIAdapter(BaseModelAdapter):
             logger.error(f"Error in generate_embeddings: {str(e)}")
             raise
     
-    def list_models(self) -> Dict[str, Any]:
+    def list_models(self) -> dict[str, Any]:
         """
         List available models from OpenAI API.
         
@@ -537,7 +535,7 @@ class OpenAIAdapter(BaseModelAdapter):
             logger.error(f"Error in list_models: {str(e)}")
             raise
     
-    def get_model_info(self, model_id: str) -> Dict[str, Any]:
+    def get_model_info(self, model_id: str) -> dict[str, Any]:
         """
         Get information about a specific model.
         

@@ -12,14 +12,18 @@ Key functionalities:
 """
 
 import logging
-from typing import Dict, Any, Optional, List
 import time
+from typing import Any, Optional
+
+from neuroca.core.health.dynamics import (  # Example
+    HealthState,
+)
+from neuroca.memory.manager import MemoryItem  # Example
+
+from .goal_manager import GoalStatus  # Example, Import GoalStatus
 
 # Import necessary components for potential integration
-from .planner import Plan # Import Plan for type hinting
-from neuroca.core.health.dynamics import HealthState, ComponentHealth, HealthDynamicsManager # Example
-from neuroca.memory.manager import MemoryItem, MemoryManager # Example
-from .goal_manager import GoalManager, Goal, GoalStatus # Example, Import GoalStatus
+from .planner import Plan  # Import Plan for type hinting
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -41,17 +45,17 @@ class MetacognitiveMonitor:
         self.health_manager = health_manager
         self.memory_manager = memory_manager
         self.goal_manager = goal_manager
-        self.goal_manager = goal_manager
-        # TODO: Implement dependency injection properly later
-        self.last_error_log: List[Dict] = [] # Simple error tracking, limited size
-        self.performance_metrics: Dict[str, Any] = { # Store more performance data
+        # NOTE: Consider implementing a proper dependency injection framework
+        # for managing manager instances instead of direct constructor passing.
+        self.last_error_log: list[dict] = [] # Simple error tracking, limited size
+        self.performance_metrics: dict[str, Any] = { # Store more performance data
              "total_actions_completed": 0,
              "total_energy_consumed": 0.0,
              "avg_action_cost": 0.0,
         }
         self.max_error_log_size = 20
 
-    def log_error(self, error_details: Dict[str, Any]):
+    def log_error(self, error_details: dict[str, Any]):
          """
          Log an error observed during cognitive processing and store in episodic memory.
          
@@ -112,7 +116,7 @@ class MetacognitiveMonitor:
          if total_actions > 0:
               self.performance_metrics["avg_action_cost"] = self.performance_metrics["total_energy_consumed"] / total_actions
 
-    def assess_current_state(self) -> Dict[str, Any]:
+    def assess_current_state(self) -> dict[str, Any]:
         """
         Assess the overall current state of the cognitive system, including performance.
 
@@ -220,7 +224,7 @@ class MetacognitiveMonitor:
         return final_confidence
         # --- End Enhanced Placeholder ---
 
-    def select_strategy(self, task_description: str, available_strategies: List[str], context: Optional[Dict[str, Any]] = None) -> Optional[str]:
+    def select_strategy(self, task_description: str, available_strategies: list[str], context: Optional[dict[str, Any]] = None) -> Optional[str]:
         """
         Select the most appropriate cognitive strategy for a given task.
 
@@ -269,7 +273,7 @@ class MetacognitiveMonitor:
                 past_success = {strategy: 0.5 for strategy in available_strategies}
 
         # 3. Score Strategies based on Context and Performance
-        strategy_scores: Dict[str, float] = {}
+        strategy_scores: dict[str, float] = {}
         for strategy in available_strategies:
             score = 0.5 # Base score
 
@@ -304,7 +308,7 @@ class MetacognitiveMonitor:
         return best_strategy
         # --- End Enhanced Placeholder ---
 
-    def detect_error_patterns(self, error_type: Optional[str] = None) -> Dict[str, Any]:
+    def detect_error_patterns(self, error_type: Optional[str] = None) -> dict[str, Any]:
         """
         Analyze past errors to detect recurring patterns and potential root causes.
         
@@ -384,7 +388,7 @@ class MetacognitiveMonitor:
             logger.error(f"Error during pattern detection: {e}")
             return {"patterns_detected": False, "reason": f"analysis_error: {str(e)}"}
 
-    def optimize_resource_allocation(self, task_complexity: float, current_plan: Optional[Plan] = None, task_type: Optional[str] = None) -> Dict[str, float]:
+    def optimize_resource_allocation(self, task_complexity: float, current_plan: Optional[Plan] = None, task_type: Optional[str] = None) -> dict[str, float]:
         """
         Suggest adjustments to resource allocation based on task and state.
 
@@ -401,8 +405,8 @@ class MetacognitiveMonitor:
         # 1. Assess current state (health, memory load, active goals)
         state = self.assess_current_state()
         health_status = state.get("overall_health", "healthy")
-        avg_energy = state.get("average_energy", 1.0)
-        wm_load = state.get("working_memory_load", 0.5)
+        state.get("average_energy", 1.0)
+        state.get("working_memory_load", 0.5)
         
         # Default allocation
         allocation = {

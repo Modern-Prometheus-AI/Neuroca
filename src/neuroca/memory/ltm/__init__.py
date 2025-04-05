@@ -41,18 +41,18 @@ Usage Examples:
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Union, Tuple
 import uuid
 from datetime import datetime
 from enum import Enum, auto
+from typing import Any, Optional, Union
 
 from neuroca.memory.base import MemoryBase, MemoryItem, MemoryRetrievalResult
 from neuroca.memory.exceptions import (
-    MemoryStorageError, 
-    MemoryRetrievalError,
-    MemoryNotFoundError,
+    InvalidMemoryFormatError,
     MemoryConsolidationError,
-    InvalidMemoryFormatError
+    MemoryNotFoundError,
+    MemoryRetrievalError,
+    MemoryStorageError,
 )
 
 # Configure module logger
@@ -76,14 +76,14 @@ class LTMItem(MemoryItem):
         self,
         content: Any,
         memory_type: MemoryType,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         item_id: Optional[str] = None,
         created_at: Optional[datetime] = None,
         last_accessed: Optional[datetime] = None,
         importance: float = 0.5,
         confidence: float = 1.0,
-        associations: Optional[List[str]] = None,
-        embedding: Optional[List[float]] = None,
+        associations: Optional[list[str]] = None,
+        embedding: Optional[list[float]] = None,
     ):
         """
         Initialize a new LTM item.
@@ -125,7 +125,7 @@ class LTMItem(MemoryItem):
         self.associations = associations or []
         self.embedding = embedding
         
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the LTM item to a dictionary representation.
         
@@ -143,7 +143,7 @@ class LTMItem(MemoryItem):
         return {**base_dict, **ltm_dict}
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'LTMItem':
+    def from_dict(cls, data: dict[str, Any]) -> 'LTMItem':
         """
         Create an LTM item from a dictionary representation.
         
@@ -179,7 +179,7 @@ class LongTermMemory(MemoryBase):
     implements associative retrieval mechanisms.
     """
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize the Long-Term Memory system.
         
@@ -202,7 +202,7 @@ class LongTermMemory(MemoryBase):
             
         logger.info("Long-Term Memory system initialized")
     
-    def store(self, item: Union[Dict[str, Any], LTMItem]) -> str:
+    def store(self, item: Union[dict[str, Any], LTMItem]) -> str:
         """
         Store a new item in long-term memory.
         
@@ -253,7 +253,7 @@ class LongTermMemory(MemoryBase):
         memory_type: Optional[MemoryType] = None,
         limit: int = 10,
         threshold: float = 0.7
-    ) -> List[MemoryRetrievalResult]:
+    ) -> list[MemoryRetrievalResult]:
         """
         Retrieve items from long-term memory based on query.
         
@@ -274,7 +274,7 @@ class LongTermMemory(MemoryBase):
             
             # In a production implementation, this would use vector similarity search
             # For now, implement a simple search mechanism
-            for item_id, item in self._storage.items():
+            for _item_id, item in self._storage.items():
                 # Filter by memory type if specified
                 if memory_type is not None and item.memory_type != memory_type:
                     continue
@@ -303,7 +303,7 @@ class LongTermMemory(MemoryBase):
             logger.error(f"Failed to retrieve memory items: {str(e)}")
             raise MemoryRetrievalError(f"Failed to retrieve memory items: {str(e)}") from e
     
-    def update(self, item_id: str, updates: Dict[str, Any]) -> None:
+    def update(self, item_id: str, updates: dict[str, Any]) -> None:
         """
         Update an existing memory item.
         
@@ -360,7 +360,7 @@ class LongTermMemory(MemoryBase):
         del self._storage[item_id]
         logger.debug(f"Deleted memory item: {item_id}")
     
-    def consolidate(self, items: List[Dict[str, Any]]) -> List[str]:
+    def consolidate(self, items: list[dict[str, Any]]) -> list[str]:
         """
         Consolidate items from working memory into long-term memory.
         
@@ -404,7 +404,7 @@ class LongTermMemory(MemoryBase):
             logger.error(f"Memory consolidation failed: {str(e)}")
             raise MemoryConsolidationError(f"Memory consolidation failed: {str(e)}") from e
     
-    def get_associations(self, item_id: str, depth: int = 1) -> List[Tuple[str, float]]:
+    def get_associations(self, item_id: str, depth: int = 1) -> list[tuple[str, float]]:
         """
         Get associated memory items for a given item.
         
@@ -484,7 +484,7 @@ class LongTermMemory(MemoryBase):
         # Default similarity for non-text content
         return 0.0
     
-    def _determine_memory_type(self, item: Dict[str, Any]) -> MemoryType:
+    def _determine_memory_type(self, item: dict[str, Any]) -> MemoryType:
         """
         Determine the appropriate memory type for an item.
         

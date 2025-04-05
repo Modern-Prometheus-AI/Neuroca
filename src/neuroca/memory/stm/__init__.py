@@ -33,16 +33,16 @@ with other memory tiers to provide a biologically-inspired memory system for LLM
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Union
 import time
 import uuid
+from typing import Any, Optional
 
 from neuroca.memory.base import MemoryBase, MemoryEntry, MemoryHealthStatus
 from neuroca.memory.exceptions import (
     MemoryCapacityError,
     MemoryRetrievalError,
     MemoryStorageError,
-    MemoryValidationError
+    MemoryValidationError,
 )
 
 # Configure module logger
@@ -77,12 +77,12 @@ class STMEntry(MemoryEntry):
     def __init__(
         self,
         content: Any,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         entry_id: Optional[str] = None,
         timestamp: Optional[float] = None,
         activation_level: float = 1.0,
         decay_rate: float = 0.05,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[dict[str, Any]] = None
     ):
         """
         Initialize a new STM entry.
@@ -168,7 +168,7 @@ class STMEntry(MemoryEntry):
         
         return self.activation_level
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the STM entry to a dictionary representation.
         
@@ -224,7 +224,7 @@ class STMHealthStatus(MemoryHealthStatus):
         self.context_richness = context_richness
         self.retrieval_latency_ms = retrieval_latency_ms
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert health status to dictionary representation.
         
@@ -302,7 +302,7 @@ class STMConfig:
         self.consolidation_interval = consolidation_interval
         self.retrieval_boost_amount = retrieval_boost_amount
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert configuration to dictionary representation.
         
@@ -355,9 +355,9 @@ class ShortTermMemory(MemoryBase):
         super().__init__()
         self.config = config or STMConfig()
         self.ltm_interface = ltm_interface
-        self._entries: Dict[str, STMEntry] = {}
+        self._entries: dict[str, STMEntry] = {}
         self._last_consolidation = time.time()
-        self._retrieval_times: List[float] = []  # For tracking retrieval performance
+        self._retrieval_times: list[float] = []  # For tracking retrieval performance
         
         logger.info(
             "Initialized Short-Term Memory with capacity %d and activation threshold %.2f",
@@ -368,8 +368,8 @@ class ShortTermMemory(MemoryBase):
     def store(
         self,
         content: Any,
-        metadata: Optional[Dict[str, Any]] = None,
-        context: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
         decay_rate: Optional[float] = None,
         activation_level: float = 1.0
     ) -> str:
@@ -443,9 +443,9 @@ class ShortTermMemory(MemoryBase):
         query: Any,
         limit: int = 10,
         min_activation: Optional[float] = None,
-        context_filter: Optional[Dict[str, Any]] = None,
+        context_filter: Optional[dict[str, Any]] = None,
         boost_retrieved: bool = True
-    ) -> List[STMEntry]:
+    ) -> list[STMEntry]:
         """
         Retrieve information from Short-Term Memory.
         
@@ -550,8 +550,8 @@ class ShortTermMemory(MemoryBase):
         self,
         entry_id: str,
         content: Optional[Any] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        context: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
         activation_level: Optional[float] = None,
         decay_rate: Optional[float] = None
     ) -> bool:
@@ -846,7 +846,7 @@ class ShortTermMemory(MemoryBase):
         
         return False
     
-    def _matches_context(self, entry: STMEntry, context_filter: Dict[str, Any]) -> bool:
+    def _matches_context(self, entry: STMEntry, context_filter: dict[str, Any]) -> bool:
         """
         Check if an entry matches the given context filter.
         

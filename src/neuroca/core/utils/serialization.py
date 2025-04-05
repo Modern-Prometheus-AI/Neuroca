@@ -38,7 +38,7 @@ import zlib
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Optional, Union
 
 import msgpack
 import numpy as np
@@ -91,7 +91,7 @@ class SecurityError(DeserializationError):
     pass
 
 
-def _get_encryption_key(password: str, salt: Optional[bytes] = None) -> Tuple[bytes, bytes]:
+def _get_encryption_key(password: str, salt: Optional[bytes] = None) -> tuple[bytes, bytes]:
     """
     Generate an encryption key from a password using PBKDF2.
     
@@ -116,7 +116,7 @@ def _get_encryption_key(password: str, salt: Optional[bytes] = None) -> Tuple[by
     return key, salt
 
 
-def _encrypt_data(data: bytes, password: str) -> Dict[str, bytes]:
+def _encrypt_data(data: bytes, password: str) -> dict[str, bytes]:
     """
     Encrypt data using Fernet symmetric encryption.
     
@@ -138,7 +138,7 @@ def _encrypt_data(data: bytes, password: str) -> Dict[str, bytes]:
     }
 
 
-def _decrypt_data(encrypted_package: Dict[str, bytes], password: str) -> bytes:
+def _decrypt_data(encrypted_package: dict[str, bytes], password: str) -> bytes:
     """
     Decrypt data using the appropriate method.
     
@@ -203,7 +203,7 @@ def _decompress_data(data: bytes, method: CompressionMethod = CompressionMethod.
         raise ValueError(f"Unsupported decompression method: {method}")
 
 
-def _serialize_numpy(obj: np.ndarray) -> Dict[str, Any]:
+def _serialize_numpy(obj: np.ndarray) -> dict[str, Any]:
     """
     Serialize a NumPy array to a dictionary.
     
@@ -225,7 +225,7 @@ def _serialize_numpy(obj: np.ndarray) -> Dict[str, Any]:
     }
 
 
-def _deserialize_numpy(data: Dict[str, Any]) -> np.ndarray:
+def _deserialize_numpy(data: dict[str, Any]) -> np.ndarray:
     """
     Deserialize a NumPy array from a dictionary.
     
@@ -239,7 +239,7 @@ def _deserialize_numpy(data: Dict[str, Any]) -> np.ndarray:
     return np.load(buffer, allow_pickle=False)
 
 
-def _serialize_datetime(obj: datetime) -> Dict[str, Any]:
+def _serialize_datetime(obj: datetime) -> dict[str, Any]:
     """
     Serialize a datetime object to a dictionary.
     
@@ -255,7 +255,7 @@ def _serialize_datetime(obj: datetime) -> Dict[str, Any]:
     }
 
 
-def _deserialize_datetime(data: Dict[str, Any]) -> datetime:
+def _deserialize_datetime(data: dict[str, Any]) -> datetime:
     """
     Deserialize a datetime object from a dictionary.
     
@@ -293,13 +293,13 @@ class NCAJSONEncoder(json.JSONEncoder):
             return {"__bytes__": True, "data": base64.b64encode(obj).decode('ascii')}
         elif isinstance(obj, Path):
             return {"__path__": True, "data": str(obj)}
-        elif hasattr(obj, "__serialize__") and callable(getattr(obj, "__serialize__")):
+        elif hasattr(obj, "__serialize__") and callable(obj.__serialize__):
             return obj.__serialize__()
         
         return super().default(obj)
 
 
-def _json_object_hook(data: Dict[str, Any]) -> Any:
+def _json_object_hook(data: dict[str, Any]) -> Any:
     """
     Custom object hook for JSON deserialization.
     
@@ -378,7 +378,7 @@ def serialize(
         elif format == SerializationFormat.MSGPACK:
             serialized = msgpack.packb(obj, use_bin_type=True, **kwargs)
         elif format == SerializationFormat.CUSTOM:
-            if not hasattr(obj, "__serialize__") or not callable(getattr(obj, "__serialize__")):
+            if not hasattr(obj, "__serialize__") or not callable(obj.__serialize__):
                 raise SerializationError("Object does not support custom serialization")
             serialized = obj.__serialize__()
             if not isinstance(serialized, bytes):
@@ -618,7 +618,7 @@ def deserialize_versioned(
     min_version: Optional[str] = None,
     max_version: Optional[str] = None,
     **kwargs
-) -> Tuple[Any, str]:
+) -> tuple[Any, str]:
     """
     Deserialize versioned data with version compatibility checks.
     

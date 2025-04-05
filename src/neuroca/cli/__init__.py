@@ -31,7 +31,7 @@ Attributes:
 import logging
 import os
 import sys
-from typing import Dict, List, Optional, Any, Union
+from typing import Any
 
 # Setup package-level logger
 logger = logging.getLogger(__name__)
@@ -46,26 +46,26 @@ try:
     # These imports will be implemented in separate files within the cli package
     # They're included here to define the public API of the cli package
     from .commands import (  # type: ignore
-        run,
         configure,
-        monitor,
         diagnose,
-        train,
         evaluate,
         export,
         import_model,
-    )
-    from .utils import (  # type: ignore
-        format_output,
-        validate_config,
-        get_system_info,
-        setup_logging,
+        monitor,
+        run,
+        train,
     )
     from .exceptions import (  # type: ignore
+        AuthenticationError,
         CLIError,
         ConfigurationError,
         ConnectionError,
-        AuthenticationError,
+    )
+    from .utils import (  # type: ignore
+        format_output,
+        get_system_info,
+        setup_logging,
+        validate_config,
     )
 except ImportError as e:
     # During early development or testing, some modules might not exist yet
@@ -107,7 +107,7 @@ def setup_cli_environment() -> None:
         raise CLIError(f"Environment setup failed: {e}") from e
 
 
-def get_cli_config() -> Dict[str, Any]:
+def get_cli_config() -> dict[str, Any]:
     """
     Retrieve the CLI configuration.
     
@@ -133,7 +133,7 @@ def get_cli_config() -> Dict[str, Any]:
         config_path = os.path.join(os.path.expanduser("~"), ".neuroca", "config.json")
         if os.path.exists(config_path):
             import json
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 file_config = json.load(f)
                 config.update(file_config)
         

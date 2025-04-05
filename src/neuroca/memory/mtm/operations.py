@@ -34,14 +34,14 @@ import datetime
 import json
 import logging
 import uuid
-from typing import Dict, List, Optional, Union, Any, Tuple
+from typing import Any, Optional
 
 from neuroca.config import settings
 from neuroca.core.exceptions import (
-    MemoryNotFoundError, 
-    MemoryStorageError,
     InvalidMemoryDataError,
-    MemoryOperationError
+    MemoryNotFoundError,
+    MemoryOperationError,
+    MemoryStorageError,
 )
 from neuroca.db.connections import get_database_connection
 from neuroca.memory.ltm.operations import store_ltm_memory
@@ -60,11 +60,11 @@ MAX_MTM_CAPACITY = settings.MTM_MAX_CAPACITY  # Maximum number of items in MTM
 
 def store_memory(
     content: str,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
     importance: float = 0.5,
     lifespan: Optional[int] = None,
-    tags: Optional[List[str]] = None,
-    linked_memories: Optional[List[str]] = None
+    tags: Optional[list[str]] = None,
+    linked_memories: Optional[list[str]] = None
 ) -> str:
     """
     Store a new memory in the Medium-Term Memory (MTM) system.
@@ -150,7 +150,7 @@ def store_memory(
 def retrieve_memory(
     memory_id: str,
     update_access_stats: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve a memory from Medium-Term Memory by its ID.
     
@@ -240,13 +240,13 @@ def retrieve_memory(
 def update_memory(
     memory_id: str,
     content: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
     importance: Optional[float] = None,
-    add_tags: Optional[List[str]] = None,
-    remove_tags: Optional[List[str]] = None,
-    add_linked_memories: Optional[List[str]] = None,
-    remove_linked_memories: Optional[List[str]] = None
-) -> Dict[str, Any]:
+    add_tags: Optional[list[str]] = None,
+    remove_tags: Optional[list[str]] = None,
+    add_linked_memories: Optional[list[str]] = None,
+    remove_linked_memories: Optional[list[str]] = None
+) -> dict[str, Any]:
     """
     Update an existing memory in Medium-Term Memory.
     
@@ -379,14 +379,14 @@ def update_memory(
 
 def search_memories(
     query: Optional[str] = None,
-    metadata_filters: Optional[Dict[str, Any]] = None,
-    tags: Optional[List[str]] = None,
+    metadata_filters: Optional[dict[str, Any]] = None,
+    tags: Optional[list[str]] = None,
     importance_min: float = 0.0,
     importance_max: float = 1.0,
     include_decayed: bool = False,
     limit: int = 10,
     offset: int = 0
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Search for memories in Medium-Term Memory based on various criteria.
     
@@ -458,7 +458,7 @@ def search_memories(
         raise MemoryOperationError(f"Failed to search memories in MTM: {str(e)}") from e
 
 
-def decay_memories(decay_cycle_id: Optional[str] = None) -> Tuple[int, int]:
+def decay_memories(decay_cycle_id: Optional[str] = None) -> tuple[int, int]:
     """
     Process memory decay for all active memories in MTM.
     
@@ -681,7 +681,7 @@ def clear_all_memories(confirm: bool = False) -> int:
 
 # Helper functions
 
-def _consolidate_memory_to_ltm(memory: Dict[str, Any]) -> str:
+def _consolidate_memory_to_ltm(memory: dict[str, Any]) -> str:
     """
     Helper function to consolidate a memory to LTM.
     

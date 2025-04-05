@@ -9,7 +9,7 @@ memory implementation modules.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union, TypeVar, Generic
+from typing import Any, Generic, Optional, TypeVar
 
 T = TypeVar('T')  # Content type for memory chunks
 
@@ -48,7 +48,7 @@ class MemoryChunk(Generic[T], ABC):
     
     @property
     @abstractmethod
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """Get the metadata associated with this memory chunk."""
         pass
     
@@ -96,7 +96,7 @@ class MemorySystem(ABC):
         pass
     
     @abstractmethod
-    def retrieve(self, query: Any, limit: int = 10, **parameters) -> List[MemoryChunk]:
+    def retrieve(self, query: Any, limit: int = 10, **parameters) -> list[MemoryChunk]:
         """
         Retrieve content from this memory system based on a query.
         
@@ -142,7 +142,7 @@ class MemorySystem(ABC):
         pass
     
     @abstractmethod
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get statistics about this memory system.
         
@@ -152,7 +152,7 @@ class MemorySystem(ABC):
         pass
     
     @abstractmethod
-    def dump(self) -> List[Dict[str, Any]]:
+    def dump(self) -> list[dict[str, Any]]:
         """
         Dump all content from this memory system.
         
@@ -165,7 +165,7 @@ class MemoryConsolidator(ABC):
     """Abstract base class for memory consolidation processes."""
     
     @abstractmethod
-    def consolidate(self, source: MemorySystem, target: MemorySystem, **parameters) -> List[str]:
+    def consolidate(self, source: MemorySystem, target: MemorySystem, **parameters) -> list[str]:
         """
         Consolidate memories from source to target memory system.
         
@@ -183,7 +183,7 @@ class MemoryDecay(ABC):
     """Abstract base class for memory decay processes."""
     
     @abstractmethod
-    def apply(self, memory_system: MemorySystem, **parameters) -> List[str]:
+    def apply(self, memory_system: MemorySystem, **parameters) -> list[str]:
         """
         Apply decay to a memory system.
         

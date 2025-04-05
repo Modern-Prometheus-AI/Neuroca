@@ -19,18 +19,17 @@ Usage:
     )
 """
 
-import os
-import re
 import json
-import yaml
 import logging
-import jinja2
-from typing import Dict, List, Optional, Union, Any, Set
-from pathlib import Path
+import re
 from dataclasses import dataclass
 from enum import Enum, auto
-from jinja2 import Environment, FileSystemLoader, select_autoescape, Template
-from jinja2.exceptions import TemplateError, TemplateNotFound, TemplateSyntaxError
+from pathlib import Path
+from typing import Any, Optional
+
+import yaml
+from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
+from jinja2.exceptions import TemplateError, TemplateSyntaxError
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -66,9 +65,9 @@ class TemplateMetadata:
     description: str
     version: str
     author: Optional[str] = None
-    tags: List[str] = None
-    required_variables: Set[str] = None
-    optional_variables: Set[str] = None
+    tags: list[str] = None
+    required_variables: set[str] = None
+    optional_variables: set[str] = None
     
     def __post_init__(self):
         """Initialize default values for optional fields."""
@@ -98,7 +97,7 @@ class PromptTemplate:
     format: TemplateFormat
     compiled_template: Optional[Template] = None
     
-    def extract_variables(self) -> Set[str]:
+    def extract_variables(self) -> set[str]:
         """
         Extract all variables from the template content.
         
@@ -120,14 +119,14 @@ class TemplateManager:
     robust error handling and validation.
     """
     
-    def __init__(self, template_dirs: Optional[List[str]] = None):
+    def __init__(self, template_dirs: Optional[list[str]] = None):
         """
         Initialize the TemplateManager.
         
         Args:
             template_dirs: Optional list of directories to load templates from
         """
-        self.templates: Dict[str, PromptTemplate] = {}
+        self.templates: dict[str, PromptTemplate] = {}
         self.jinja_env = Environment(
             loader=FileSystemLoader(template_dirs or []),
             autoescape=select_autoescape(['html', 'xml']),
@@ -211,7 +210,7 @@ class TemplateManager:
         file_extension = file_path.suffix.lower()
         
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 content = f.read()
             
             if file_extension in {'.json'}:
@@ -349,7 +348,7 @@ class TemplateManager:
                 compiled_template=compiled_template
             )
     
-    def _extract_metadata(self, template_id: str, data: Dict[str, Any]) -> TemplateMetadata:
+    def _extract_metadata(self, template_id: str, data: dict[str, Any]) -> TemplateMetadata:
         """
         Extract metadata from template data.
         
@@ -416,7 +415,7 @@ class TemplateManager:
         
         return self.templates[template_id]
     
-    def render_template(self, template_id: str, variables: Dict[str, Any] = None) -> str:
+    def render_template(self, template_id: str, variables: dict[str, Any] = None) -> str:
         """
         Render a template with the provided variables.
         
@@ -462,7 +461,7 @@ class TemplateManager:
             logger.error(error_msg)
             raise TemplateRenderError(error_msg) from e
     
-    def _validate_template_variables(self, template: PromptTemplate, variables: Dict[str, Any]) -> None:
+    def _validate_template_variables(self, template: PromptTemplate, variables: dict[str, Any]) -> None:
         """
         Validate that all required variables are provided.
         
@@ -480,7 +479,7 @@ class TemplateManager:
             raise ValueError(error_msg)
     
     def create_template_from_string(self, template_id: str, content: str, 
-                                   metadata: Optional[Dict[str, Any]] = None) -> PromptTemplate:
+                                   metadata: Optional[dict[str, Any]] = None) -> PromptTemplate:
         """
         Create a new template from a string.
         
@@ -523,7 +522,7 @@ class TemplateManager:
             logger.error(error_msg)
             raise TemplateFormatError(error_msg) from e
     
-    def list_templates(self) -> List[str]:
+    def list_templates(self) -> list[str]:
         """
         Get a list of all template IDs.
         
@@ -532,7 +531,7 @@ class TemplateManager:
         """
         return list(self.templates.keys())
     
-    def get_templates_by_tag(self, tag: str) -> List[PromptTemplate]:
+    def get_templates_by_tag(self, tag: str) -> list[PromptTemplate]:
         """
         Get all templates with a specific tag.
         

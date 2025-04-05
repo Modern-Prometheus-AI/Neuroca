@@ -18,20 +18,21 @@ Usage:
 """
 
 import logging
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, FastAPI, Depends
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.routing import APIRoute
+
+from neuroca.api.middleware.auth import get_current_user
+from neuroca.api.routes.admin import router as admin_router
+from neuroca.api.routes.auth import router as auth_router
+from neuroca.api.routes.cognitive import router as cognitive_router
 
 # Import all route modules
 from neuroca.api.routes.health import router as health_router
-from neuroca.api.routes.memory import router as memory_router
-from neuroca.api.routes.cognitive import router as cognitive_router
 from neuroca.api.routes.integration import router as integration_router
-from neuroca.api.routes.admin import router as admin_router
+from neuroca.api.routes.memory import router as memory_router
 from neuroca.api.routes.monitoring import router as monitoring_router
-from neuroca.api.routes.auth import router as auth_router
-from neuroca.api.middleware.auth import get_current_user
 from neuroca.config import settings
 
 # Configure logger
@@ -108,7 +109,7 @@ def register_routes(app: FastAPI) -> None:
         raise ValueError(f"Route registration failed: {str(e)}") from e
 
 
-def get_all_routes() -> List[dict]:
+def get_all_routes() -> list[dict]:
     """
     Get information about all registered routes.
     

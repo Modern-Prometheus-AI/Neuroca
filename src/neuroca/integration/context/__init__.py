@@ -39,10 +39,10 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 from neuroca.core.exceptions import ContextError, ContextLimitExceededError
-from neuroca.memory.working import WorkingMemory
+from neuroca.memory.working_memory import WorkingMemory  # Corrected import path
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class Message:
     role: MessageRole
     content: str
     timestamp: float = field(default_factory=time.time)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
         """Validate message after initialization."""
@@ -76,7 +76,7 @@ class Message:
         if not isinstance(self.content, str):
             raise TypeError(f"Message content must be a string, got {type(self.content)}")
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert message to dictionary format."""
         return {
             "role": self.role.value,
@@ -86,7 +86,7 @@ class Message:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Message':
+    def from_dict(cls, data: dict[str, Any]) -> 'Message':
         """Create a Message instance from a dictionary."""
         try:
             return cls(
@@ -114,7 +114,7 @@ class Context:
         context_id: Optional[str] = None,
         system_prompt: Optional[str] = None,
         max_tokens: int = 4000,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None
     ):
         """
         Initialize a new Context instance.
@@ -140,7 +140,7 @@ class Context:
         self.updated_at = self.created_at
         self.max_tokens = max_tokens
         self.metadata = metadata or {}
-        self.messages: List[Message] = []
+        self.messages: list[Message] = []
         
         # Add system prompt if provided
         if system_prompt:
@@ -148,7 +148,7 @@ class Context:
         
         logger.debug(f"Created new context: {self.context_id} for user: {user_id}")
     
-    def add_message(self, role: Union[str, MessageRole], content: str, metadata: Optional[Dict[str, Any]] = None) -> Message:
+    def add_message(self, role: Union[str, MessageRole], content: str, metadata: Optional[dict[str, Any]] = None) -> Message:
         """
         Add a new message to the context.
         
@@ -191,7 +191,7 @@ class Context:
         logger.debug(f"Added {message.role.value} message to context {self.context_id}")
         return message
     
-    def get_messages(self, limit: Optional[int] = None, roles: Optional[List[MessageRole]] = None) -> List[Message]:
+    def get_messages(self, limit: Optional[int] = None, roles: Optional[list[MessageRole]] = None) -> list[Message]:
         """
         Get messages from the context, optionally filtered by role and limited in number.
         
@@ -231,7 +231,7 @@ class Context:
         self.updated_at = datetime.now()
         logger.debug(f"Cleared messages from context {self.context_id} (preserve_system={preserve_system})")
     
-    def format_for_llm(self, provider: str = "openai") -> List[Dict[str, str]]:
+    def format_for_llm(self, provider: str = "openai") -> list[dict[str, str]]:
         """
         Format the context for consumption by a specific LLM provider.
         
@@ -260,7 +260,7 @@ class Context:
         else:
             raise ValueError(f"Unsupported LLM provider: {provider}")
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the context to a dictionary for serialization.
         
@@ -279,7 +279,7 @@ class Context:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Context':
+    def from_dict(cls, data: dict[str, Any]) -> 'Context':
         """
         Create a Context instance from a dictionary.
         
@@ -331,7 +331,7 @@ class ContextManager:
         Args:
             working_memory: Optional working memory instance for context persistence
         """
-        self.contexts: Dict[str, Context] = {}
+        self.contexts: dict[str, Context] = {}
         self.working_memory = working_memory
         logger.debug("Initialized ContextManager")
     
@@ -474,7 +474,7 @@ class ContextManager:
         
         return True
     
-    def get_contexts_for_user(self, user_id: str) -> List[Context]:
+    def get_contexts_for_user(self, user_id: str) -> list[Context]:
         """
         Get all contexts for a specific user.
         
@@ -486,7 +486,7 @@ class ContextManager:
         """
         return [ctx for ctx in self.contexts.values() if ctx.user_id == user_id]
     
-    def get_contexts_for_session(self, session_id: str) -> List[Context]:
+    def get_contexts_for_session(self, session_id: str) -> list[Context]:
         """
         Get all contexts for a specific session.
         

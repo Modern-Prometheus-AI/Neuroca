@@ -27,23 +27,17 @@ Note:
     robust performance in production environments.
 """
 
-import json
 import logging
-import time
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
-import numpy as np
-
-from neuroca.config import settings
 from neuroca.core.exceptions import (
     InvalidMemoryError,
     MemoryNotFoundError,
     MemoryOperationError,
     MemoryStorageError,
 )
-from neuroca.db.connection import get_db_connection
 from neuroca.memory.ltm.models import LTMEntry, MemoryAssociation, MemoryMetadata
 from neuroca.memory.ltm.schema import validate_ltm_entry
 from neuroca.memory.ltm.storage import LTMStorage
@@ -57,8 +51,8 @@ logger = logging.getLogger(__name__)
 @track_operation_time("ltm_store")
 def store_memory(
     content: str,
-    metadata: Optional[Dict[str, Any]] = None,
-    associations: Optional[List[str]] = None,
+    metadata: Optional[dict[str, Any]] = None,
+    associations: Optional[list[str]] = None,
     importance: float = 0.5,
     encoding_timestamp: Optional[datetime] = None,
     ttl: Optional[int] = None,
@@ -226,7 +220,7 @@ def retrieve_memory(memory_id: str) -> LTMEntry:
 def update_memory(
     memory_id: str,
     content: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
     importance: Optional[float] = None,
 ) -> LTMEntry:
     """
@@ -393,8 +387,8 @@ def search_memories(
     query: str,
     limit: int = 10,
     threshold: float = 0.7,
-    metadata_filters: Optional[Dict[str, Any]] = None,
-) -> List[Tuple[LTMEntry, float]]:
+    metadata_filters: Optional[dict[str, Any]] = None,
+) -> list[tuple[LTMEntry, float]]:
     """
     Search for memories semantically related to the query.
     
@@ -574,7 +568,7 @@ def create_association(source_id: str, target_id: str, strength: float = 0.5) ->
 
 
 @track_operation_time("ltm_get_associations")
-def get_associations(memory_id: str) -> List[Tuple[LTMEntry, float]]:
+def get_associations(memory_id: str) -> list[tuple[LTMEntry, float]]:
     """
     Retrieve all memories associated with the given memory ID.
     
@@ -893,7 +887,7 @@ def consolidate_memories(
         raise MemoryOperationError(f"Failed to consolidate memories: {str(e)}") from e
 
 
-def _matches_metadata_filters(memory: LTMEntry, filters: Dict[str, Any]) -> bool:
+def _matches_metadata_filters(memory: LTMEntry, filters: dict[str, Any]) -> bool:
     """
     Check if a memory entry matches the given metadata filters.
     

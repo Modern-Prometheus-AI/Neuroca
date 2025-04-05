@@ -40,7 +40,7 @@ Usage:
 """
 
 import logging
-from typing import Callable, List, Optional, Type, Union
+from typing import Callable, Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -122,7 +122,7 @@ def setup_compression(app: FastAPI) -> None:
 
 def setup_custom_middleware(
     app: FastAPI,
-    middleware_classes: Optional[List[Type[BaseHTTPMiddleware]]] = None,
+    middleware_classes: Optional[list[type[BaseHTTPMiddleware]]] = None,
     skip_default: bool = False,
 ) -> None:
     """
@@ -166,7 +166,7 @@ def setup_custom_middleware(
 
 def setup_middleware(
     app: FastAPI,
-    custom_middleware: Optional[List[Type[BaseHTTPMiddleware]]] = None,
+    custom_middleware: Optional[list[type[BaseHTTPMiddleware]]] = None,
     skip_default_middleware: bool = False,
     skip_cors: bool = False,
     skip_trusted_hosts: bool = False,

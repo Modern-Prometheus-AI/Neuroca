@@ -27,14 +27,12 @@ Usage:
     context_manager.release_context(context_id)
 """
 
-import json
 import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -73,10 +71,10 @@ class ContextEntry:
     content: str
     timestamp: float = field(default_factory=time.time)
     source: str = "user"  # Can be 'user', 'system', 'llm', etc.
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     relevance_score: float = 1.0  # Used for pruning decisions
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the context entry to a dictionary representation."""
         return {
             "content": self.content,
@@ -87,7 +85,7 @@ class ContextEntry:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ContextEntry':
+    def from_dict(cls, data: dict[str, Any]) -> 'ContextEntry':
         """Create a ContextEntry from a dictionary representation."""
         return cls(
             content=data["content"],
@@ -107,15 +105,15 @@ class Context:
     session_id: str
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
-    entries: List[ContextEntry] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    entries: list[ContextEntry] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     priority: ContextPriority = ContextPriority.MEDIUM
     max_size: int = 100  # Maximum number of entries
     compression_strategy: ContextCompressionStrategy = ContextCompressionStrategy.SUMMARIZE
     is_active: bool = True
     
     def add_entry(self, entry: Union[ContextEntry, str], source: str = "user", 
-                  metadata: Optional[Dict[str, Any]] = None) -> None:
+                  metadata: Optional[dict[str, Any]] = None) -> None:
         """
         Add a new entry to the context.
         
@@ -155,7 +153,7 @@ class Context:
         
         return "\n".join(formatted)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the context to a dictionary representation."""
         return {
             "id": self.id,
@@ -173,7 +171,7 @@ class Context:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Context':
+    def from_dict(cls, data: dict[str, Any]) -> 'Context':
         """Create a Context object from a dictionary representation."""
         return cls(
             id=data["id"],
@@ -213,7 +211,7 @@ class ContextManager:
             default_compression_strategy: Default compression strategy for new contexts
             auto_cleanup_interval: Interval in seconds for automatic cleanup of inactive contexts
         """
-        self._contexts: Dict[str, Context] = {}
+        self._contexts: dict[str, Context] = {}
         self._default_max_size = default_max_size
         self._default_compression_strategy = default_compression_strategy
         self._auto_cleanup_interval = auto_cleanup_interval
@@ -230,7 +228,7 @@ class ContextManager:
                        priority: ContextPriority = ContextPriority.MEDIUM,
                        max_size: Optional[int] = None,
                        compression_strategy: Optional[ContextCompressionStrategy] = None,
-                       metadata: Optional[Dict[str, Any]] = None) -> str:
+                       metadata: Optional[dict[str, Any]] = None) -> str:
         """
         Create a new context and return its ID.
         
@@ -315,7 +313,7 @@ class ContextManager:
                        context_id: str, 
                        content: str,
                        source: str = "user",
-                       metadata: Optional[Dict[str, Any]] = None) -> None:
+                       metadata: Optional[dict[str, Any]] = None) -> None:
         """
         Add content to an existing context.
         
@@ -345,7 +343,7 @@ class ContextManager:
                        context_id: str, 
                        content: str,
                        source: str = "system",
-                       metadata: Optional[Dict[str, Any]] = None) -> None:
+                       metadata: Optional[dict[str, Any]] = None) -> None:
         """
         Update a context with new content (alias for add_to_context with different defaults).
         
@@ -396,7 +394,7 @@ class ContextManager:
         
         logger.info("Deleted context %s", context_id)
     
-    def get_contexts_for_user(self, user_id: str) -> List[Context]:
+    def get_contexts_for_user(self, user_id: str) -> list[Context]:
         """
         Get all active contexts for a specific user.
         
@@ -411,7 +409,7 @@ class ContextManager:
             if context.user_id == user_id and context.is_active
         ]
     
-    def get_contexts_for_session(self, session_id: str) -> List[Context]:
+    def get_contexts_for_session(self, session_id: str) -> list[Context]:
         """
         Get all active contexts for a specific session.
         
@@ -426,7 +424,7 @@ class ContextManager:
             if context.session_id == session_id and context.is_active
         ]
     
-    def export_context(self, context_id: str) -> Dict[str, Any]:
+    def export_context(self, context_id: str) -> dict[str, Any]:
         """
         Export a context to a serializable dictionary.
         
@@ -442,7 +440,7 @@ class ContextManager:
         context = self.get_context(context_id)
         return context.to_dict()
     
-    def import_context(self, context_data: Dict[str, Any]) -> str:
+    def import_context(self, context_data: dict[str, Any]) -> str:
         """
         Import a context from a dictionary representation.
         
@@ -528,7 +526,7 @@ class ContextManager:
                 )
                 
                 # Get indices to remove (lowest relevance scores)
-                indices_to_remove = set(idx for idx, _ in sorted_entries[:excess])
+                indices_to_remove = {idx for idx, _ in sorted_entries[:excess]}
                 
                 # Keep only entries that aren't in the removal set
                 context.entries = [

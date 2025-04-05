@@ -5,18 +5,19 @@ This module provides specialized health monitoring for memory systems,
 tracking memory-specific health metrics and applying biological constraints.
 """
 
-import time
 import logging
-from typing import Dict, List, Any, Optional, Tuple
+import time
+from typing import Optional
 
-from neuroca.core.memory.interfaces import MemorySystem
 from neuroca.core.health import (
-    HealthCheck, HealthCheckStatus, HealthCheckResult,
-    MemoryHealthCheck, register_health_check,
-    ComponentHealth, HealthParameterType, HealthState,
-    register_component_for_health_tracking, record_cognitive_operation
+    ComponentHealth,
+    HealthCheckResult,
+    HealthCheckStatus,
+    MemoryHealthCheck,
+    record_cognitive_operation,
+    register_component_for_health_tracking,
+    register_health_check,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +62,8 @@ class WorkingMemoryHealthCheck(MemoryHealthCheck):
         start_time = time.time()
         
         try:
-            # Get all memory chunks
-            chunks = self.memory_system.retrieve_all()
+            # Get all memory chunks using the correct method (assuming get_all_items)
+            chunks = self.memory_system.get_all_items() 
             total_items = len(chunks)
             capacity = getattr(self.memory_system, 'capacity', float('inf'))
             
@@ -173,8 +174,8 @@ class EpisodicMemoryHealthCheck(MemoryHealthCheck):
         start_time = time.time()
         
         try:
-            # Get all memory chunks
-            chunks = self.memory_system.retrieve_all()
+            # Get all memory chunks using the correct method (assuming get_all_items)
+            chunks = self.memory_system.get_all_items() 
             total_items = len(chunks)
             
             # Analyze temporal context
@@ -592,4 +593,4 @@ def record_memory_operation(component_id: str, operation: str,
     """
     get_memory_health_monitor().record_memory_operation(
         component_id, operation, num_items
-    ) 
+    )

@@ -38,26 +38,24 @@ import json
 import logging
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Optional
 
 import anthropic
 from anthropic.types import MessageParam
 from tenacity import (
+    before_sleep_log,
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
-    before_sleep_log
 )
 
-from neuroca.integration.adapters.base import LLMAdapter, AdapterError, ModelNotFoundError
+from neuroca.integration.adapters.base import AdapterError, LLMAdapter, ModelNotFoundError
 from neuroca.integration.schema import (
-    CompletionRequest, 
-    CompletionResponse,
-    ChatMessage,
-    ChatCompletionRequest,
     ChatCompletionResponse,
-    TokenUsage
+    ChatMessage,
+    CompletionResponse,
+    TokenUsage,
 )
 
 # Configure module logger
@@ -151,7 +149,7 @@ class AnthropicAdapter(LLMAdapter):
         max_tokens: int = 1000,
         temperature: float = 0.7,
         top_p: Optional[float] = None,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         **kwargs
     ) -> CompletionResponse:
         """
@@ -267,13 +265,13 @@ class AnthropicAdapter(LLMAdapter):
     )
     def generate_chat_completion(
         self,
-        messages: List[ChatMessage],
+        messages: list[ChatMessage],
         model: Optional[str] = None,
         system_prompt: Optional[str] = None,
         max_tokens: int = 1000,
         temperature: float = 0.7,
         top_p: Optional[float] = None,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         **kwargs
     ) -> ChatCompletionResponse:
         """
@@ -402,7 +400,7 @@ class AnthropicAdapter(LLMAdapter):
             logger.error(error_msg)
             raise AnthropicError(error_msg) from e
 
-    def _convert_messages_to_anthropic_format(self, messages: List[ChatMessage]) -> List[MessageParam]:
+    def _convert_messages_to_anthropic_format(self, messages: list[ChatMessage]) -> list[MessageParam]:
         """
         Convert NCA message format to Anthropic's expected format.
         
@@ -479,11 +477,7 @@ class AnthropicAdapter(LLMAdapter):
             return True
             
         # Check if the model starts with a supported family prefix
-        for family in AnthropicModelFamily:
-            if model.startswith(family.value):
-                return True
-                
-        return False
+        return any(model.startswith(family.value) for family in AnthropicModelFamily)
 
     def get_token_count(self, text: str) -> int:
         """
@@ -557,7 +551,7 @@ class AnthropicAdapter(LLMAdapter):
         logger.error(error_msg)
         raise ModelNotFoundError(error_msg)
 
-    def health_check(self) -> Tuple[bool, str]:
+    def health_check(self) -> tuple[bool, str]:
         """
         Perform a health check on the Anthropic API connection.
         

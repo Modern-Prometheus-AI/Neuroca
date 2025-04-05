@@ -27,19 +27,19 @@ Typical workflow:
     5. Return abstracted memory for storage in semantic/episodic systems
 """
 
+import hashlib
+import json
 import logging
 import time
-from typing import Dict, List, Optional, Set, Tuple, Union, Any
-from dataclasses import dataclass, field
-import json
-import hashlib
 import uuid
+from dataclasses import dataclass, field
+from typing import Any, Optional
 
-from neuroca.memory.base import MemoryComponent, MemoryItem
-from neuroca.memory.utils.validation import validate_memory_items
-from neuroca.memory.utils.metrics import track_processing_time
-from neuroca.core.exceptions import AbstractionError, ConfigurationError
 from neuroca.config.settings import AbstractorConfig
+from neuroca.core.exceptions import AbstractionError, ConfigurationError
+from neuroca.memory.base import MemoryComponent, MemoryItem
+from neuroca.memory.utils.metrics import track_processing_time
+from neuroca.memory.utils.validation import validate_memory_items
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -63,13 +63,13 @@ class AbstractConcept:
     """
     concept_id: str
     name: str
-    source_items: List[str]
-    attributes: Dict[str, Any]
+    source_items: list[str]
+    attributes: dict[str, Any]
     confidence: float
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
-    relationships: Dict[str, str] = field(default_factory=dict)
-    embedding: Optional[List[float]] = None
+    relationships: dict[str, str] = field(default_factory=dict)
+    embedding: Optional[list[float]] = None
     
     def __post_init__(self):
         """Validate the concept after initialization."""
@@ -79,7 +79,7 @@ class AbstractConcept:
         if not self.concept_id:
             self.concept_id = str(uuid.uuid4())
     
-    def update(self, new_attributes: Dict[str, Any], new_confidence: Optional[float] = None) -> None:
+    def update(self, new_attributes: dict[str, Any], new_confidence: Optional[float] = None) -> None:
         """
         Update the concept with new attributes and optionally a new confidence score.
         
@@ -105,7 +105,7 @@ class AbstractConcept:
         self.relationships[related_concept_id] = relationship_type
         self.updated_at = time.time()
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the concept to a dictionary representation."""
         return {
             "concept_id": self.concept_id,
@@ -120,7 +120,7 @@ class AbstractConcept:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AbstractConcept':
+    def from_dict(cls, data: dict[str, Any]) -> 'AbstractConcept':
         """Create a concept from a dictionary representation."""
         return cls(
             concept_id=data["concept_id"],
@@ -160,7 +160,7 @@ class Abstractor(MemoryComponent):
         self._validate_config()
         
         # Internal storage for concepts being processed
-        self._concept_cache: Dict[str, AbstractConcept] = {}
+        self._concept_cache: dict[str, AbstractConcept] = {}
         
         # Tracking metrics
         self._processed_items_count = 0
@@ -189,7 +189,7 @@ class Abstractor(MemoryComponent):
             raise ConfigurationError(f"Missing required configuration: {str(e)}")
     
     @track_processing_time
-    def process(self, memory_items: List[MemoryItem]) -> List[AbstractConcept]:
+    def process(self, memory_items: list[MemoryItem]) -> list[AbstractConcept]:
         """
         Process a list of memory items to extract abstract concepts.
         
@@ -236,7 +236,7 @@ class Abstractor(MemoryComponent):
             logger.error(f"Abstraction process failed: {str(e)}", exc_info=True)
             raise AbstractionError(f"Failed to abstract memory items: {str(e)}")
     
-    def _extract_features(self, memory_items: List[MemoryItem]) -> List[Dict[str, Any]]:
+    def _extract_features(self, memory_items: list[MemoryItem]) -> list[dict[str, Any]]:
         """
         Extract relevant features from memory items for abstraction.
         
@@ -263,11 +263,10 @@ class Abstractor(MemoryComponent):
                 }
                 
                 # Add content-specific features
-                if hasattr(item, "content") and item.content:
-                    if isinstance(item.content, dict):
-                        for key, value in item.content.items():
-                            if key not in item_features and self._is_relevant_attribute(key):
-                                item_features[key] = value
+                if hasattr(item, "content") and item.content and isinstance(item.content, dict):
+                    for key, value in item.content.items():
+                        if key not in item_features and self._is_relevant_attribute(key):
+                            item_features[key] = value
                 
                 features.append(item_features)
                 
@@ -278,7 +277,7 @@ class Abstractor(MemoryComponent):
         logger.debug(f"Extracted features from {len(features)} memory items")
         return features
     
-    def _extract_keywords(self, item: MemoryItem) -> List[str]:
+    def _extract_keywords(self, item: MemoryItem) -> list[str]:
         """
         Extract keywords from a memory item.
         
@@ -309,7 +308,7 @@ class Abstractor(MemoryComponent):
         # Return unique keywords
         return list(set(keywords))[:self.config.max_keywords_per_item]
     
-    def _extract_entities(self, item: MemoryItem) -> List[str]:
+    def _extract_entities(self, item: MemoryItem) -> list[str]:
         """
         Extract named entities from a memory item.
         
@@ -380,7 +379,7 @@ class Abstractor(MemoryComponent):
         
         return attribute not in ignored_attributes
     
-    def _identify_clusters(self, features: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
+    def _identify_clusters(self, features: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
         """
         Identify clusters of related features based on similarity.
         
@@ -420,7 +419,7 @@ class Abstractor(MemoryComponent):
         logger.debug(f"Identified {len(clusters)} clusters from {len(features)} items")
         return clusters
     
-    def _calculate_similarity(self, item1: Dict[str, Any], item2: Dict[str, Any]) -> float:
+    def _calculate_similarity(self, item1: dict[str, Any], item2: dict[str, Any]) -> float:
         """
         Calculate similarity between two items based on their features.
         
@@ -469,7 +468,7 @@ class Abstractor(MemoryComponent):
         # Normalize score
         return score / total_weight if total_weight > 0 else 0.0
     
-    def _jaccard_similarity(self, set1: Set[Any], set2: Set[Any]) -> float:
+    def _jaccard_similarity(self, set1: set[Any], set2: set[Any]) -> float:
         """
         Calculate Jaccard similarity between two sets.
         
@@ -488,7 +487,7 @@ class Abstractor(MemoryComponent):
         
         return intersection / union if union > 0 else 0.0
     
-    def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
+    def _cosine_similarity(self, vec1: list[float], vec2: list[float]) -> float:
         """
         Calculate cosine similarity between two vectors.
         
@@ -514,9 +513,9 @@ class Abstractor(MemoryComponent):
     
     def _generate_concepts(
         self, 
-        clusters: List[List[Dict[str, Any]]], 
-        memory_items: List[MemoryItem]
-    ) -> List[AbstractConcept]:
+        clusters: list[list[dict[str, Any]]], 
+        memory_items: list[MemoryItem]
+    ) -> list[AbstractConcept]:
         """
         Generate abstract concepts from clusters of features.
         
@@ -591,7 +590,7 @@ class Abstractor(MemoryComponent):
         
         return concepts
     
-    def _find_common_elements(self, lists: List[List[Any]]) -> List[Any]:
+    def _find_common_elements(self, lists: list[list[Any]]) -> list[Any]:
         """
         Find elements that appear in multiple lists.
         
@@ -617,7 +616,7 @@ class Abstractor(MemoryComponent):
         # Sort by frequency
         return sorted(common, key=lambda x: counts[x], reverse=True)
     
-    def _find_common_attributes(self, items: List[Dict[str, Any]]) -> List[str]:
+    def _find_common_attributes(self, items: list[dict[str, Any]]) -> list[str]:
         """
         Find attribute keys that appear in multiple items.
         
@@ -633,7 +632,7 @@ class Abstractor(MemoryComponent):
         # Count occurrences of each attribute key
         counts = {}
         for item in items:
-            for key in item.keys():
+            for key in item:
                 if self._is_relevant_attribute(key):
                     counts[key] = counts.get(key, 0) + 1
         
@@ -644,7 +643,7 @@ class Abstractor(MemoryComponent):
         # Sort by frequency
         return sorted(common, key=lambda x: counts[x], reverse=True)
     
-    def _most_common_value(self, values: List[Any]) -> Any:
+    def _most_common_value(self, values: list[Any]) -> Any:
         """
         Find the most common value in a list.
         
@@ -668,9 +667,9 @@ class Abstractor(MemoryComponent):
     
     def _generate_concept_name(
         self, 
-        keywords: List[str], 
-        entities: List[str], 
-        cluster: List[Dict[str, Any]]
+        keywords: list[str], 
+        entities: list[str], 
+        cluster: list[dict[str, Any]]
     ) -> str:
         """
         Generate a descriptive name for a concept.
@@ -700,7 +699,7 @@ class Abstractor(MemoryComponent):
         # Fallback
         return f"Abstract Concept {uuid.uuid4().hex[:8]}"
     
-    def _generate_concept_id(self, name: str, source_items: List[str]) -> str:
+    def _generate_concept_id(self, name: str, source_items: list[str]) -> str:
         """
         Generate a stable concept ID based on content.
         
@@ -720,7 +719,7 @@ class Abstractor(MemoryComponent):
         
         return f"concept-{hash_obj.hexdigest()[:16]}"
     
-    def _calculate_cluster_confidence(self, cluster: List[Dict[str, Any]]) -> float:
+    def _calculate_cluster_confidence(self, cluster: list[dict[str, Any]]) -> float:
         """
         Calculate confidence score for a cluster based on cohesion.
         
@@ -753,7 +752,7 @@ class Abstractor(MemoryComponent):
         
         return min(1.0, max(0.1, confidence))
     
-    def _calculate_importance(self, cluster: List[Dict[str, Any]], item_map: Dict[str, MemoryItem]) -> float:
+    def _calculate_importance(self, cluster: list[dict[str, Any]], item_map: dict[str, MemoryItem]) -> float:
         """
         Calculate importance score for a concept based on source items.
         
@@ -783,7 +782,7 @@ class Abstractor(MemoryComponent):
         # Combine factors
         return min(1.0, max(0.1, 0.7 * avg_importance + 0.3 * size_factor))
     
-    def _average_embeddings(self, embeddings: List[Optional[List[float]]]) -> Optional[List[float]]:
+    def _average_embeddings(self, embeddings: list[Optional[list[float]]]) -> Optional[list[float]]:
         """
         Average multiple embeddings into a single embedding.
         
@@ -821,7 +820,7 @@ class Abstractor(MemoryComponent):
         return avg_embedding
     
     @track_processing_time
-    def consolidate(self, concepts: List[AbstractConcept]) -> List[AbstractConcept]:
+    def consolidate(self, concepts: list[AbstractConcept]) -> list[AbstractConcept]:
         """
         Consolidate similar concepts into more general abstractions.
         
@@ -903,7 +902,7 @@ class Abstractor(MemoryComponent):
         
         return overall_similarity >= self.config.concept_similarity_threshold
     
-    def _merge_concepts(self, base: AbstractConcept, similar: List[AbstractConcept]) -> AbstractConcept:
+    def _merge_concepts(self, base: AbstractConcept, similar: list[AbstractConcept]) -> AbstractConcept:
         """
         Merge similar concepts into a single consolidated concept.
         
@@ -985,7 +984,7 @@ class Abstractor(MemoryComponent):
         
         return consolidated
     
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Get performance metrics for the Abstractor.
         
@@ -1030,7 +1029,7 @@ class Abstractor(MemoryComponent):
             
         except Exception as e:
             logger.error(f"Failed to save Abstractor state: {str(e)}", exc_info=True)
-            raise IOError(f"Failed to save Abstractor state: {str(e)}")
+            raise OSError(f"Failed to save Abstractor state: {str(e)}")
     
     def load_state(self, file_path: str) -> None:
         """
@@ -1043,7 +1042,7 @@ class Abstractor(MemoryComponent):
             IOError: If loading fails
         """
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 state = json.load(f)
             
             # Restore concept cache
@@ -1061,4 +1060,4 @@ class Abstractor(MemoryComponent):
             
         except Exception as e:
             logger.error(f"Failed to load Abstractor state: {str(e)}", exc_info=True)
-            raise IOError(f"Failed to load Abstractor state: {str(e)}")
+            raise OSError(f"Failed to load Abstractor state: {str(e)}")

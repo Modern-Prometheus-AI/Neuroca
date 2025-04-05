@@ -25,23 +25,18 @@ Usage:
     connection_manager.modulate_strength(connection_id, delta=0.1)
 """
 
-import logging
 import uuid
 from datetime import datetime
 from enum import Enum, auto
-from typing import Dict, List, Optional, Set, Tuple, Union, Any
-
-import numpy as np
+from typing import Any, Optional
 
 from neuroca.core.exceptions import (
-    ConnectionError, 
-    InvalidConnectionError,
     ConnectionLimitExceededError,
-    SignalPropagationError
+    InvalidConnectionError,
+    SignalPropagationError,
 )
-from neuroca.memory.base import MemoryNode
-from neuroca.core.utils.validation import validate_range, validate_type
 from neuroca.core.utils.logging_utils import get_logger
+from neuroca.core.utils.validation import validate_range, validate_type
 
 # Configure logger
 logger = get_logger(__name__)
@@ -229,7 +224,7 @@ class TubuleConnection:
             self.state = ConnectionState.PRUNED
             logger.info(f"Connection {self.connection_id} marked as PRUNED due to decay")
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the connection to a dictionary representation for serialization.
         
@@ -257,7 +252,7 @@ class TubuleConnection:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'TubuleConnection':
+    def from_dict(cls, data: dict[str, Any]) -> 'TubuleConnection':
         """
         Create a connection instance from a dictionary representation.
         
@@ -326,9 +321,9 @@ class TubuleConnectionManager:
         Args:
             max_connections_per_node: Maximum number of connections allowed per node
         """
-        self._connections: Dict[str, TubuleConnection] = {}
-        self._source_connections: Dict[str, Set[str]] = {}  # source_id -> set of connection_ids
-        self._target_connections: Dict[str, Set[str]] = {}  # target_id -> set of connection_ids
+        self._connections: dict[str, TubuleConnection] = {}
+        self._source_connections: dict[str, set[str]] = {}  # source_id -> set of connection_ids
+        self._target_connections: dict[str, set[str]] = {}  # target_id -> set of connection_ids
         self.max_connections_per_node = max_connections_per_node
         
         logger.info(f"Initialized TubuleConnectionManager with {max_connections_per_node} max connections per node")
@@ -341,7 +336,7 @@ class TubuleConnectionManager:
         initial_strength: float = 0.5,
         max_capacity: float = 1.0,
         decay_rate: float = 0.01,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None
     ) -> TubuleConnection:
         """
         Create a new connection between two memory nodes.
@@ -419,7 +414,7 @@ class TubuleConnectionManager:
             raise InvalidConnectionError(f"Connection {connection_id} does not exist")
         return self._connections[connection_id]
     
-    def get_connections_from_source(self, source_id: str) -> List[TubuleConnection]:
+    def get_connections_from_source(self, source_id: str) -> list[TubuleConnection]:
         """
         Get all connections originating from a specific source node.
         
@@ -432,7 +427,7 @@ class TubuleConnectionManager:
         connection_ids = self._source_connections.get(source_id, set())
         return [self._connections[cid] for cid in connection_ids if cid in self._connections]
     
-    def get_connections_to_target(self, target_id: str) -> List[TubuleConnection]:
+    def get_connections_to_target(self, target_id: str) -> list[TubuleConnection]:
         """
         Get all connections leading to a specific target node.
         
@@ -601,7 +596,7 @@ class TubuleConnectionManager:
         logger.info(f"Cleaned up {len(pruned_connections)} pruned connections")
         return len(pruned_connections)
     
-    def get_connection_stats(self) -> Dict[str, Any]:
+    def get_connection_stats(self) -> dict[str, Any]:
         """
         Get statistics about the current connection system.
         
@@ -634,7 +629,7 @@ class TubuleConnectionManager:
             "average_strength": avg_strength
         }
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the connection manager state to a dictionary for serialization.
         
@@ -650,7 +645,7 @@ class TubuleConnectionManager:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'TubuleConnectionManager':
+    def from_dict(cls, data: dict[str, Any]) -> 'TubuleConnectionManager':
         """
         Create a connection manager from a dictionary representation.
         

@@ -14,10 +14,10 @@ import datetime
 import enum
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional, Union
 
-from pydantic import BaseModel, Field, validator, root_validator
-from pydantic.types import conint, confloat
+from pydantic import BaseModel, Field, root_validator, validator
+from pydantic.types import confloat, conint
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class MemoryEmotion(BaseModel):
         default=None,
         description="Primary emotion label (e.g., 'joy', 'fear', 'surprise')"
     )
-    emotion_labels: Dict[str, float] = Field(
+    emotion_labels: dict[str, float] = Field(
         default_factory=dict,
         description="Mapping of emotion labels to their confidence scores"
     )
@@ -94,7 +94,7 @@ class MemoryContext(BaseModel):
         default=None,
         description="Task or activity associated with this memory"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional contextual metadata"
     )
@@ -118,7 +118,7 @@ class MemoryAssociation(BaseModel):
         default=False,
         description="Whether the association applies in both directions"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional metadata about the association"
     )
@@ -158,7 +158,7 @@ class BaseMemory(BaseModel):
         default=0,
         description="Number of times this memory has been accessed"
     )
-    tags: Set[str] = Field(
+    tags: set[str] = Field(
         default_factory=set,
         description="Tags for categorizing and retrieving the memory"
     )
@@ -170,7 +170,7 @@ class BaseMemory(BaseModel):
         default=None,
         description="Emotional aspects associated with the memory"
     )
-    associations: List[MemoryAssociation] = Field(
+    associations: list[MemoryAssociation] = Field(
         default_factory=list,
         description="Associations to other memory items"
     )
@@ -284,7 +284,7 @@ class EpisodicMemory(BaseMemory):
         ...,
         description="Type of episode (e.g., 'conversation', 'observation', 'action')"
     )
-    participants: List[str] = Field(
+    participants: list[str] = Field(
         default_factory=list,
         description="Entities involved in this episode"
     )
@@ -331,7 +331,7 @@ class SemanticMemory(BaseMemory):
         const=True,
         description="Semantic memory tier"
     )
-    knowledge_domain: List[str] = Field(
+    knowledge_domain: list[str] = Field(
         default_factory=list,
         description="Knowledge domains this memory belongs to"
     )
@@ -343,7 +343,7 @@ class SemanticMemory(BaseMemory):
         default=0.8,
         description="Reliability of the source of this knowledge"
     )
-    contradictions: List[uuid.UUID] = Field(
+    contradictions: list[uuid.UUID] = Field(
         default_factory=list,
         description="IDs of memories that contradict this knowledge"
     )
@@ -368,19 +368,19 @@ class SemanticMemory(BaseMemory):
 
 class MemoryQuery(BaseModel):
     """Query parameters for searching and retrieving memories."""
-    content_keywords: Optional[List[str]] = Field(
+    content_keywords: Optional[list[str]] = Field(
         default=None,
         description="Keywords to search for in memory content"
     )
-    tiers: Optional[List[MemoryTier]] = Field(
+    tiers: Optional[list[MemoryTier]] = Field(
         default=None,
         description="Memory tiers to search in"
     )
-    tags: Optional[List[str]] = Field(
+    tags: Optional[list[str]] = Field(
         default=None,
         description="Tags to filter memories by"
     )
-    status: Optional[List[MemoryStatus]] = Field(
+    status: Optional[list[MemoryStatus]] = Field(
         default=None,
         description="Memory statuses to include"
     )
@@ -433,12 +433,12 @@ class MemoryUpdateRequest(BaseModel):
     """Request model for updating memory attributes."""
     status: Optional[MemoryStatus] = None
     priority: Optional[MemoryPriority] = None
-    tags: Optional[Set[str]] = None
+    tags: Optional[set[str]] = None
     activation_level: Optional[confloat(ge=0.0, le=1.0)] = None
     decay_rate: Optional[confloat(ge=0.0, le=1.0)] = None
     content: Optional[Any] = None
-    associations_to_add: Optional[List[MemoryAssociation]] = None
-    associations_to_remove: Optional[List[uuid.UUID]] = None
+    associations_to_add: Optional[list[MemoryAssociation]] = None
+    associations_to_remove: Optional[list[uuid.UUID]] = None
     emotion: Optional[MemoryEmotion] = None
     
     @validator('associations_to_add')
@@ -475,7 +475,7 @@ class MemoryOperationResponse(BaseModel):
         default_factory=datetime.datetime.utcnow,
         description="When the operation was performed"
     )
-    details: Optional[Dict[str, Any]] = Field(
+    details: Optional[dict[str, Any]] = Field(
         default=None,
         description="Additional operation details"
     )

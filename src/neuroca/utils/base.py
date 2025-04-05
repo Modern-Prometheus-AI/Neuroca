@@ -5,16 +5,16 @@ This module provides base classes with common functionality that can be
 used throughout the NCA system.
 """
 
-from typing import Dict, Any, Optional
-from datetime import datetime
-import uuid
 import json
+import uuid
+from datetime import datetime
+from typing import Any, Optional
 
 
 class BaseObject:
     """Base class for all serializable objects in the system."""
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert object to a dictionary."""
         return {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
     
@@ -23,7 +23,7 @@ class BaseObject:
         return json.dumps(self.to_dict())
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BaseObject':
+    def from_dict(cls, data: dict[str, Any]) -> 'BaseObject':
         """Create an object from a dictionary."""
         obj = cls()
         for k, v in data.items():
@@ -50,7 +50,7 @@ class WithID(BaseObject):
         """
         self.id = id or str(uuid.uuid4())
         
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert object to a dictionary."""
         return {**super().to_dict(), "id": self.id}
 
@@ -67,7 +67,7 @@ class WithTimestamp(BaseObject):
         """Update the 'updated_at' timestamp to current time."""
         self.updated_at = datetime.now()
         
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert object to a dictionary with ISO format timestamps."""
         result = super().to_dict()
         if hasattr(self, 'created_at'):
@@ -77,9 +77,9 @@ class WithTimestamp(BaseObject):
         return result
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'WithTimestamp':
+    def from_dict(cls, data: dict[str, Any]) -> 'WithTimestamp':
         """Create an object from a dictionary, parsing timestamps."""
-        obj = super(WithTimestamp, cls).from_dict(data)
+        obj = super().from_dict(data)
         if 'created_at' in data and isinstance(data['created_at'], str):
             obj.created_at = datetime.fromisoformat(data['created_at'])
         if 'updated_at' in data and isinstance(data['updated_at'], str):
@@ -90,7 +90,7 @@ class WithTimestamp(BaseObject):
 class WithMetadata(BaseObject):
     """Mixin class that adds a metadata dictionary to an object."""
     
-    def __init__(self, metadata: Optional[Dict[str, Any]] = None):
+    def __init__(self, metadata: Optional[dict[str, Any]] = None):
         """
         Initialize with optional metadata.
         

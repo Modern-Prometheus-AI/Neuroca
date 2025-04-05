@@ -22,23 +22,22 @@ Usage:
     mongo_conn.close()
 """
 
+import logging
 import os
 import time
-import logging
-from typing import Dict, Any, Optional, Union, List, Tuple
+from typing import Any, Optional, Union
 from urllib.parse import quote_plus
 
-import pymongo
 from pymongo import MongoClient
-from pymongo.database import Database
 from pymongo.collection import Collection
+from pymongo.database import Database
 from pymongo.errors import (
-    ConnectionFailure, 
-    ServerSelectionTimeoutError, 
-    OperationFailure, 
-    NetworkTimeout,
+    AutoReconnect,
     ConfigurationError,
-    AutoReconnect
+    ConnectionFailure,
+    NetworkTimeout,
+    OperationFailure,
+    ServerSelectionTimeoutError,
 )
 
 from neuroca.config.settings import get_settings
@@ -69,7 +68,7 @@ class MongoDBConnection:
         retry_delay (int): Delay between retry attempts in seconds
     """
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize MongoDB connection manager.
         
@@ -108,7 +107,7 @@ class MongoDBConnection:
         logger.debug("MongoDB connection manager initialized with config: %s", 
                     {k: v if k != 'password' else '******' for k, v in self.config.items()})
 
-    def _load_config_from_env(self) -> Dict[str, Any]:
+    def _load_config_from_env(self) -> dict[str, Any]:
         """
         Load MongoDB configuration from environment variables.
         
@@ -475,7 +474,7 @@ class MongoDBConnection:
         logger.error(f"MongoDB operation failed after {max_retries} attempts")
         raise last_error or Exception("MongoDB operation failed after maximum retry attempts")
 
-    def create_indexes(self, db_name: str, collection_name: str, indexes: List[Tuple[Union[str, List[Tuple[str, int]]], Dict[str, Any]]]) -> List[str]:
+    def create_indexes(self, db_name: str, collection_name: str, indexes: list[tuple[Union[str, list[tuple[str, int]]], dict[str, Any]]]) -> list[str]:
         """
         Create indexes on a MongoDB collection.
         
@@ -528,7 +527,7 @@ class MongoDBConnection:
             logger.warning(f"MongoDB ping failed: {str(e)}")
             return False
 
-    def get_server_info(self) -> Dict[str, Any]:
+    def get_server_info(self) -> dict[str, Any]:
         """
         Get MongoDB server information.
         
@@ -547,7 +546,7 @@ class MongoDBConnection:
             logger.error(f"Failed to get MongoDB server info: {str(e)}")
             raise MongoDBConnectionError(f"Failed to get MongoDB server info: {str(e)}") from e
 
-    def get_connection_status(self) -> Dict[str, Any]:
+    def get_connection_status(self) -> dict[str, Any]:
         """
         Get detailed connection status information.
         

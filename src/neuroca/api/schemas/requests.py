@@ -24,9 +24,17 @@ import enum
 import logging
 import re
 import uuid
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field, validator, root_validator, EmailStr, HttpUrl, conint, confloat, constr
+from pydantic import (
+    BaseModel,
+    EmailStr,
+    Field,
+    confloat,
+    conint,
+    root_validator,
+    validator,
+)
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -102,7 +110,7 @@ class MemoryCreateRequest(BaseModel):
         max_length=10000,
         description="The content of the memory to be stored"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional metadata associated with the memory"
     )
@@ -114,7 +122,7 @@ class MemoryCreateRequest(BaseModel):
         default=MemoryPriority.MEDIUM,
         description="Priority level affecting memory retention and recall"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list,
         description="Tags for categorizing and retrieving memories"
     )
@@ -166,11 +174,11 @@ class MemoryQueryRequest(BaseModel):
         min_length=1,
         description="Search query text or semantic query"
     )
-    tiers: List[MemoryTier] = Field(
-        default_factory=lambda: [t for t in MemoryTier],
+    tiers: list[MemoryTier] = Field(
+        default_factory=lambda: list(MemoryTier),
         description="Memory tiers to search in"
     )
-    tags: Optional[List[str]] = Field(
+    tags: Optional[list[str]] = Field(
         default=None,
         description="Filter by tags (optional)"
     )
@@ -314,7 +322,7 @@ class CognitiveProcessRequest(BaseModel):
         ...,
         description="Type of cognitive process to execute"
     )
-    parameters: Dict[str, Any] = Field(
+    parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Parameters specific to the cognitive process"
     )
@@ -404,7 +412,7 @@ class UserProfileUpdateRequest(BaseModel):
         default=None,
         description="User's email address"
     )
-    preferences: Optional[Dict[str, Any]] = Field(
+    preferences: Optional[dict[str, Any]] = Field(
         default=None,
         description="User preferences for system interaction"
     )
@@ -412,7 +420,7 @@ class UserProfileUpdateRequest(BaseModel):
         default=None,
         description="Preferred communication style (formal, casual, technical, etc.)"
     )
-    interests: Optional[List[str]] = Field(
+    interests: Optional[list[str]] = Field(
         default=None,
         description="User's interests and topics they care about"
     )
@@ -456,19 +464,19 @@ class SystemConfigUpdateRequest(BaseModel):
     System configuration controls various aspects of the cognitive system's
     behavior and performance characteristics.
     """
-    memory_settings: Optional[Dict[str, Any]] = Field(
+    memory_settings: Optional[dict[str, Any]] = Field(
         default=None,
         description="Settings for the memory subsystem"
     )
-    health_dynamics: Optional[Dict[str, Any]] = Field(
+    health_dynamics: Optional[dict[str, Any]] = Field(
         default=None,
         description="Settings for health dynamics simulation"
     )
-    llm_integration: Optional[Dict[str, Any]] = Field(
+    llm_integration: Optional[dict[str, Any]] = Field(
         default=None,
         description="Settings for LLM integration"
     )
-    cognitive_processes: Optional[Dict[str, Any]] = Field(
+    cognitive_processes: Optional[dict[str, Any]] = Field(
         default=None,
         description="Settings for cognitive processes"
     )
@@ -554,11 +562,11 @@ class SessionInitRequest(BaseModel):
         default="standard",
         description="Type of session to initialize"
     )
-    initial_context: Optional[Dict[str, Any]] = Field(
+    initial_context: Optional[dict[str, Any]] = Field(
         default=None,
         description="Initial context information for the session"
     )
-    session_parameters: Dict[str, Any] = Field(
+    session_parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional parameters for session configuration"
     )

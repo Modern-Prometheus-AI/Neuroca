@@ -42,14 +42,13 @@ import re
 import secrets
 import string
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any, Optional, Union
 
 import bcrypt
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, padding
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 # Configure logger
@@ -90,7 +89,7 @@ class InputValidationError(SecurityError):
     pass
 
 
-def generate_key(password: str, salt: Optional[bytes] = None) -> Tuple[bytes, bytes]:
+def generate_key(password: str, salt: Optional[bytes] = None) -> tuple[bytes, bytes]:
     """
     Generate a cryptographic key from a password using PBKDF2.
     
@@ -137,10 +136,7 @@ def get_fernet_key(key: Union[str, bytes]) -> bytes:
         EncryptionError: If key conversion fails
     """
     try:
-        if isinstance(key, str):
-            key_bytes = key.encode('utf-8')
-        else:
-            key_bytes = key
+        key_bytes = key.encode('utf-8') if isinstance(key, str) else key
             
         # Ensure key is 32 bytes
         if len(key_bytes) < 32:
@@ -288,7 +284,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
         raise PasswordError(f"Failed to verify password: {str(e)}")
 
 
-def generate_token(payload: Dict[str, Any], secret_key: str, expires_in: int = TOKEN_EXPIRY_DEFAULT) -> str:
+def generate_token(payload: dict[str, Any], secret_key: str, expires_in: int = TOKEN_EXPIRY_DEFAULT) -> str:
     """
     Generate a secure JWT-like token with payload.
     
@@ -332,7 +328,7 @@ def generate_token(payload: Dict[str, Any], secret_key: str, expires_in: int = T
         raise TokenError(f"Failed to generate token: {str(e)}")
 
 
-def validate_token(token: str, secret_key: str) -> Dict[str, Any]:
+def validate_token(token: str, secret_key: str) -> dict[str, Any]:
     """
     Validate and decode a token generated with generate_token.
     
@@ -539,7 +535,7 @@ class RateLimiter:
         self.attempts[key].append((now, 1))
 
 
-def log_security_event(event_type: str, details: Dict[str, Any], severity: str = "INFO") -> None:
+def log_security_event(event_type: str, details: dict[str, Any], severity: str = "INFO") -> None:
     """
     Log a security-related event with standardized format.
     

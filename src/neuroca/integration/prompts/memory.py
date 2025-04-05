@@ -20,13 +20,13 @@ Usage:
     prompt = get_working_memory_prompt(context="current task", query="recent information")
 """
 
-import logging
-from typing import Dict, List, Optional, Union, Any
-from datetime import datetime
 import json
+import logging
+from datetime import datetime
+from typing import Any, Optional, Union
 
-from neuroca.core.exceptions import PromptGenerationError, InvalidPromptParameterError
-from neuroca.core.utils.validation import validate_string, validate_dict, validate_list
+from neuroca.core.exceptions import InvalidPromptParameterError, PromptGenerationError
+from neuroca.core.utils.validation import validate_dict, validate_list, validate_string
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -123,7 +123,7 @@ def get_working_memory_prompt(
     query: str,
     task_description: str = "process current information",
     system_instruction: Optional[str] = None,
-) -> Dict[str, Union[str, float]]:
+) -> dict[str, Union[str, float]]:
     """
     Generate a prompt for retrieving information from working memory.
 
@@ -196,11 +196,11 @@ def get_episodic_memory_prompt(
     query: str,
     time_period: Optional[str] = None,
     location: Optional[str] = None,
-    entities: Optional[List[str]] = None,
+    entities: Optional[list[str]] = None,
     emotional_valence: Optional[str] = None,
     priority_criteria: str = "recency and emotional significance",
     system_instruction: Optional[str] = None,
-) -> Dict[str, Union[str, float]]:
+) -> dict[str, Union[str, float]]:
     """
     Generate a prompt for retrieving information from episodic memory.
 
@@ -277,10 +277,10 @@ def get_episodic_memory_prompt(
 def get_semantic_memory_prompt(
     query: str,
     domain: Optional[str] = None,
-    concepts: Optional[List[str]] = None,
-    relationships: Optional[List[str]] = None,
+    concepts: Optional[list[str]] = None,
+    relationships: Optional[list[str]] = None,
     system_instruction: Optional[str] = None,
-) -> Dict[str, Union[str, float]]:
+) -> dict[str, Union[str, float]]:
     """
     Generate a prompt for retrieving information from semantic memory.
 
@@ -349,12 +349,12 @@ def get_semantic_memory_prompt(
 
 
 def get_memory_consolidation_prompt(
-    memory_items: List[Dict[str, Any]],
+    memory_items: list[dict[str, Any]],
     source_memory_type: str,
     target_memory_type: str,
     consolidation_criteria: str,
     system_instruction: Optional[str] = None,
-) -> Dict[str, Union[str, float]]:
+) -> dict[str, Union[str, float]]:
     """
     Generate a prompt for memory consolidation between different memory tiers.
 
@@ -432,12 +432,12 @@ def get_memory_consolidation_prompt(
 
 
 def get_memory_forgetting_prompt(
-    memory_items: List[Dict[str, Any]],
+    memory_items: list[dict[str, Any]],
     memory_type: str,
     forgetting_criteria: str,
     retention_importance: str = "relevance to current goals and emotional significance",
     system_instruction: Optional[str] = None,
-) -> Dict[str, Union[str, float]]:
+) -> dict[str, Union[str, float]]:
     """
     Generate a prompt for memory forgetting/pruning operations.
 
@@ -514,9 +514,9 @@ def get_memory_forgetting_prompt(
 
 
 def format_memory_for_prompt(
-    memories: List[Dict[str, Any]], 
+    memories: list[dict[str, Any]], 
     max_items: int = 20,
-    include_fields: Optional[List[str]] = None
+    include_fields: Optional[list[str]] = None
 ) -> str:
     """
     Format a list of memory items for inclusion in a prompt.
@@ -581,10 +581,10 @@ def format_memory_for_prompt(
 
 def get_memory_search_prompt(
     query: str,
-    memory_types: List[str],
-    search_parameters: Optional[Dict[str, Any]] = None,
+    memory_types: list[str],
+    search_parameters: Optional[dict[str, Any]] = None,
     system_instruction: Optional[str] = None,
-) -> Dict[str, Union[str, float]]:
+) -> dict[str, Union[str, float]]:
     """
     Generate a prompt for searching across multiple memory types.
 

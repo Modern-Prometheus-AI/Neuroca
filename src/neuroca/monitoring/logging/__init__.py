@@ -52,12 +52,9 @@ import os
 import platform
 import sys
 import threading
-import traceback
-import uuid
 from enum import Enum
 from functools import wraps
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 # Constants
 DEFAULT_LOG_LEVEL = "INFO"
@@ -138,7 +135,7 @@ class SensitiveDataFilter(logging.Filter):
         
         return True
     
-    def _redact_sensitive_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _redact_sensitive_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Recursively redact sensitive data in dictionaries.
         
@@ -467,7 +464,7 @@ def get_logger(name: str) -> logging.Logger:
 def configure_logging(
     level: Union[str, LogLevel] = DEFAULT_LOG_LEVEL,
     format: Union[str, LogFormat] = DEFAULT_LOG_FORMAT,
-    output: List[Union[str, LogOutput]] = DEFAULT_LOG_OUTPUT,
+    output: list[Union[str, LogOutput]] = DEFAULT_LOG_OUTPUT,
     file_path: Optional[str] = None,
     syslog_address: Optional[tuple] = None,
     include_stack_info: bool = False,
@@ -659,7 +656,7 @@ def clear_context() -> None:
         _context_store.context = {}
 
 
-def get_context() -> Dict[str, Any]:
+def get_context() -> dict[str, Any]:
     """
     Get the current thread's logging context.
     

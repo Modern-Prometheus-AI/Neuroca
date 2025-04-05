@@ -28,33 +28,33 @@ Dependencies:
 
 import logging
 import time
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Callable
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+import sentry_sdk
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel, Field
-import sentry_sdk
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from neuroca.api.routes import health, memory, cognitive, integration, admin
+from neuroca.api.routes import admin, cognitive, health, integration, memory
 from neuroca.config import settings
 from neuroca.core.exceptions import (
-    NCACoreException,
     NCAAuthenticationError,
     NCAAuthorizationError,
+    NCACoreException,
     NCAResourceNotFoundError,
     NCAValidationError,
 )
-from neuroca.core.logging import configure_logging
+
 # Import health registration and component IDs
-from neuroca.core.health.dynamics import register_component_for_health_tracking, get_health_dynamics
+from neuroca.core.health.dynamics import get_health_dynamics, register_component_for_health_tracking
+from neuroca.core.logging import configure_logging
 from neuroca.memory.manager import (
-    WORKING_MEMORY_COMPONENT_ID,
     EPISODIC_MEMORY_COMPONENT_ID,
-    SEMANTIC_MEMORY_COMPONENT_ID,
     MEMORY_MANAGER_COMPONENT_ID,
+    SEMANTIC_MEMORY_COMPONENT_ID,
+    WORKING_MEMORY_COMPONENT_ID,
 )
 
 # Configure logging
@@ -189,7 +189,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 # Health check endpoint
 @app.get("/api/health", tags=["Health"])
-async def health_check() -> Dict[str, str]:
+async def health_check() -> dict[str, str]:
     """
     Health check endpoint to verify API is running.
     
@@ -288,7 +288,7 @@ if __name__ == "__main__":
     logger.warning("Running API directly with uvicorn. This is not recommended for production.")
     uvicorn.run(
         "neuroca.api.app:app",
-        host="0.0.0.0",
+        host="127.0.0.1",  # Default to localhost for direct execution
         port=8000,
         reload=settings.ENVIRONMENT == "development",
     )

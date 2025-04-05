@@ -11,8 +11,12 @@ from typing import Dict, List, Tuple, Any
 from neuroca.core.memory.interfaces import MemorySystem, MemoryChunk
 from neuroca.core.memory.working_memory import WorkingMemory
 from neuroca.core.memory.episodic_memory import EpisodicMemory
-from neuroca.core.memory.semantic_memory import SemanticMemory, Concept, Relationship, RelationshipType
-from neuroca.core.memory.consolidation import MemoryConsolidator
+# Import the concrete implementation from the correct location
+from neuroca.memory.semantic_memory import SemanticMemory 
+# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
+from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType 
+# Import the concrete implementation instead of the abstract base class
+from neuroca.core.memory.consolidation import StandardMemoryConsolidator 
 
 
 @pytest.fixture
@@ -184,8 +188,10 @@ def realistic_memory_load():
     # Create base memory systems
     working_memory = WorkingMemory()
     episodic_memory = EpisodicMemory()
-    semantic_memory = SemanticMemory()
-    consolidator = MemoryConsolidator()
+    # Instantiate the concrete class
+    semantic_memory = SemanticMemory() 
+    # Instantiate the concrete class
+    consolidator = StandardMemoryConsolidator() 
     
     # Load working memory with mixed content (simulating active thought process)
     working_items = [
@@ -290,4 +296,4 @@ def realistic_memory_load():
     # Clean up
     working_memory.clear()
     episodic_memory.clear()
-    semantic_memory.clear() 
+    semantic_memory.clear()

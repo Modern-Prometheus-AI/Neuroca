@@ -15,12 +15,11 @@ Key functionalities:
 
 import logging
 import time
-from typing import Any, Optional, Dict, List, Tuple, Set
+from typing import Any, Optional
+
+from neuroca.core.health.dynamics import HealthState
 
 # Import necessary components for integration
-from .goal_manager import GoalManager, Goal
-from neuroca.core.health.dynamics import HealthState, HealthDynamicsManager
-from neuroca.memory.manager import MemoryManager
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ class InhibitionTarget:
     """
     def __init__(self, target_type: str, target_id: str, description: str, 
                  activation: float = 1.0, source: str = "unknown", 
-                 importance: float = 0.5, potential_consequences: Optional[Dict[str, float]] = None):
+                 importance: float = 0.5, potential_consequences: Optional[dict[str, float]] = None):
         self.target_type = target_type # e.g., "action", "plan", "stimulus_response" 
         self.target_id = target_id
         self.description = description
@@ -52,7 +51,7 @@ class InhibitionDecision:
     confidence, and the full context of the inhibition evaluation.
     """
     def __init__(self, target: InhibitionTarget, inhibited: bool, reasoning: str, 
-                 confidence: float, context_factors: Dict[str, Any]):
+                 confidence: float, context_factors: dict[str, Any]):
         self.target = target
         self.inhibited = inhibited
         self.reasoning = reasoning
@@ -60,7 +59,7 @@ class InhibitionDecision:
         self.context_factors = context_factors # Factors that influenced the decision
         self.timestamp = time.time()
         
-    def to_memory_content(self) -> Dict[str, Any]:
+    def to_memory_content(self) -> dict[str, Any]:
         """Convert the decision to a structure suitable for memory storage."""
         return {
             "type": "inhibition_decision",
@@ -110,11 +109,11 @@ class Inhibitor:
         self.base_inhibition_threshold = 0.5  # Default threshold
         
         # Track recent inhibition decisions for pattern detection
-        self.recent_decisions: List[InhibitionDecision] = []
+        self.recent_decisions: list[InhibitionDecision] = []
         self.max_recent_decisions = 20  # Keep last 20 decisions
         
         # Set of currently active inhibitions
-        self.active_inhibitions: Set[str] = set()  # target_ids that are currently inhibited
+        self.active_inhibitions: set[str] = set()  # target_ids that are currently inhibited
         
         # Performance tracking
         self.inhibition_metrics = {
@@ -127,7 +126,7 @@ class Inhibitor:
         }
 
     def should_inhibit(self, target: InhibitionTarget, 
-                      context: Optional[Dict[str, Any]] = None) -> Tuple[bool, float, str]:
+                      context: Optional[dict[str, Any]] = None) -> tuple[bool, float, str]:
         """
         Determine whether a specific target action or response should be inhibited.
 
@@ -204,7 +203,7 @@ class Inhibitor:
                 )
             
             # Record this decision with high confidence
-            decision = self._record_decision(target, inhibit, 
+            self._record_decision(target, inhibit, 
                                             reasons[0], confidence, context)
             
             # Add to active inhibitions set
@@ -258,7 +257,7 @@ class Inhibitor:
             confidence = 0.7  # Reasonable confidence when no issues found
             
         # Track the decision
-        decision = self._record_decision(target, inhibit, final_reason, confidence, context)
+        self._record_decision(target, inhibit, final_reason, confidence, context)
         
         # Update active inhibitions set
         if inhibit:
@@ -290,7 +289,7 @@ class Inhibitor:
             
         return inhibit, confidence, final_reason
     
-    def _calculate_inhibition_threshold(self, target: InhibitionTarget, context: Dict[str, Any]) -> float:
+    def _calculate_inhibition_threshold(self, target: InhibitionTarget, context: dict[str, Any]) -> float:
         """
         Calculate the adaptive inhibition threshold based on health state, target properties,
         cognitive load, and other contextual factors.
@@ -313,7 +312,7 @@ class Inhibitor:
         # Default threshold
         return self.base_inhibition_threshold  # 0.5 default
     
-    def _check_memory_constraints(self, target: InhibitionTarget) -> Tuple[bool, float, str]:
+    def _check_memory_constraints(self, target: InhibitionTarget) -> tuple[bool, float, str]:
         """
         Check memory for learned constraints that would require inhibition.
         
@@ -362,7 +361,7 @@ class Inhibitor:
             logger.error(f"Error checking memory constraints: {e}")
             return False, 0.0, ""
     
-    def _check_goal_conflicts(self, target: InhibitionTarget, context: Dict[str, Any]) -> Tuple[bool, float, str]:
+    def _check_goal_conflicts(self, target: InhibitionTarget, context: dict[str, Any]) -> tuple[bool, float, str]:
         """
         Check if the target conflicts with any active goals.
         
@@ -396,7 +395,7 @@ class Inhibitor:
                     return True, confidence, reason
                 
                 # Check for semantic conflicts (if goal manager has conflict detection)
-                if hasattr(goal, 'conflicts_with') and callable(getattr(goal, 'conflicts_with')):
+                if hasattr(goal, 'conflicts_with') and callable(goal.conflicts_with):
                     if goal.conflicts_with(target):
                         confidence = 0.65 + (goal.priority * 0.05)
                         reason = f"Semantic conflict with goal '{goal.description}'"
@@ -407,7 +406,7 @@ class Inhibitor:
             logger.error(f"Error checking goal conflicts: {e}")
             return False, 0.0, ""
     
-    def _check_health_constraints(self, target: InhibitionTarget, context: Dict[str, Any]) -> Tuple[bool, float, str]:
+    def _check_health_constraints(self, target: InhibitionTarget, context: dict[str, Any]) -> tuple[bool, float, str]:
         """
         Check if the target should be inhibited based on health state and resource availability.
         
@@ -440,7 +439,7 @@ class Inhibitor:
         
         return False, 0.0, ""
     
-    def _assess_risk(self, target: InhibitionTarget, context: Dict[str, Any]) -> Tuple[bool, float, str]:
+    def _assess_risk(self, target: InhibitionTarget, context: dict[str, Any]) -> tuple[bool, float, str]:
         """
         Assess the risk of the target based on potential consequences and past patterns.
         
@@ -474,7 +473,7 @@ class Inhibitor:
         return False, 0.0, ""
     
     def _record_decision(self, target: InhibitionTarget, inhibited: bool, reasoning: str, 
-                        confidence: float, context: Dict[str, Any]) -> InhibitionDecision:
+                        confidence: float, context: dict[str, Any]) -> InhibitionDecision:
         """
         Record the inhibition decision in memory and recent history.
         
@@ -568,7 +567,7 @@ class Inhibitor:
             logger.error(f"Error checking pattern in memory: {e}")
             return False
             
-    def _create_constraint_in_memory(self, decisions: List[InhibitionDecision], inhibited_ratio: float):
+    def _create_constraint_in_memory(self, decisions: list[InhibitionDecision], inhibited_ratio: float):
         """Create a new constraint in semantic memory based on observed patterns."""
         if not self.memory_manager or not decisions:
             return
@@ -613,11 +612,11 @@ class Inhibitor:
         except Exception as e:
             logger.error(f"Error creating constraint in memory: {e}")
     
-    def get_inhibition_metrics(self) -> Dict[str, Any]:
+    def get_inhibition_metrics(self) -> dict[str, Any]:
         """Return performance metrics about the inhibition system."""
         return self.inhibition_metrics.copy()
         
-    def get_active_inhibitions(self) -> List[str]:
+    def get_active_inhibitions(self) -> list[str]:
         """Return list of currently inhibited target IDs."""
         return list(self.active_inhibitions)
         

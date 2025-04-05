@@ -45,19 +45,19 @@ See Also:
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Union
+from typing import Any, Optional
 
 # Configure module logger
 logger = logging.getLogger(__name__)
 
 # Import core MTM components
 try:
-    from .store import MTMStore
-    from .entry import MTMEntry
-    from .query import MTMQuery
     from .consolidation import MTMConsolidator
-    from .decay import DecayFunction, LinearDecay, ExponentialDecay
-    from .exceptions import MTMError, MTMStorageError, MTMRetrievalError, MTMConsolidationError
+    from .decay import DecayFunction, ExponentialDecay, LinearDecay
+    from .entry import MTMEntry
+    from .exceptions import MTMConsolidationError, MTMError, MTMRetrievalError, MTMStorageError
+    from .query import MTMQuery
+    from .store import MTMStore
     
     # Make these classes available when importing from the module
     __all__ = [
@@ -86,7 +86,7 @@ except ImportError as e:
 __version__ = '0.1.0'
 
 
-def get_default_mtm_config() -> Dict[str, Any]:
+def get_default_mtm_config() -> dict[str, Any]:
     """
     Return the default configuration for Medium-Term Memory.
     
@@ -114,7 +114,7 @@ def get_default_mtm_config() -> Dict[str, Any]:
     }
 
 
-def create_mtm_store(config: Optional[Dict[str, Any]] = None) -> 'MTMStore':
+def create_mtm_store(config: Optional[dict[str, Any]] = None) -> 'MTMStore':
     """
     Create and configure a new Medium-Term Memory store.
     

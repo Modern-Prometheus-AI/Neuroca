@@ -13,14 +13,14 @@ Key functionalities:
 """
 
 import logging
-import random
-from typing import List, Dict, Any, Optional
+from typing import Any, Optional
 
-# Assuming Plan and PlanStep might be used or adapted for decision options
-from .planner import Plan, PlanStep, Planner # Import Planner for potential interaction
 # Import necessary components for potential integration
 # from neuroca.memory.manager import MemoryManager # Example
-from neuroca.core.health.dynamics import HealthState # Example for context checking
+from neuroca.core.health.dynamics import HealthState  # Example for context checking
+
+# Assuming Plan and PlanStep might be used or adapted for decision options
+
 # from .goal_manager import GoalManager, Goal # Example
 
 # Configure logger
@@ -56,9 +56,10 @@ class DecisionMaker:
         self.health_manager = health_manager
         self.planner = planner
         self.goal_manager = goal_manager
-        # TODO: Implement dependency injection properly later
+        # NOTE: Consider implementing a proper dependency injection framework
+        # for managing manager instances instead of direct constructor passing.
 
-    def choose_action(self, options: List[DecisionOption], context: Optional[Dict[str, Any]] = None) -> Optional[DecisionOption]:
+    def choose_action(self, options: list[DecisionOption], context: Optional[dict[str, Any]] = None) -> Optional[DecisionOption]:
         """
         Selects the best action from a list of options based on utility and risk.
 
@@ -121,7 +122,7 @@ class DecisionMaker:
                         logger.debug(f"Retrieved {len(past_attempts)} past attempts related to '{option.description}'.")
                         # Simple average of past success/failure 
                         success_count = sum(1 for item in past_attempts if isinstance(item, MemoryItem) and item.metadata.get("outcome") == "success")
-                        failure_count = len(past_attempts) - success_count
+                        len(past_attempts) - success_count
                         if len(past_attempts) > 0:
                              success_rate = success_count / len(past_attempts)
                              # Adjust utility: +0.1 for >50% success, -0.1 for <50% success
@@ -174,7 +175,8 @@ class DecisionMaker:
                           best_option.action = sub_plan 
                      else:
                           logger.error(f"Failed to generate sub-plan for chosen action '{best_option.description}'. Decision might need reconsideration.")
-                          # TODO: Handle planning failure - maybe choose a different option?
+                          # NOTE: Implement handling for sub-plan generation failure.
+                          # This could involve selecting an alternative option or raising an error.
                  else:
                      logger.warning("Planner not available to create sub-plan for complex action.")
 

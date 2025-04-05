@@ -25,7 +25,7 @@ Usage:
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Generic, Optional, TypeVar
 
 from pydantic import BaseModel, Field, validator
 
@@ -121,7 +121,7 @@ class ErrorDetail(BaseModel):
         None, 
         description="Field that caused the error, if applicable"
     )
-    details: Optional[Dict[str, Any]] = Field(
+    details: Optional[dict[str, Any]] = Field(
         None, 
         description="Additional error details"
     )
@@ -174,7 +174,7 @@ class ErrorResponse(BaseResponse):
     
     @classmethod
     def create(cls, code: ErrorCode, message: str, field: Optional[str] = None, 
-               details: Optional[Dict[str, Any]] = None, meta: Optional[MetaData] = None) -> 'ErrorResponse':
+               details: Optional[dict[str, Any]] = None, meta: Optional[MetaData] = None) -> 'ErrorResponse':
         """
         Factory method to create an ErrorResponse with the given parameters.
         
@@ -254,7 +254,7 @@ class PaginatedResponse(SuccessResponse, Generic[T]):
     
     This model extends SuccessResponse to include pagination information.
     """
-    data: List[T] = Field(..., description="List of items for the current page")
+    data: list[T] = Field(..., description="List of items for the current page")
     pagination: PaginationInfo = Field(..., description="Pagination information")
 
 
@@ -274,7 +274,7 @@ class ComponentHealth(BaseModel):
         default_factory=datetime.utcnow,
         description="When the component was last checked"
     )
-    metrics: Optional[Dict[str, Any]] = Field(
+    metrics: Optional[dict[str, Any]] = Field(
         None, 
         description="Component-specific metrics"
     )
@@ -286,7 +286,7 @@ class HealthResponse(SuccessResponse):
     
     This model provides detailed health information about the system and its components.
     """
-    data: Dict[str, Any] = Field(
+    data: dict[str, Any] = Field(
         ..., 
         description="Health check data"
     )
@@ -294,7 +294,7 @@ class HealthResponse(SuccessResponse):
         ..., 
         description="Overall system health status"
     )
-    components: List[ComponentHealth] = Field(
+    components: list[ComponentHealth] = Field(
         ..., 
         description="Health status of individual components"
     )
@@ -327,7 +327,7 @@ class EmptyResponse(SuccessResponse):
     This model is used for operations like DELETE that successfully complete
     but don't have meaningful return data.
     """
-    data: Dict[str, Any] = Field(
+    data: dict[str, Any] = Field(
         default_factory=dict,
         description="Empty data object"
     )
@@ -342,7 +342,7 @@ class WarningResponse(BaseResponse, Generic[T]):
     """
     status: ResponseStatus = ResponseStatus.WARNING
     data: T = Field(..., description="Response data")
-    warnings: List[str] = Field(..., description="List of warning messages")
+    warnings: list[str] = Field(..., description="List of warning messages")
     meta: Optional[MetaData] = Field(
         None, 
         description="Optional metadata about the response"
@@ -386,11 +386,11 @@ class BatchResponse(SuccessResponse):
     This model is used for endpoints that process multiple operations in a single request,
     providing results for each individual operation.
     """
-    data: List[BatchOperationResult] = Field(
+    data: list[BatchOperationResult] = Field(
         ..., 
         description="Results of individual operations in the batch"
     )
-    summary: Dict[str, Any] = Field(
+    summary: dict[str, Any] = Field(
         default_factory=lambda: {"total": 0, "succeeded": 0, "failed": 0},
         description="Summary of batch operation results"
     )

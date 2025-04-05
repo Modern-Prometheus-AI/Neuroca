@@ -25,21 +25,18 @@ import datetime
 import logging
 import os
 import platform
-import psutil
 import time
-from typing import Dict, List, Optional, Any, Union
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Path, status
-from fastapi.responses import JSONResponse
+import psutil
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from neuroca.api.auth.dependencies import get_admin_user
-from neuroca.api.models.responses import StandardResponse, ErrorResponse
-from neuroca.config.settings import get_settings, Settings
-from neuroca.core.system.health import HealthStatus, HealthChecker, ComponentStatus
+from neuroca.api.models.responses import ErrorResponse, StandardResponse
+from neuroca.config.settings import get_settings
 from neuroca.core.system.diagnostics import SystemDiagnostics
-from neuroca.monitoring.metrics import get_system_metrics
-from neuroca.db.session import get_db_status
+from neuroca.core.system.health import ComponentStatus, HealthChecker
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -70,8 +67,8 @@ class HealthCheckResponse(BaseModel):
     """Health check response model"""
     status: str = Field(..., description="Overall system health status")
     timestamp: datetime.datetime = Field(..., description="Time of health check")
-    components: Dict[str, ComponentStatus] = Field(..., description="Status of individual components")
-    details: Optional[Dict[str, Any]] = Field(None, description="Additional health details")
+    components: dict[str, ComponentStatus] = Field(..., description="Status of individual components")
+    details: Optional[dict[str, Any]] = Field(None, description="Additional health details")
 
 class ConfigurationItem(BaseModel):
     """Configuration item model"""
@@ -111,7 +108,7 @@ class MaintenanceModeRequest(BaseModel):
     description="Returns basic information about the NCA system including version, environment, and uptime."
 )
 async def get_system_info(
-    admin_user: Dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user)
 ) -> SystemInfo:
     """
     Retrieve basic system information.
@@ -161,7 +158,7 @@ async def get_system_info(
 )
 async def health_check(
     detailed: bool = Query(False, description="Include detailed component information"),
-    admin_user: Dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user)
 ) -> HealthCheckResponse:
     """
     Perform a comprehensive health check of the NCA system.
@@ -209,14 +206,14 @@ async def health_check(
 
 @router.get(
     "/configuration",
-    response_model=List[ConfigurationItem],
+    response_model=list[ConfigurationItem],
     summary="Get system configuration",
     description="Returns the current system configuration settings."
 )
 async def get_configuration(
     filter: Optional[str] = Query(None, description="Filter configuration by key prefix"),
-    admin_user: Dict = Depends(get_admin_user)
-) -> List[ConfigurationItem]:
+    admin_user: dict = Depends(get_admin_user)
+) -> list[ConfigurationItem]:
     """
     Retrieve the current system configuration.
     
@@ -275,7 +272,7 @@ async def get_configuration(
 )
 async def update_configuration(
     update_request: ConfigurationUpdateRequest,
-    admin_user: Dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user)
 ) -> StandardResponse:
     """
     Update a system configuration setting.
@@ -341,7 +338,7 @@ async def update_configuration(
     description="Returns current system resource utilization metrics."
 )
 async def get_resource_utilization(
-    admin_user: Dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user)
 ) -> ResourceUtilization:
     """
     Retrieve current system resource utilization.
@@ -407,7 +404,7 @@ async def get_resource_utilization(
 async def set_maintenance_mode(
     request: MaintenanceModeRequest,
     background_tasks: BackgroundTasks,
-    admin_user: Dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user)
 ) -> StandardResponse:
     """
     Enable or disable system maintenance mode.
@@ -470,7 +467,7 @@ async def set_maintenance_mode(
 )
 async def restart_system(
     background_tasks: BackgroundTasks,
-    admin_user: Dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user)
 ) -> StandardResponse:
     """
     Initiate a controlled system restart.
@@ -511,14 +508,14 @@ async def restart_system(
 
 @router.get(
     "/diagnostics",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Run system diagnostics",
     description="Runs comprehensive system diagnostics and returns detailed results."
 )
 async def run_diagnostics(
     components: Optional[str] = Query(None, description="Comma-separated list of components to diagnose"),
-    admin_user: Dict = Depends(get_admin_user)
-) -> Dict[str, Any]:
+    admin_user: dict = Depends(get_admin_user)
+) -> dict[str, Any]:
     """
     Run comprehensive system diagnostics.
     
@@ -559,7 +556,7 @@ async def run_diagnostics(
 
 @router.get(
     "/logs",
-    response_model=List[Dict[str, Any]],
+    response_model=list[dict[str, Any]],
     summary="Get system logs",
     description="Retrieves recent system logs with filtering options."
 )
@@ -567,8 +564,8 @@ async def get_system_logs(
     level: Optional[str] = Query(None, description="Log level filter (DEBUG, INFO, WARNING, ERROR, CRITICAL)"),
     component: Optional[str] = Query(None, description="Component filter"),
     limit: int = Query(100, description="Maximum number of log entries to return"),
-    admin_user: Dict = Depends(get_admin_user)
-) -> List[Dict[str, Any]]:
+    admin_user: dict = Depends(get_admin_user)
+) -> list[dict[str, Any]]:
     """
     Retrieve recent system logs.
     
@@ -607,7 +604,7 @@ async def get_system_logs(
         
         try:
             if os.path.exists(log_file_path):
-                with open(log_file_path, "r") as f:
+                with open(log_file_path) as f:
                     lines = f.readlines()
                     # Process the most recent lines first
                     for line in reversed(lines):

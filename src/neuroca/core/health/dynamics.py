@@ -5,17 +5,12 @@ This module provides biologically-inspired health dynamics including energy
 management, attention allocation, and homeostatic mechanisms.
 """
 
-from enum import Enum
-from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional, Callable, Set
-import time
-import threading
 import logging
-import math
-from abc import ABC, abstractmethod
-
-from neuroca.core.health.component import ComponentStatus, ComponentHealthStatus
-
+import threading
+import time
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +151,7 @@ class HealthEvent:
     old_value: Any = None
     new_value: Any = None
     timestamp: float = field(default_factory=time.time)
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -176,8 +171,8 @@ class ComponentHealth:
     """
     component_id: str
     state: HealthState = HealthState.NORMAL
-    parameters: Dict[str, HealthParameter] = field(default_factory=dict)
-    events: List[HealthEvent] = field(default_factory=list)
+    parameters: dict[str, HealthParameter] = field(default_factory=dict)
+    events: list[HealthEvent] = field(default_factory=list)
     last_state_change: float = field(default_factory=time.time)
     max_events: int = 100
     
@@ -260,6 +255,7 @@ class ComponentHealth:
             )
             self._add_event(event)
             return event
+        return None
     
     def _add_event(self, event: HealthEvent) -> None:
         """
@@ -302,7 +298,7 @@ class ComponentHealth:
             logger.debug(f"Component {self.component_id} applying CRITICAL coping strategy.")
             # Example: Halt non-essential operations, maximize recovery rates
 
-    def apply_natural_processes(self, elapsed_seconds: float) -> List[HealthEvent]:
+    def apply_natural_processes(self, elapsed_seconds: float) -> list[HealthEvent]:
         """
         Apply natural biological processes like decay and recovery, potentially
         modified by coping strategies.
@@ -449,8 +445,8 @@ class HealthDynamicsManager:
     """
     def __init__(self):
         """Initialize the health dynamics manager."""
-        self._components: Dict[str, ComponentHealth] = {}
-        self._listeners: List[Callable[[HealthEvent], None]] = []
+        self._components: dict[str, ComponentHealth] = {}
+        self._listeners: list[Callable[[HealthEvent], None]] = []
         self._lock = threading.RLock()
         self._last_update = time.time()
         self._update_interval = 5.0  # Update every 5 seconds
@@ -571,7 +567,7 @@ class HealthDynamicsManager:
             return event
     
     def record_operation(self, component_id: str, operation_type: str, 
-                        complexity: float = 0.5) -> List[HealthEvent]:
+                        complexity: float = 0.5) -> list[HealthEvent]:
         """
         Record a cognitive operation and update health parameters accordingly.
         
@@ -662,7 +658,7 @@ class HealthDynamicsManager:
             except Exception as e:
                 logger.error(f"Error in health event listener: {e}")
     
-    def update_all_components(self) -> List[HealthEvent]:
+    def update_all_components(self) -> list[HealthEvent]:
         """
         Update health dynamics for all components.
         
@@ -753,7 +749,7 @@ def register_component_for_health_tracking(component_id: str) -> ComponentHealth
     return get_health_dynamics().register_component(component_id)
 
 def record_cognitive_operation(component_id: str, operation_type: str, 
-                              complexity: float = 0.5) -> List[HealthEvent]:
+                              complexity: float = 0.5) -> list[HealthEvent]:
     """Record a cognitive operation with the global health dynamics manager."""
     return get_health_dynamics().record_operation(
         component_id, operation_type, complexity

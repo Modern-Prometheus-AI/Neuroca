@@ -29,23 +29,18 @@ Usage:
 import functools
 import inspect
 import logging
-import os
 import time
-import traceback
 from contextvars import ContextVar
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Optional
 
 # OpenTelemetry imports
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware as OTelASGIMiddleware
-from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware as OTelWSGIMiddleware
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.sdk.trace.sampling import ParentBasedTraceIdRatio, TraceIdRatioBased
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-from opentelemetry.util.http import get_traced_request_attrs
 
 # Starlette/FastAPI specific imports (for type hints)
 try:
@@ -71,7 +66,8 @@ except ImportError:
 
 # Flask specific imports (for type hints)
 try:
-    from flask import Flask, Request as FlaskRequest
+    from flask import Flask
+    from flask import Request as FlaskRequest
     from werkzeug.wsgi import ClosingIterator
 except ImportError:
     # Define placeholder classes for type checking when Flask is not installed
@@ -113,7 +109,7 @@ def setup_tracing(
     sample_rate: float = 1.0,
     otlp_endpoint: Optional[str] = None,
     console_export: bool = False,
-    additional_resource_attributes: Optional[Dict[str, str]] = None,
+    additional_resource_attributes: Optional[dict[str, str]] = None,
 ) -> TracerProvider:
     """
     Set up OpenTelemetry tracing for the application.
@@ -204,8 +200,8 @@ class TracingMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        excluded_paths: Optional[List[str]] = None,
-        captured_headers: Optional[List[str]] = None,
+        excluded_paths: Optional[list[str]] = None,
+        captured_headers: Optional[list[str]] = None,
     ):
         """
         Initialize the tracing middleware.
@@ -318,8 +314,8 @@ class FlaskTracingMiddleware:
     def __init__(
         self,
         app: Any,
-        excluded_paths: Optional[List[str]] = None,
-        captured_headers: Optional[List[str]] = None,
+        excluded_paths: Optional[list[str]] = None,
+        captured_headers: Optional[list[str]] = None,
     ):
         """
         Initialize the Flask tracing middleware.
@@ -335,7 +331,7 @@ class FlaskTracingMiddleware:
         self.tracer = trace.get_tracer(__name__)
         logger.debug("FlaskTracingMiddleware initialized")
     
-    def __call__(self, environ: Dict, start_response: Callable) -> Any:
+    def __call__(self, environ: dict, start_response: Callable) -> Any:
         """
         Process an incoming WSGI request with tracing.
         
@@ -439,7 +435,7 @@ class FlaskTracingMiddleware:
 
 def trace_function(
     name: Optional[str] = None,
-    attributes: Optional[Dict[str, Any]] = None,
+    attributes: Optional[dict[str, Any]] = None,
     kind: trace.SpanKind = trace.SpanKind.INTERNAL,
 ):
     """
@@ -614,7 +610,7 @@ def get_current_span() -> trace.Span:
 
 def create_child_span(
     name: str,
-    attributes: Optional[Dict[str, Any]] = None,
+    attributes: Optional[dict[str, Any]] = None,
     kind: trace.SpanKind = trace.SpanKind.INTERNAL,
 ) -> trace.Span:
     """

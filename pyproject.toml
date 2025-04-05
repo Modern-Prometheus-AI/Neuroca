@@ -8,15 +8,15 @@
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry]
+[project]
 name = "neuroca"
 version = "0.1.0"
 description = "NeuroCognitive Architecture (NCA) for Large Language Models"
-authors = ["Justin Lietz <jlietz93@gmail.com>"]
+authors = [
+    {name = "Justin Lietz", email = "jlietz93@gmail.com"},
+]
 readme = "README.md"
-license = "MIT"
-repository = "https://github.com/neuroca/neuroca"
-documentation = "https://docs.neuroca.ai"
+license = {text = "MIT"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -27,77 +27,101 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+requires-python = ">=3.9,<3.13"
+dependencies = [
+    # Core dependencies
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scipy>=1.10.0",
+    "scikit-learn>=1.2.0",
+    "torch>=2.0.0; python_version <= '3.11'",
+    "transformers>=4.30.0",
+    "pydantic>=2.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.22.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.11.0",
+    "psycopg2-binary>=2.9.6",
+    "redis>=4.5.5",
+    "httpx>=0.24.1",
+    "python-dotenv>=0.21.0",
+    "loguru>=0.7.0",
+    "typer>=0.9.0",
+    "rich>=13.4.0",
+    "tenacity>=8.2.2",
+    "prometheus-client>=0.17.0",
+    "opentelemetry-api>=1.18.0",
+    "opentelemetry-sdk>=1.18.0",
+    "opentelemetry-exporter-otlp>=1.18.0",
+    "langchain>=0.0.267",
+    "tiktoken>=0.4.0",
+    "faiss-cpu>=1.7.4",
+    "pyyaml>=6.0.1",
+    "aiohttp>=3.9.0",
+    # Add other production dependencies as needed
+]
+
+[project.urls]
+Repository = "https://github.com/neuroca/neuroca"
+Documentation = "https://docs.neuroca.ai"
+
+[project.scripts]
+neuroca = "neuroca.cli.main:app"
+neuroca-api = "neuroca.api.main:start"
+neuroca-worker = "neuroca.infrastructure.worker:start"
+
+[project.optional-dependencies]
+dev = [
+    # Development tools
+    "pytest>=7.3.1",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.3.0",
+    "isort>=5.12.0",
+    "mypy>=1.3.0",
+    "ruff>=0.0.272",
+    "pre-commit>=3.3.3",
+    "commitizen>=3.2.2",
+    "bandit>=1.7.5",
+    "safety>=2.3.5",
+    "sphinx>=7.0.1",
+    "sphinx-rtd-theme>=1.2.2",
+    "mkdocs>=1.4.3",
+    "mkdocs-material>=9.1.16",
+    "ipython>=8.14.0",
+    "jupyter>=1.0.0",
+]
+test = [
+    # Testing specific dependencies
+    "faker>=18.11.2",
+    "hypothesis>=6.80.0",
+    "pytest-mock>=3.11.1",
+    "pytest-benchmark>=4.0.0",
+    "responses>=0.23.1",
+    "freezegun>=1.2.2",
+]
+
+[tool.poetry]
+# Keep poetry-specific configurations like packages
 packages = [
     {include = "neuroca", from = "src"}
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.9,<3.13"
-# Core dependencies
-numpy = "^1.24.0"
-pandas = "^2.0.0"
-scipy = "^1.10.0"
-scikit-learn = "^1.2.0"
-torch = {version = "^2.0.0", markers = "python_version <= '3.11'"}
-transformers = "^4.30.0"
-pydantic = "^2.0.0"
-fastapi = "^0.100.0"
-uvicorn = {extras = ["standard"], version = "^0.22.0"}
-sqlalchemy = "^2.0.0"
-alembic = "^1.11.0"
-psycopg2-binary = "^2.9.6"
-redis = "^4.5.5"
-httpx = "^0.24.1"
-python-dotenv = "^0.21.0"
-loguru = "^0.7.0"
-typer = "^0.9.0"
-rich = "^13.4.0"
-tenacity = "^8.2.2"
-prometheus-client = "^0.17.0"
-opentelemetry-api = "^1.18.0"
-opentelemetry-sdk = "^1.18.0"
-opentelemetry-exporter-otlp = "^1.18.0"
-langchain = "^0.0.267"
-tiktoken = "^0.4.0"
-faiss-cpu = "^1.7.4"
-pyyaml = "^6.0.1"
-aiohttp = "^3.9.0"
-# Add other production dependencies as needed
+# Remove dependencies from here as they are now in [project]
+# [tool.poetry.dependencies]
+# python = ">=3.9,<3.13"
+# ... (rest of dependencies removed) ...
 
-[tool.poetry.group.dev.dependencies]
-# Development tools
-pytest = "^7.3.1"
-pytest-cov = "^4.1.0"
-pytest-asyncio = "^0.21.0"
-black = "^23.3.0"
-isort = "^5.12.0"
-mypy = "^1.3.0"
-ruff = "^0.0.272"
-pre-commit = "^3.3.3"
-commitizen = "^3.2.2"
-bandit = "^1.7.5"
-safety = "^2.3.5"
-sphinx = "^7.0.1"
-sphinx-rtd-theme = "^1.2.2"
-mkdocs = "^1.4.3"
-mkdocs-material = "^9.1.16"
-ipython = "^8.14.0"
-jupyter = "^1.0.0"
+# Remove groups from here as they are now in [project.optional-dependencies]
+# [tool.poetry.group.dev.dependencies]
+# ... (dev dependencies removed) ...
 
-[tool.poetry.group.test.dependencies]
-# Testing specific dependencies
-faker = "^18.11.2"
-hypothesis = "^6.80.0"
-pytest-mock = "^3.11.1"
-pytest-benchmark = "^4.0.0"
-responses = "^0.23.1"
-freezegun = "^1.2.2"
+# [tool.poetry.group.test.dependencies]
+# ... (test dependencies removed) ...
 
-[tool.poetry.scripts]
-# CLI entry points
-neuroca = "neuroca.cli.main:app"
-neuroca-api = "neuroca.api.main:start"
-neuroca-worker = "neuroca.infrastructure.worker:start"
+# Remove scripts from here as they are now in [project.scripts]
+# [tool.poetry.scripts]
+# ... (scripts removed) ...
 
 [tool.black]
 line-length = 100
@@ -160,6 +184,7 @@ exclude = [
     "docs",
     "build",
     "dist",
+    "archive", 
 ]
 
 [tool.pytest.ini_options]
@@ -168,6 +193,8 @@ python_files = "test_*.py"
 python_functions = "test_*"
 python_classes = "Test*"
 addopts = "--strict-markers --cov=neuroca --cov-report=term --cov-report=xml"
+norecursedirs = ["archive", ".venv", ".git", "__pycache__"] 
+collect_ignore = ["archive/development_scripts/test_cli.py"] # Explicitly ignore archived test
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",

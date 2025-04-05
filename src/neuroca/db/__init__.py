@@ -33,19 +33,18 @@ Examples:
             raise
 """
 
-import os
-import time
 import logging
+import os
 import threading
-from typing import Optional, Dict, Any, Generator, Union, List
+import time
+from collections.abc import Generator
 from contextlib import contextmanager
+from typing import Any, Optional
 
-import sqlalchemy
 from sqlalchemy import create_engine, event, exc
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker, scoped_session, Session
-from sqlalchemy.pool import QueuePool
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -57,8 +56,8 @@ _thread_local = threading.local()
 Base = declarative_base()
 
 # Global engine instances
-_engines: Dict[str, Engine] = {}
-_session_factories: Dict[str, scoped_session] = {}
+_engines: dict[str, Engine] = {}
+_session_factories: dict[str, scoped_session] = {}
 
 # Default connection settings
 DEFAULT_POOL_SIZE = 10
@@ -169,6 +168,7 @@ def _create_engine_with_retry(db_url: str, **kwargs) -> Engine:
             else:
                 logger.error(f"Failed to connect to database after {retry_count} attempts: {e}")
                 raise ConnectionError(f"Could not connect to database: {e}") from e
+    return None
 
 
 def init_db(db_name: str = DEFAULT_DB_NAME, **kwargs) -> None:
@@ -356,7 +356,7 @@ def close_connections(db_name: Optional[str] = None) -> None:
         raise DatabaseError(f"Failed to close database connections: {e}") from e
 
 
-def health_check(db_name: str = DEFAULT_DB_NAME) -> Dict[str, Any]:
+def health_check(db_name: str = DEFAULT_DB_NAME) -> dict[str, Any]:
     """
     Perform a health check on the database.
     

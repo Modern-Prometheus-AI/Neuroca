@@ -22,18 +22,18 @@ Usage:
     response = await adapter.generate(prompt="Explain neuroplasticity")
 """
 
-import asyncio
 import json
 import logging
 import time
-from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional, Union
 
 import aiohttp
 
-from .base import LLMAdapter, AdapterError, ModelCapability, AdapterConfigurationError
-from ..models import LLMRequest, LLMResponse, TokenUsage, ResponseType
+from ..models import LLMRequest, LLMResponse, ResponseType, TokenUsage
+from .base import AdapterError, BaseAdapter, ConfigurationError  # Import AdapterRegistry
 
+# NOTE: ModelCapability was removed from the import above as it's not defined in base.py.
+# The capabilities property below might need adjustment if ModelCapability is defined elsewhere.
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +42,7 @@ class OllamaError(AdapterError):
     pass
 
 
-class OllamaAdapter(LLMAdapter):
+class OllamaAdapter(BaseAdapter): # Corrected inheritance
     """
     Adapter for Ollama local LLM deployments.
     
@@ -50,7 +50,7 @@ class OllamaAdapter(LLMAdapter):
     the Ollama API, providing access to a variety of open-source models.
     """
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize the Ollama adapter.
         
@@ -87,12 +87,13 @@ class OllamaAdapter(LLMAdapter):
         return self._name
     
     @property
-    def capabilities(self) -> Set[ModelCapability]:
+    def capabilities(self) -> set[str]: # Changed return type hint as ModelCapability is undefined
         """Return the set of capabilities supported by this adapter."""
+        # Using strings until ModelCapability enum is defined/imported correctly
         return {
-            ModelCapability.TEXT_GENERATION,
-            ModelCapability.CHAT_COMPLETION,
-            ModelCapability.EMBEDDINGS
+            "TEXT_GENERATION", 
+            "CHAT_COMPLETION",
+            "EMBEDDINGS"
         }
     
     async def close(self):
@@ -109,19 +110,19 @@ class OllamaAdapter(LLMAdapter):
             bool: True if configuration is valid
             
         Raises:
-            AdapterConfigurationError: If configuration is invalid
+            ConfigurationError: If configuration is invalid
         """
         # Check required configuration
         if not self._base_url:
-            raise AdapterConfigurationError("base_url must be specified in configuration")
+            raise ConfigurationError("base_url must be specified in configuration") # Corrected exception type
         
         # Validate URL format
         if not self._base_url.startswith(("http://", "https://")):
-            raise AdapterConfigurationError(f"Invalid base_url format: {self._base_url}")
+            raise ConfigurationError(f"Invalid base_url format: {self._base_url}") # Corrected exception type
         
         return True
     
-    async def _fetch_available_models(self) -> List[str]:
+    async def _fetch_available_models(self) -> list[str]:
         """
         Fetch available models from Ollama API.
         
@@ -152,7 +153,7 @@ class OllamaAdapter(LLMAdapter):
         except Exception as e:
             raise OllamaError(f"Unexpected error: {str(e)}")
     
-    async def get_available_models(self) -> List[str]:
+    async def get_available_models(self) -> list[str]:
         """
         Get a list of available Ollama models.
         
@@ -267,8 +268,8 @@ class OllamaAdapter(LLMAdapter):
                        prompt: str, 
                        max_tokens: Optional[int] = None,
                        temperature: Optional[float] = None,
-                       stop_sequences: Optional[List[str]] = None,
-                       **kwargs) -> Dict[str, Any]:
+                       stop_sequences: Optional[list[str]] = None,
+                       **kwargs) -> dict[str, Any]:
         """
         Generate text based on the provided prompt.
         
@@ -277,10 +278,13 @@ class OllamaAdapter(LLMAdapter):
             max_tokens: Maximum tokens to generate
             temperature: Temperature for generation
             stop_sequences: Sequences that stop generation
-            **kwargs: Additional parameters
-            
+            **kwargs: Additional parameters to override configuration
+
         Returns:
-            Dictionary with generated text and metadata
+            LLMResponse containing the generated text
+
+        Raises:
+            AdapterError: If an error occurs during generation
         """
         # Create LLMRequest
         request = LLMRequest(
@@ -293,46 +297,45 @@ class OllamaAdapter(LLMAdapter):
             additional_params=kwargs
         )
         
-        # Execute the request
-        response = await self.execute(request)
-        
-        # Format as expected by LLMAdapter interface
-        return {
-            "text": response.content,
-            "usage": response.usage.to_dict() if response.usage else {},
-            "model": response.model,
-            "metadata": response.metadata
-        }
-    
-    async def chat(self,
-                   messages: List[Dict[str, str]],
-                   max_tokens: Optional[int] = None,
-                   temperature: Optional[float] = None,
-                   **kwargs) -> Dict[str, Any]:
+        # Execute the request and return the LLMResponse directly
+        return await self.execute(request)
+
+    async def generate_chat(self,
+                            messages: list[dict[str, str]],
+                            **kwargs) -> LLMResponse:
         """
-        Generate a response based on a conversation history.
-        
+        Generate a response from the LLM based on a conversation history.
+
         Args:
-            messages: List of message dicts with 'role' and 'content'
-            max_tokens: Maximum tokens to generate
-            temperature: Temperature for generation
-            **kwargs: Additional parameters
-            
+            messages: List of message dictionaries with 'role' and 'content' keys
+            **kwargs: Additional parameters to override configuration
+
         Returns:
-            Dictionary with generated response and metadata
+            LLMResponse containing the generated response
+
+        Raises:
+            AdapterError: If an error occurs during generation
         """
         # Convert chat messages to a prompt string
         formatted_prompt = self._format_chat_messages(messages)
-        
-        # Generate response using the formatted prompt
-        return await self.generate(
-            prompt=formatted_prompt,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            **kwargs
-        )
+
+        # Create LLMRequest using merged parameters
+        # Extract relevant kwargs for LLMRequest, others go into additional_params
+        request_params = {
+            "provider": self.name,
+            "model": kwargs.get("model", self._default_model),
+            "prompt": formatted_prompt,
+            "max_tokens": kwargs.get("max_tokens"),
+            "temperature": kwargs.get("temperature"),
+            "stop_sequences": kwargs.get("stop_sequences"),
+            "additional_params": {k: v for k, v in kwargs.items() if k not in ["model", "max_tokens", "temperature", "stop_sequences"]}
+        }
+        request = LLMRequest(**request_params)
+
+        # Execute the request and return the LLMResponse directly
+        return await self.execute(request)
     
-    def _format_chat_messages(self, messages: List[Dict[str, str]]) -> str:
+    def _format_chat_messages(self, messages: list[dict[str, str]]) -> str:
         """
         Format chat messages into a prompt string for Ollama.
         
@@ -362,22 +365,22 @@ class OllamaAdapter(LLMAdapter):
                 formatted_prompt += f"[INST] {content} [/INST]"
         
         return formatted_prompt
-    
-    async def embed(self, 
-                    text: Union[str, List[str]], 
-                    **kwargs) -> Dict[str, Any]:
+
+    async def generate_embedding(self,
+                                 text: Union[str, list[str]],
+                                 **kwargs) -> LLMResponse:
         """
-        Generate embeddings for the provided text.
-        
+        Generate embeddings for the provided text(s).
+
         Args:
-            text: Text or list of texts to embed
-            **kwargs: Additional parameters
-            
+            text: Single text or list of texts to embed
+            **kwargs: Additional parameters to override configuration
+
         Returns:
-            Dictionary with embeddings and metadata
-            
+            LLMResponse containing the embeddings
+
         Raises:
-            OllamaError: If embedding generation fails
+            AdapterError: If an error occurs during embedding generation
         """
         if not self._session or self._session.closed:
             self._initialize_session()
@@ -411,21 +414,27 @@ class OllamaAdapter(LLMAdapter):
                     embeddings.append(embedding)
                     
                     # Track token usage (estimated)
-                    total_tokens += len(single_text.split())
-            
-            # Return embeddings
-            return {
-                "embeddings": embeddings[0] if not is_batch else embeddings,
-                "usage": {
-                    "prompt_tokens": total_tokens,
+                    total_tokens += len(single_text.split()) # Simple token estimation
+
+            embedding_content = embeddings[0] if not is_batch else embeddings
+            embedding_size = len(embeddings[0]) if embeddings else 0
+
+            # Construct LLMResponse for embeddings
+            return LLMResponse(
+                content=embedding_content,
+                response_type=ResponseType.EMBEDDING,
+                model_name=model,
+                usage={
+                    "prompt_tokens": total_tokens, # Note: Ollama doesn't provide exact tokens for embeddings
                     "total_tokens": total_tokens
                 },
-                "model": model,
-                "metadata": {
+                metadata={
                     "batch_size": len(texts),
-                    "embedding_size": len(embeddings[0]) if embeddings else 0
-                }
-            }
+                    "embedding_size": embedding_size,
+                    "adapter": self.name
+                },
+                # raw_response could be the list of individual responses if needed
+            )
             
         except aiohttp.ClientError as e:
             raise OllamaError(f"Connection error with Ollama API: {str(e)}")
@@ -436,5 +445,29 @@ class OllamaAdapter(LLMAdapter):
                 raise OllamaError(f"Unexpected error during embedding: {str(e)}")
             raise
 
-# Register the adapter
-AdapterRegistry.register_adapter_class("ollama", OllamaAdapter)
+    async def generate_with_functions(
+        self,
+        messages: list[dict[str, str]],
+        functions: list[dict[str, Any]],
+        **kwargs
+    ) -> LLMResponse:
+        """
+        Generate a response that may include function calls.
+        NOTE: Ollama does not natively support function calling in the same way
+              as OpenAI. This implementation will raise NotImplementedError.
+        
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys
+            functions: List of function definitions the LLM can call
+            **kwargs: Additional parameters to override configuration
+            
+        Returns:
+            LLMResponse containing the generated response or function call
+            
+        Raises:
+            NotImplementedError: As Ollama does not support this directly.
+        """
+        raise NotImplementedError("Ollama adapter does not support direct function calling.")
+
+# Registration is handled centrally in adapters/__init__.py
+# AdapterRegistry.register_adapter_class("ollama", OllamaAdapter)

@@ -31,12 +31,11 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Optional
 
 import numpy as np
 
 from neuroca.core.exceptions import PathwayError, ValidationError
-from neuroca.memory.tubules.base import TubuleInterface
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -114,7 +113,7 @@ class Pathway:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=datetime.now)
     last_modified: datetime = field(default_factory=datetime.now)
-    metadata: Dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
     metrics: PathwayMetrics = field(default_factory=PathwayMetrics)
     
     def __post_init__(self) -> None:
@@ -208,7 +207,7 @@ class Pathway:
         logger.debug(f"Pathway {self.id} activated: {activation_strength} -> {output_activation}")
         return output_activation
     
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """
         Convert the pathway to a dictionary representation.
         
@@ -235,7 +234,7 @@ class Pathway:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict) -> 'Pathway':
+    def from_dict(cls, data: dict) -> 'Pathway':
         """
         Create a Pathway instance from a dictionary representation.
         
@@ -287,16 +286,16 @@ class PathwayManager:
     def __init__(self) -> None:
         """Initialize the PathwayManager with empty pathway collections."""
         # Main pathway storage: pathway_id -> Pathway
-        self._pathways: Dict[str, Pathway] = {}
+        self._pathways: dict[str, Pathway] = {}
         
         # Index for source_id -> set of pathway_ids
-        self._source_index: Dict[str, Set[str]] = {}
+        self._source_index: dict[str, set[str]] = {}
         
         # Index for target_id -> set of pathway_ids
-        self._target_index: Dict[str, Set[str]] = {}
+        self._target_index: dict[str, set[str]] = {}
         
         # Index for pathway_type -> set of pathway_ids
-        self._type_index: Dict[PathwayType, Set[str]] = {
+        self._type_index: dict[PathwayType, set[str]] = {
             pathway_type: set() for pathway_type in PathwayType
         }
         
@@ -408,7 +407,7 @@ class PathwayManager:
         del self._pathways[pathway_id]
         logger.debug(f"Removed pathway {pathway_id}")
     
-    def get_pathways_from_source(self, source_id: str) -> List[Pathway]:
+    def get_pathways_from_source(self, source_id: str) -> list[Pathway]:
         """
         Get all pathways originating from a specific source.
         
@@ -423,7 +422,7 @@ class PathwayManager:
         
         return [self._pathways[pid] for pid in self._source_index[source_id]]
     
-    def get_pathways_to_target(self, target_id: str) -> List[Pathway]:
+    def get_pathways_to_target(self, target_id: str) -> list[Pathway]:
         """
         Get all pathways leading to a specific target.
         
@@ -438,7 +437,7 @@ class PathwayManager:
         
         return [self._pathways[pid] for pid in self._target_index[target_id]]
     
-    def get_pathways_by_type(self, pathway_type: PathwayType) -> List[Pathway]:
+    def get_pathways_by_type(self, pathway_type: PathwayType) -> list[Pathway]:
         """
         Get all pathways of a specific type.
         
@@ -450,7 +449,7 @@ class PathwayManager:
         """
         return [self._pathways[pid] for pid in self._type_index[pathway_type]]
     
-    def get_connected_tubules(self, tubule_id: str) -> Set[str]:
+    def get_connected_tubules(self, tubule_id: str) -> set[str]:
         """
         Get all tubules connected to a specific tubule (in either direction).
         
@@ -483,7 +482,7 @@ class PathwayManager:
         source_id: str, 
         activation_strength: float = 1.0,
         activation_threshold: float = 0.1
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Activate all pathways from a source and return activated targets with their strengths.
         
@@ -529,11 +528,11 @@ class PathwayManager:
     
     def spread_activation(
         self,
-        initial_activations: Dict[str, float],
+        initial_activations: dict[str, float],
         max_depth: int = 3,
         decay_factor: float = 0.7,
         activation_threshold: float = 0.1
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Spread activation through the pathway network from multiple initial sources.
         
@@ -569,7 +568,7 @@ class PathwayManager:
         processed = set()
         
         # Spread activation for max_depth steps
-        for depth in range(max_depth):
+        for _depth in range(max_depth):
             next_activations = {}
             
             # Process each currently activated tubule
@@ -635,7 +634,7 @@ class PathwayManager:
         pathway_type: PathwayType,
         strength: float = 0.5,
         bidirectional: bool = False,
-        metadata: Optional[Dict] = None
+        metadata: Optional[dict] = None
     ) -> str:
         """
         Create and register a new pathway.
@@ -719,7 +718,7 @@ class PathwayManager:
         source_id: str, 
         target_id: str, 
         max_depth: int = 5
-    ) -> Optional[List[Pathway]]:
+    ) -> Optional[list[Pathway]]:
         """
         Find a path between source and target tubules through the pathway network.
         
@@ -761,7 +760,7 @@ class PathwayManager:
         # No path found
         return None
     
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """
         Get statistics about the pathway network.
         
@@ -781,7 +780,7 @@ class PathwayManager:
             "average_strength": np.mean([p.strength for p in self._pathways.values()]) if self._pathways else 0.0,
         }
     
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """
         Convert the pathway manager to a dictionary representation.
         
@@ -794,7 +793,7 @@ class PathwayManager:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict) -> 'PathwayManager':
+    def from_dict(cls, data: dict) -> 'PathwayManager':
         """
         Create a PathwayManager instance from a dictionary representation.
         
@@ -808,7 +807,7 @@ class PathwayManager:
         
         # Load pathways
         pathways_data = data.get("pathways", {})
-        for pid, pathway_data in pathways_data.items():
+        for _pid, pathway_data in pathways_data.items():
             pathway = Pathway.from_dict(pathway_data)
             manager.register_pathway(pathway)
         

@@ -6,15 +6,15 @@ abstracting away the details of which implementation classes are used.
 """
 
 import logging
-from typing import Dict, Any, Type, Optional, Union
+from typing import Optional
 
-from neuroca.core.memory.interfaces import MemorySystem
 from neuroca.core.memory.health import register_memory_system
+from neuroca.core.memory.interfaces import MemorySystem
 
 logger = logging.getLogger(__name__)
 
 # Mapping of memory type names to implementation classes
-_memory_system_registry: Dict[str, Type[MemorySystem]] = {}
+_memory_system_registry: dict[str, type[MemorySystem]] = {}
 
 # Alias mapping for more flexible type names
 _memory_type_aliases = {
@@ -30,7 +30,7 @@ _memory_type_aliases = {
 }
 
 
-def register_memory_implementation(memory_type: str, implementation: Type[MemorySystem]) -> None:
+def register_memory_implementation(memory_type: str, implementation: type[MemorySystem]) -> None:
     """
     Register a memory system implementation class.
     
@@ -86,7 +86,7 @@ def create_memory_system(memory_type: str, enable_health_monitoring: bool = True
 
 
 def create_memory_trio(enable_health_monitoring: bool = True, 
-                      prefix: str = "") -> Dict[str, MemorySystem]:
+                      prefix: str = "") -> dict[str, MemorySystem]:
     """
     Create a complete set of memory systems (working, episodic, semantic).
     
@@ -123,9 +123,11 @@ def _register_default_memory_systems() -> None:
         
     try:
         # Import memory implementations
-        from neuroca.core.memory.working_memory import WorkingMemory
         from neuroca.core.memory.episodic_memory import EpisodicMemory
-        from neuroca.core.memory.semantic_memory import SemanticMemory
+        from neuroca.core.memory.working_memory import WorkingMemory
+
+        # Import the CONCRETE implementation from the correct location
+        from neuroca.memory.semantic_memory import SemanticMemory
         
         # Register implementations
         register_memory_implementation("working", WorkingMemory)
@@ -142,4 +144,4 @@ def _register_default_memory_systems() -> None:
         logger.debug("Registered default memory system implementations")
     except ImportError as e:
         # During development, some implementations might not exist yet
-        logger.warning(f"Could not register all memory implementations: {e}") 
+        logger.warning(f"Could not register all memory implementations: {e}")

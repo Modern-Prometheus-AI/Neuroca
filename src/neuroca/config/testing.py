@@ -34,20 +34,19 @@ Usage:
     teardown_test_environment()
 """
 
-import os
+import datetime
 import json
 import logging
-import tempfile
+import os
 import random
-import string
-import uuid
-from enum import Enum
-from typing import Dict, List, Any, Optional, Union, Tuple, Callable
-from pathlib import Path
-from contextlib import contextmanager
 import shutil
+import tempfile
 import time
-import datetime
+import uuid
+from contextlib import contextmanager
+from enum import Enum
+from pathlib import Path
+from typing import Any, Optional, Union
 
 # Configure logging for testing
 logging.basicConfig(
@@ -146,7 +145,7 @@ class TestConfig:
                 logger.warning(f"Config file not found: {config_path}")
                 return
                 
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config_data = json.load(f)
             
             # Apply configuration from file
@@ -303,7 +302,7 @@ class TestConfig:
                 json.dump(config_data, f, indent=2)
             logger.debug(f"Configuration saved to {path}")
             return path
-        except IOError as e:
+        except OSError as e:
             logger.error(f"Failed to save configuration to {path}: {e}")
             raise
     
@@ -317,7 +316,7 @@ class TestConfig:
             logger.warning(f"Failed to clean up temporary directory {self.temp_dir}: {e}")
 
 
-def setup_test_environment(config: TestConfig) -> Dict[str, Any]:
+def setup_test_environment(config: TestConfig) -> dict[str, Any]:
     """
     Set up the test environment based on the provided configuration.
     
@@ -461,7 +460,7 @@ def setup_performance_test_data(config: TestConfig) -> Path:
             "large": 10000
         }
         
-        size = sizes.get(config.mock_data_size, sizes["medium"])
+        sizes.get(config.mock_data_size, sizes["medium"])
         
         # Generate memory test data
         memory_data = generate_mock_memory_data(size=config.mock_data_size)
@@ -477,7 +476,7 @@ def setup_performance_test_data(config: TestConfig) -> Path:
 
 
 def generate_mock_memory_data(size: str = "medium", 
-                             memory_tier: Optional[MemoryTier] = None) -> List[Dict[str, Any]]:
+                             memory_tier: Optional[MemoryTier] = None) -> list[dict[str, Any]]:
     """
     Generate mock memory data for testing.
     
@@ -617,7 +616,7 @@ def timed_test_context(name: str, threshold_ms: Optional[int] = None):
             logger.debug(f"Test '{name}' completed in {elapsed_time:.2f}ms")
 
 
-def create_test_fixture(fixture_type: str, **kwargs) -> Dict[str, Any]:
+def create_test_fixture(fixture_type: str, **kwargs) -> dict[str, Any]:
     """
     Create a test fixture for testing.
     
@@ -652,7 +651,7 @@ def create_test_fixture(fixture_type: str, **kwargs) -> Dict[str, Any]:
     return {}
 
 
-def create_memory_system_fixture(**kwargs) -> Dict[str, Any]:
+def create_memory_system_fixture(**kwargs) -> dict[str, Any]:
     """
     Create a memory system test fixture.
     
@@ -685,7 +684,7 @@ def create_memory_system_fixture(**kwargs) -> Dict[str, Any]:
     }
 
 
-def create_health_system_fixture(**kwargs) -> Dict[str, Any]:
+def create_health_system_fixture(**kwargs) -> dict[str, Any]:
     """
     Create a health system test fixture.
     
@@ -717,7 +716,7 @@ def create_health_system_fixture(**kwargs) -> Dict[str, Any]:
     }
 
 
-def create_cognitive_process_fixture(**kwargs) -> Dict[str, Any]:
+def create_cognitive_process_fixture(**kwargs) -> dict[str, Any]:
     """
     Create a cognitive process test fixture.
     
@@ -747,7 +746,7 @@ def create_cognitive_process_fixture(**kwargs) -> Dict[str, Any]:
     }
 
 
-def create_integration_fixture(**kwargs) -> Dict[str, Any]:
+def create_integration_fixture(**kwargs) -> dict[str, Any]:
     """
     Create an integration test fixture.
     

@@ -30,7 +30,7 @@ Version: 0.1.0
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any
 
 # Set up module-level logger
 logger = logging.getLogger(__name__)
@@ -38,13 +38,13 @@ logger = logging.getLogger(__name__)
 # Import core LangChain components that we'll use or wrap
 try:
     import langchain
-    from langchain.llms.base import BaseLLM
+    from langchain.callbacks.base import BaseCallbackHandler
     from langchain.chains.base import Chain
+    from langchain.embeddings.base import Embeddings
+    from langchain.llms.base import BaseLLM
     from langchain.memory import ConversationBufferMemory
     from langchain.schema import BaseMemory, Document
-    from langchain.embeddings.base import Embeddings
     from langchain.vectorstores.base import VectorStore
-    from langchain.callbacks.base import BaseCallbackHandler
     
     LANGCHAIN_AVAILABLE = True
     logger.debug("LangChain successfully imported (version: %s)", langchain.__version__)
@@ -54,9 +54,9 @@ except ImportError as e:
 
 # Import NCA components needed for integration
 try:
+    from neuroca.core.exceptions import ConfigurationError, IntegrationError
     from neuroca.core.models import BaseModel
     from neuroca.memory.base import BaseMemory as NCABaseMemory
-    from neuroca.core.exceptions import IntegrationError, ConfigurationError
 except ImportError as e:
     logger.error("Failed to import required NCA components: %s", str(e))
     raise ImportError(f"NCA core components not available: {str(e)}")
@@ -146,7 +146,7 @@ class LangChainModelAdapter(BaseModel):
             logger.error(f"Error generating response: {str(e)}", exc_info=True)
             raise LangChainIntegrationError(f"Error generating response: {str(e)}") from e
     
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         """
         Get information about the underlying LangChain model.
         
@@ -308,7 +308,7 @@ class CallbackHandler(BaseCallbackHandler):
         self.config = kwargs
         logger.debug("Initialized LangChain callback handler")
     
-    def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) -> None:
+    def on_llm_start(self, serialized: dict[str, Any], prompts: list[str], **kwargs: Any) -> None:
         """Called when LLM starts processing."""
         logger.debug(f"LLM started: {serialized.get('name', 'unknown')}")
     
@@ -320,11 +320,11 @@ class CallbackHandler(BaseCallbackHandler):
         """Called when LLM encounters an error."""
         logger.error(f"LLM error: {str(error)}", exc_info=True)
     
-    def on_chain_start(self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any) -> None:
+    def on_chain_start(self, serialized: dict[str, Any], inputs: dict[str, Any], **kwargs: Any) -> None:
         """Called when a chain starts processing."""
         logger.debug(f"Chain started: {serialized.get('name', 'unknown')}")
     
-    def on_chain_end(self, outputs: Dict[str, Any], **kwargs: Any) -> None:
+    def on_chain_end(self, outputs: dict[str, Any], **kwargs: Any) -> None:
         """Called when a chain completes processing."""
         logger.debug("Chain completed processing")
     

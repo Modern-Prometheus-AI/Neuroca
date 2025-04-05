@@ -16,10 +16,9 @@ Security Note:
     environment variables or a secure secrets management system.
 """
 
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Any
 
 # Base paths and directories
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -268,7 +267,7 @@ def get_database_url() -> str:
     ssl_param = "?sslmode=require" if db['ssl_enabled'] else ""
     return f"{db['engine']}://{db['user']}:{password}@{db['host']}:{db['port']}/{db['name']}{ssl_param}"
 
-def validate_config() -> List[str]:
+def validate_config() -> list[str]:
     """
     Validates the production configuration and returns a list of warnings or issues.
     
@@ -308,7 +307,7 @@ def validate_config() -> List[str]:
         with open(test_file, 'w') as f:
             f.write('test')
         os.remove(test_file)
-    except (IOError, PermissionError):
+    except (OSError, PermissionError):
         issues.append(f"Cannot write to log directory: {LOG_DIR}")
     
     try:
@@ -316,7 +315,7 @@ def validate_config() -> List[str]:
         with open(test_file, 'w') as f:
             f.write('test')
         os.remove(test_file)
-    except (IOError, PermissionError):
+    except (OSError, PermissionError):
         issues.append(f"Cannot write to data directory: {DATA_DIR}")
     
     return issues

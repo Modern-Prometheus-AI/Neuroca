@@ -2,10 +2,9 @@
 CLI commands for monitoring and managing NCA system health.
 """
 
-import typer
 import logging
-from typing import Annotated
 
+import typer
 from rich.console import Console
 
 # Assuming logger and console are initialized elsewhere or passed/imported
@@ -23,10 +22,13 @@ def health_status() -> None:
     """
     logger.info("Retrieving system health status...")
     
-    # TODO: Connect to the actual health monitoring subsystem
-    # For now, we'll just show a sample output
+    # NOTE: Implement connection to the actual HealthDynamicsManager here.
+    # This should involve getting the HealthDynamicsManager instance and calling
+    # its methods to retrieve the current overall health status and component details.
+    # Example: health_manager = get_health_manager()
+    # Example: health_data = health_manager.get_system_status()
     
-    # Sample health data
+    # Sample health data (Replace with actual data from health_manager)
     health_data = {
         "energy": 0.72,
         "rest_state": "active",

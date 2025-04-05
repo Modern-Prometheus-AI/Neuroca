@@ -32,20 +32,27 @@ import datetime
 import enum
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, Enum, Float, ForeignKey, 
-    Index, Integer, JSON, String, Table, Text, UniqueConstraint
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
 
-from neuroca.db.base import Base
 from neuroca.core.exceptions import ValidationError
-from neuroca.core.utils.time import get_current_timestamp
+from neuroca.db.base import Base
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -198,7 +205,7 @@ class STMItem(Base):
             
         return False
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the STM item to a dictionary representation.
         
@@ -291,7 +298,7 @@ class STMRelation(Base):
             raise ValidationError(error_msg)
         return value
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the relation to a dictionary representation.
         
