@@ -349,10 +349,12 @@ def init(
 # Import sub-apps from the commands directory
 from .commands.memory import memory_app # Import memory commands
 from .commands.health import health_app # Import health commands
+from .commands.llm import llm_app # Import LLM commands
 
 # Add imported sub-apps to the main app
 app.add_typer(memory_app)
 app.add_typer(health_app)
+app.add_typer(llm_app)
 # Remove the old inline command definitions below
 
 
