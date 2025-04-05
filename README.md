@@ -62,8 +62,8 @@ neuroca/
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/neuroca.git
-cd neuroca
+git clone https://github.com/justinlietz93/Neuro-Cognitive-Architecture.git
+cd Neuro-Cognitive-Architecture
 
 # Install dependencies using Poetry
 poetry install
@@ -76,8 +76,8 @@ poetry shell
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/neuroca.git
-cd neuroca
+git clone https://github.com/justinlietz93/Neuro-Cognitive-Architecture.git
+cd Neuro-Cognitive-Architecture
 
 # Create and activate a virtual environment
 python -m venv venv
@@ -91,8 +91,8 @@ pip install -r requirements.txt
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/neuroca.git
-cd neuroca
+git clone https://github.com/justinlietz93/Neuro-Cognitive-Architecture.git
+cd Neuro-Cognitive-Architecture
 
 # Build and run with Docker Compose
 docker-compose up -d
@@ -246,9 +246,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - The open-source AI community
 - Contributors and early adopters
 
+## Author
+
+- **Justin Lietz** - *Initial work & Lead Developer*
+
 ## Contact
 
-For questions, feedback, or collaboration opportunities, please open an issue on this repository or contact the maintainers at [maintainers@neuroca.ai](mailto:maintainers@neuroca.ai).
+For questions, feedback, or collaboration opportunities, please open an issue on this repository or contact Justin Lietz.
 
 ---
 

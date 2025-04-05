@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: neuroca
+  namespace: neuroca
+  labels:
+    app: neuroca
+    release: monitoring  # Match Prometheus Operator's release label
+spec:
+  selector:
+    matchLabels:
+      app: neuroca
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - neuroca

@@ -38,8 +38,8 @@ The NeuroCognitive Architecture (NCA) is an advanced framework designed to enhan
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/neuroca.git
-cd neuroca
+git clone https://github.com/justinlietz93/Neuro-Cognitive-Architecture.git
+cd Neuro-Cognitive-Architecture
 
 # Install dependencies
 poetry install
@@ -53,8 +53,8 @@ cp .env.example .env
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/neuroca.git
-cd neuroca
+git clone https://github.com/justinlietz93/Neuro-Cognitive-Architecture.git
+cd Neuro-Cognitive-Architecture
 
 # Build and start containers
 docker-compose up -d

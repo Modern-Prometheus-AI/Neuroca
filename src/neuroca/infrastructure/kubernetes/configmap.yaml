@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neuroca-config
+  namespace: neuroca
+data:
+  postgres-host: "postgres.neuroca.svc.cluster.local"
+  postgres-port: "5432"
+  postgres-db: "neuroca"
+  redis-host: "redis.neuroca.svc.cluster.local"
+  redis-port: "6379"
+  
+  # Application configuration
+  config.yaml: |
+    version: "1.0.0"
+    api:
+      cors_origins:
+        - https://app.neuroca.com
+        - https://admin.neuroca.com
+      rate_limit: 100
+      timeout: 30
+    
+    memory:
+      working_memory:
+        capacity: 7
+        decay_rate: 0.1
+      short_term:
+        capacity: 100
+        retention_period: 3600
+      long_term:
+        storage_path: "/app/data/long_term"
+        indexing: "semantic"
+    
+    health:
+      energy_decay_rate: 0.05
+      rest_recovery_rate: 0.1
+      critical_threshold: 0.2
+      
+    llm:
+      default_model: "gpt-4"
+      default_provider: "openai"
+      timeout: 60
+      store_interactions: true
+      memory_integration: true
+      health_awareness: true
+      goal_directed: true

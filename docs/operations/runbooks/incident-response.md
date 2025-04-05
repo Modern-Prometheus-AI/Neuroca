@@ -1,302 +1,320 @@
 # NeuroCognitive Architecture (NCA) Incident Response Runbook
 
-## Overview
-
-This runbook provides structured guidance for responding to incidents within the NeuroCognitive Architecture (NCA) system. It outlines the procedures, roles, and responsibilities for effectively identifying, containing, resolving, and learning from incidents that affect the NCA platform's availability, performance, or security.
+This runbook provides a structured approach for responding to incidents that may occur in the NCA production environment. It outlines the steps for identifying, responding to, and resolving incidents while minimizing impact on users.
 
 ## Incident Severity Levels
 
-| Severity | Description | Response Time | Examples |
-|----------|-------------|---------------|----------|
-| **P0 - Critical** | Complete system outage or severe security breach affecting all users. Business-critical functions unavailable. | Immediate (24/7) | - Complete system unavailability<br>- Data breach exposing sensitive information<br>- Critical memory corruption affecting all LLM interactions |
-| **P1 - High** | Major functionality impaired or security issue affecting many users. Significant business impact. | < 1 hour (business hours)<br>< 4 hours (non-business) | - Memory tier failures affecting response quality<br>- API gateway outages<br>- Significant performance degradation |
-| **P2 - Medium** | Partial functionality impaired or potential security concern. Limited business impact. | < 4 hours (business hours)<br>< 8 hours (non-business) | - Non-critical component failures<br>- Intermittent errors in specific modules<br>- Degraded performance in specific functions |
-| **P3 - Low** | Minor issues with minimal impact. Workarounds available. | < 1 business day | - Cosmetic issues<br>- Minor bugs with easy workarounds<br>- Non-urgent enhancement requests |
+Incidents are classified by severity level to determine appropriate response procedures:
 
-## Incident Response Team Roles
+| Level | Description | Examples | Response Time | Escalation |
+|-------|-------------|----------|--------------|------------|
+| P1 | Critical service outage | - API completely down<br>- Data loss<br>- Security breach | Immediate | Leadership + On-call team |
+| P2 | Partial service disruption | - High latency<br>- Feature failure<br>- Degraded performance | < 30 minutes | On-call team |
+| P3 | Minor service impact | - Non-critical bugs<br>- Isolated errors<br>- Minor performance issues | < 4 hours | Primary on-call |
+| P4 | No user impact | - Warning signs<br>- Potential future issues | Next business day | Team aware |
 
-| Role | Responsibilities |
-|------|------------------|
-| **Incident Commander (IC)** | - Overall coordination of response<br>- Decision-making authority<br>- Stakeholder communications<br>- Escalation management |
-| **Technical Lead** | - Technical investigation<br>- Implementing fixes<br>- Coordinating technical resources<br>- Providing technical updates |
-| **Communications Lead** | - Internal/external communications<br>- Status updates<br>- Documentation<br>- Stakeholder management |
-| **Subject Matter Experts** | - Specialized knowledge areas (memory systems, LLM integration, etc.)<br>- Technical consultation<br>- Specialized troubleshooting |
+## Incident Response Workflow
 
-## Incident Response Process
+### 1. Detection
 
-### 1. Detection and Reporting
+* **Automated Detection**
+  * System health alerts from Prometheus
+  * Latency spikes detected by ServiceMonitor
+  * Error rate increases in logs
+  * Memory/CPU utilization alerts
 
-**Objective**: Identify and report potential incidents as quickly as possible.
+* **Manual Detection**
+  * User-reported issues
+  * Regular system health checks
+  * Deployment observations
 
-**Process**:
-- Incidents may be detected through:
-  - Automated monitoring alerts (Prometheus, Grafana dashboards)
-  - Error logs and exception reports
-  - User/customer reports
-  - Security monitoring tools
-- Report incidents through:
-  - Incident management system (Jira/PagerDuty)
-  - Emergency response channel (#nca-incidents Slack channel)
-  - On-call rotation contact
+### 2. Assessment & Classification
 
-**Tools**:
-- Monitoring dashboards: `https://monitoring.neuroca.ai/dashboards`
-- Logging system: `https://logs.neuroca.ai`
-- Incident reporting form: `https://neuroca.ai/report-incident`
+When an incident is detected:
 
-### 2. Triage and Assessment
+1. **Determine the scope**
+   * Which components are affected?
+   * Is it impacting users?
+   * Is it affecting all users or only specific segments?
 
-**Objective**: Quickly assess the incident's severity, scope, and potential impact.
+2. **Classify severity** based on the level definitions above
 
-**Process**:
-1. Assign initial severity level (P0-P3)
-2. Determine affected components and users
-3. Identify potential causes
-4. Establish incident response team with appropriate roles
-5. Create incident channel/ticket for tracking
+3. **Initial documentation** in the incident management system
+   * Incident ID
+   * Severity level
+   * Brief description
+   * Affected components
+   * Detection method
+   * Initial responder(s)
 
-**Documentation**:
-- Document initial assessment in incident management system
-- Record timeline of events
-- Track all actions taken
+### 3. Response
 
-### 3. Containment
+#### For P1 (Critical) Incidents:
 
-**Objective**: Limit the impact and prevent escalation of the incident.
+1. **Activate incident management**
+   * Notify on-call team via PagerDuty
+   * Create incident channel in Slack
+   * Designate Incident Commander (IC)
 
-**Process**:
-1. Implement immediate mitigation measures:
-   - Service isolation
-   - Traffic rerouting
-   - Feature flags/toggles
-   - Rollback to previous stable version
-2. Apply temporary fixes if available
-3. Communicate status to affected stakeholders
-4. Continuously monitor for changes in incident scope
+2. **Immediate mitigation**
+   * Consider emergency rollback to last known good version
+   * Implement circuit breakers if applicable
+   * Scale up resources if resource-related
 
-**Common Containment Strategies**:
-- For memory corruption: Isolate affected memory tier and route to backup
-- For API issues: Implement circuit breakers or rate limiting
-- For security incidents: Block compromised access points, rotate credentials
+3. **Client communication**
+   * Post to status page
+   * Send initial notification to affected clients
+   * Establish communication cadence
 
-### 4. Investigation and Diagnosis
+#### For P2 (Major) Incidents:
 
-**Objective**: Determine root cause and develop comprehensive solution.
+1. **Notify on-call team**
+   * Primary responder to lead
+   * Escalate if necessary
 
-**Process**:
-1. Gather relevant logs, metrics, and system state information
-2. Analyze data to identify patterns and anomalies
-3. Reproduce issue in non-production environment if possible
-4. Consult relevant documentation and known issues
-5. Engage subject matter experts as needed
+2. **Implement mitigation**
+   * Apply fixes from playbooks if available
+   * Isolate affected components if possible
 
-**Investigation Checklist**:
-- Review recent deployments or changes
-- Check infrastructure status (cloud provider, network, etc.)
-- Analyze error logs and exception reports
-- Review memory tier integrity and performance metrics
-- Verify LLM integration points
+3. **Client communication**
+   * Update status page if user-visible
+   * Prepare client communication
+
+#### For P3/P4 (Minor) Incidents:
+
+1. **Assign to primary on-call or team**
+2. **Implement mitigation during business hours**
+3. **Document in tracking system**
+
+### 4. Investigation
+
+1. **Gather diagnostic information**
+   ```bash
+   # Get pod logs
+   kubectl logs -n neuroca -l app=neuroca --tail=500
+   
+   # Check pod status
+   kubectl get pods -n neuroca
+   
+   # Check memory usage
+   kubectl top pod -n neuroca
+   
+   # Watch metrics
+   kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
+   ```
+
+2. **Examine logs and traces**
+   * Check application logs
+   * Review Prometheus metrics
+   * Analyze request traces in Jaeger
+
+3. **Perform root cause analysis**
+   * Memory leak checks
+   * API throttling issues
+   * Database connection problems
+   * External dependency failures
+   * Changes or deployments
 
 ### 5. Resolution
 
-**Objective**: Implement and verify permanent fix.
+1. **Implement permanent fix**
+   * Deploy hotfix if needed
+   * Validate fix in production
+   * Verify monitoring confirms resolution
 
-**Process**:
-1. Develop solution addressing root cause
-2. Test solution in non-production environment
-3. Create implementation plan with rollback procedures
-4. Deploy fix with appropriate approvals
-5. Verify resolution through monitoring and testing
-6. Return system to normal operation
+2. **Document resolution**
+   * Update incident report
+   * Note fixed version
+   * Document workarounds used
 
-**Verification Steps**:
-- Confirm all affected components are operational
-- Verify performance metrics have returned to normal
-- Ensure no new issues have been introduced
-- Validate with end-users if appropriate
+3. **Client communication**
+   * Notify of resolution
+   * Update status page
+   * Provide explanation if appropriate
 
-### 6. Post-Incident Activities
+### 6. Post-incident Follow-up
 
-**Objective**: Learn from the incident and improve system resilience.
+1. **Conduct post-mortem**
+   * Schedule within 24-48 hours of resolution
+   * Include all participants
+   * Document timeline
+   * Identify root causes
+   * No blame approach
 
-**Process**:
-1. Conduct post-incident review meeting (within 5 business days)
-2. Document incident timeline, actions, and outcomes
-3. Identify preventive measures and improvements
-4. Create follow-up action items with owners and deadlines
-5. Update documentation and runbooks based on lessons learned
-6. Share findings with relevant teams
+2. **Generate action items**
+   * Preventative measures
+   * Detection improvements
+   * Response enhancements
+   * Documentation updates
 
-**Post-Incident Review Template**:
-- Incident summary and timeline
-- Root cause analysis
-- What went well
-- What could be improved
-- Action items with owners and deadlines
+3. **Knowledge sharing**
+   * Update runbooks with new findings
+   * Share lessons learned with team
+   * Improve monitoring if gaps identified
 
-## Common Incident Scenarios and Responses
+## Common Incident Scenarios
 
-### Memory Tier Failures
+### API Latency Spike
 
-**Symptoms**:
-- Degraded response quality
-- Increased latency in responses
-- Memory retrieval errors in logs
+1. **Check CPU/Memory usage**
+   ```bash
+   kubectl top pods -n neuroca
+   ```
 
-**Initial Response**:
-1. Identify affected memory tier (working, episodic, semantic)
-2. Check memory tier health metrics in monitoring dashboard
-3. Verify database connectivity and performance
-4. Implement failover to backup memory systems if available
+2. **Check database connection pool**
+   * Query the database metrics
+   * Look for connection limits
 
-**Resolution Steps**:
-1. Restore from backup if corruption detected
-2. Repair index inconsistencies
-3. Scale resources if capacity issues identified
-4. Implement circuit breakers to prevent cascading failures
+3. **Check external API dependencies**
+   * Review Redis, OpenAI, etc.
 
-### LLM Integration Issues
+4. **Examine recent deployments**
+   * Any recent code changes?
+   * New dependencies?
 
-**Symptoms**:
-- Failed API calls to LLM provider
-- Timeout errors
-- Unexpected response formats
-- Cost spikes
+5. **Actions**
+   * Scale horizontally if resource-bound
+   * Increase connection pool if DB-related
+   * Implement circuit breakers if dependency issues
 
-**Initial Response**:
-1. Check LLM provider status page
-2. Verify API credentials and rate limits
-3. Review recent changes to integration code
-4. Implement fallback to alternative LLM if available
+### Memory Leak
 
-**Resolution Steps**:
-1. Update integration code to handle API changes
-2. Adjust timeout and retry configurations
-3. Implement request caching if appropriate
-4. Review and optimize prompt engineering
+1. **Verify with increasing memory trend**
+   * Check Prometheus graphs for memory growth pattern
 
-### Security Incidents
+2. **Collect heap dumps**
+   ```bash
+   # Get pod name
+   POD=$(kubectl get pod -n neuroca -l app=neuroca -o jsonpath='{.items[0].metadata.name}')
+   
+   # Execute heap dump
+   kubectl exec -n neuroca $POD -- python -m memory_profiler dump_mem.py > heap.dump
+   ```
 
-**Symptoms**:
-- Unauthorized access attempts
-- Unusual traffic patterns
-- Data exfiltration alerts
-- Unexpected system behavior
+3. **Analyze memory usage**
+   * Look for large object allocations
+   * Check for unbounded caches
 
-**Initial Response**:
-1. Isolate affected systems
-2. Revoke compromised credentials
-3. Block suspicious IP addresses
-4. Preserve evidence for investigation
+4. **Actions**
+   * Rolling restart if immediate mitigation needed
+   * Deploy fix addressing memory leak
+   * Add memory bounds to caches
 
-**Resolution Steps**:
-1. Conduct security assessment
-2. Patch vulnerabilities
-3. Implement additional security controls
-4. Review and update security policies
+### Database Performance Issues
 
-## Communication Templates
+1. **Check query performance**
+   ```sql
+   SELECT query, calls, total_time, mean_time
+   FROM pg_stat_statements
+   ORDER BY total_time DESC
+   LIMIT 10;
+   ```
 
-### Internal Status Updates
+2. **Examine index usage**
 
-```
-INCIDENT STATUS UPDATE
-Incident ID: [ID]
-Severity: [P0-P3]
-Status: [Investigating/Containing/Resolving/Resolved]
-Start Time: [Time]
-Duration: [Time elapsed]
+3. **Check connection pool**
+   * Look for maxed out connections
+   * Connection leaks
 
-Issue Summary:
-[Brief description of the incident]
+4. **Actions**
+   * Add needed indexes
+   * Optimize slow queries
+   * Increase connection timeouts if needed
 
-Impact:
-[Description of affected systems and users]
+## Emergency Contacts
 
-Current Actions:
-[What is being done right now]
+| Role | Primary | Secondary | Contact Method |
+|------|---------|-----------|----------------|
+| Database Admin | [NAME] | [NAME] | Slack @dbadmin, Phone |
+| Infrastructure Lead | [NAME] | [NAME] | Slack @infrateam, Phone |
+| Security Officer | [NAME] | [NAME] | Slack @security, Phone |
+| Engineering Lead | [NAME] | [NAME] | Slack @eng-lead, Phone |
 
-Next Steps:
-[Planned actions]
+## Rollback Procedure
 
-Next Update Expected:
-[Time]
-```
+If a deployment needs to be rolled back:
 
-### External Customer Communications
+```bash
+# Check deployment history
+kubectl rollout history deployment/neuroca -n neuroca
 
-```
-NeuroCognitive Architecture Service Status
+# Roll back to previous version
+kubectl rollout undo deployment/neuroca -n neuroca
 
-We are currently experiencing [brief description of issue] affecting [affected services].
+# Roll back to specific version
+kubectl rollout undo deployment/neuroca -n neuroca --to-revision=<revision_number>
 
-Impact: [Description of user impact]
-
-Status: Our engineering team is [current status of investigation/resolution].
-
-Workaround: [If available]
-
-We apologize for any inconvenience and will provide updates as more information becomes available.
-
-Last Updated: [Time]
+# Monitor rollback
+kubectl rollout status deployment/neuroca -n neuroca
 ```
 
-## Escalation Paths
+## Helpful Commands
 
-### Technical Escalation
+### Kubernetes
 
-1. On-call Engineer
-2. Engineering Team Lead
-3. VP of Engineering
-4. CTO
+```bash
+# Get pod logs
+kubectl logs -n neuroca <pod-name>
 
-**Contact Information**:
-- On-call rotation: Available in PagerDuty
-- Engineering Team Lead: [Contact details]
-- VP of Engineering: [Contact details]
-- CTO: [Contact details]
+# Get pod logs for all containers in a pod
+kubectl logs -n neuroca <pod-name> --all-containers
 
-### Business Escalation
+# Describe pod for detailed information
+kubectl describe pod -n neuroca <pod-name>
 
-1. Product Manager
-2. Director of Product
-3. COO
-4. CEO
+# Get events
+kubectl get events -n neuroca --sort-by='.lastTimestamp'
 
-**Contact Information**:
-- Product Manager: [Contact details]
-- Director of Product: [Contact details]
-- COO: [Contact details]
-- CEO: [Contact details]
+# Exec into container
+kubectl exec -it -n neuroca <pod-name> -- /bin/bash
 
-## Appendix
+# Port forward to service
+kubectl port-forward -n neuroca svc/neuroca 8000:80
+```
 
-### Key System Dashboards
+### Monitoring
 
-- System Health: `https://monitoring.neuroca.ai/system-health`
-- Memory Tiers: `https://monitoring.neuroca.ai/memory-metrics`
-- LLM Integration: `https://monitoring.neuroca.ai/llm-integration`
-- API Performance: `https://monitoring.neuroca.ai/api-metrics`
-- Security Monitoring: `https://monitoring.neuroca.ai/security`
+```bash
+# Check Prometheus alerts
+curl -s http://prometheus:9090/api/v1/alerts | jq
 
-### Incident Response Tools
+# Check service health
+curl -s http://neuroca-service/health/readiness
 
-- Incident Management: Jira/PagerDuty
-- Communication: Slack (#nca-incidents channel)
-- Documentation: Confluence
-- Monitoring: Prometheus/Grafana
-- Logging: ELK Stack
+# Get recent logs
+kubectl logs -n neuroca -l app=neuroca --tail=100
+```
 
-### Reference Documentation
+### Database
 
-- System Architecture: `https://docs.neuroca.ai/architecture`
-- Deployment Procedures: `https://docs.neuroca.ai/deployment`
-- Backup and Recovery: `https://docs.neuroca.ai/backup-recovery`
-- Security Policies: `https://docs.neuroca.ai/security-policies`
+```bash
+# Connect to database
+kubectl exec -it -n neuroca <postgres-pod> -- psql -U postgres -d neuroca
 
-## Document Maintenance
+# Check connection count
+SELECT count(*), state FROM pg_stat_activity GROUP BY state;
 
-This runbook should be reviewed and updated quarterly or after significant system changes. The Technical Operations team is responsible for maintaining this document.
+# Check table sizes
+SELECT relname, pg_size_pretty(pg_total_relation_size(relid)) AS size
+FROM pg_catalog.pg_statio_user_tables
+ORDER BY pg_total_relation_size(relid) DESC;
+```
 
-**Last Updated**: [Current Date]
-**Next Review**: [Current Date + 3 months]
+## Regular Drills
+
+Schedule regular incident response drills to ensure the team is prepared:
+
+1. **Quarterly Gameday exercises**
+   * Simulate P1 incidents
+   * Practice coordination
+   * Test communication channels
+
+2. **Monthly Runbook reviews**
+   * Update with new information
+   * Add newly discovered issues
+   * Remove obsolete information
+
+3. **On-call readiness check**
+   * Verify access to all systems
+   * Review escalation procedures
+   * Update contact information

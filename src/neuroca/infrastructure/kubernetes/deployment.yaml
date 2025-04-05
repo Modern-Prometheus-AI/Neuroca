@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuroca
+  namespace: neuroca
+  labels:
+    app: neuroca
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: neuroca
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: neuroca
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: neuroca-api
+        image: ${REGISTRY}/neuroca:${TAG}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: NEUROCA_ENV
+          value: "production"
+        - name: NEUROCA_LOG_LEVEL
+          value: "INFO"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: neuroca-db-credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: neuroca-db-credentials
+              key: password
+        - name: POSTGRES_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: neuroca-config
+              key: postgres-host
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: neuroca-config
+              key: redis-host
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: neuroca-api-keys
+              key: openai-api-key
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+        readinessProbe:
+          httpGet:
+            path: /health/readiness
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health/liveness
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        - name: cache-volume
+          mountPath: /app/cache
+      volumes:
+      - name: config-volume
+        configMap:
+          name: neuroca-config
+      - name: cache-volume
+        emptyDir: {}

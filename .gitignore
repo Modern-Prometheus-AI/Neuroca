@@ -194,3 +194,9 @@ Thumbs.db
 
 # Ignore all .mypy_cache directories
 **/.mypy_cache/
+
+# Ignore development artifacts archive
+/archive/
+
+# Ignore internal development tracking folder
+/.DEV/
