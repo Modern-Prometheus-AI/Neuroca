@@ -15,9 +15,12 @@ Key functionalities:
 import logging
 from typing import Any, Optional
 
+from neuroca.core.enums import MemoryTier  # Import the correct enum
+
 # Import necessary components for potential integration
 # from neuroca.memory.manager import MemoryManager # Example
 from neuroca.core.health.dynamics import HealthState  # Example for context checking
+from neuroca.core.models import MemoryItem  # Import MemoryItem
 
 # Assuming Plan and PlanStep might be used or adapted for decision options
 
@@ -115,9 +118,9 @@ class DecisionMaker:
                     # Assuming MemoryItem metadata stores outcome like: {"outcome": "success" | "failure", "details": "..."}
                     past_attempts = self.memory_manager.retrieve(
                         query=f"outcome related to {option.description}", # More general query
-                        memory_type=MemoryType.EPISODIC, 
+                        memory_type=MemoryTier.EPISODIC, # Use MemoryTier instead of MemoryType
                         limit=5 # Look at recent attempts
-                    ) 
+                    )
                     if past_attempts:
                         logger.debug(f"Retrieved {len(past_attempts)} past attempts related to '{option.description}'.")
                         # Simple average of past success/failure 
@@ -126,10 +129,10 @@ class DecisionMaker:
                         if len(past_attempts) > 0:
                              success_rate = success_count / len(past_attempts)
                              # Adjust utility: +0.1 for >50% success, -0.1 for <50% success
-                             past_outcome_adjustment = (success_rate - 0.5) * 0.2 
+                             past_outcome_adjustment = (success_rate - 0.5) * 0.2
                              logger.debug(f"Option '{option.description}': Past success rate {success_rate:.2f}, Utility Adjustment={past_outcome_adjustment:.2f}")
-                except Exception as e:
-                     logger.error(f"Error retrieving past outcomes for decision making: {e}")
+                except Exception as e:  # noqa: BLE001
+                    logger.error(f"Error retrieving past outcomes for decision making: {e}")
             # --- End Past Outcome ---
 
             # Adjust utility based on goal alignment (placeholder)

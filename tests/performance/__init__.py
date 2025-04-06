@@ -44,7 +44,7 @@ import tracemalloc
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Optional
 
 # Configure logging for performance tests
 logger = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ class PerformanceMetric:
     memory_after_kb: Optional[float] = None
     memory_diff_kb: Optional[float] = None
     cpu_percent: Optional[float] = None
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         """Initialize default values for optional fields."""
@@ -107,7 +107,7 @@ class PerformanceMetric:
         if self.memory_before_kb is not None and self.memory_after_kb is not None:
             self.memory_diff_kb = self.memory_after_kb - self.memory_before_kb
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the metric to a dictionary for serialization.
         
@@ -147,7 +147,7 @@ class PerformanceTestCase:
     
     def __init__(self):
         """Initialize the performance test case with empty results."""
-        self.results: List[PerformanceMetric] = []
+        self.results: list[PerformanceMetric] = []
     
     def setup(self) -> None:
         """Set up the test environment. Override in subclasses."""
@@ -224,7 +224,7 @@ class PerformanceTestCase:
     
     def run_benchmark(self, func: Callable, iterations: int = DEFAULT_ITERATIONS, 
                      warmup: int = DEFAULT_WARMUP_ITERATIONS,
-                     cooldown: float = DEFAULT_COOLDOWN_SECONDS) -> List[PerformanceMetric]:
+                     cooldown: float = DEFAULT_COOLDOWN_SECONDS) -> list[PerformanceMetric]:
         """
         Run a benchmark test with multiple iterations.
         
@@ -271,7 +271,7 @@ class PerformanceTestCase:
         
         return results
     
-    def report_results(self) -> Dict[str, Any]:
+    def report_results(self) -> dict[str, Any]:
         """
         Generate a report of all test results.
         
@@ -360,7 +360,7 @@ def benchmark(func: Optional[Callable] = None, *,
                 return fn(*args, **kwargs)
             
             # Run the benchmark
-            results = test_case.run_benchmark(
+            test_case.run_benchmark(
                 benchmarked_func, 
                 iterations=iterations,
                 warmup=warmup,
@@ -385,7 +385,7 @@ def benchmark(func: Optional[Callable] = None, *,
 
 
 @contextmanager
-def measure_memory_usage(name: str = "memory_measurement") -> Dict[str, Any]:
+def measure_memory_usage(name: str = "memory_measurement") -> dict[str, Any]:
     """
     Context manager for measuring memory usage of a code block.
     
@@ -446,7 +446,7 @@ def measure_memory_usage(name: str = "memory_measurement") -> Dict[str, Any]:
         )
 
 
-def measure_response_time(func: Callable, *args, **kwargs) -> Tuple[Any, float]:
+def measure_response_time(func: Callable, *args, **kwargs) -> tuple[Any, float]:
     """
     Measure the response time of a function call.
     
@@ -476,7 +476,7 @@ def measure_response_time(func: Callable, *args, **kwargs) -> Tuple[Any, float]:
 
 def load_test(func: Callable, concurrent_users: int, 
              requests_per_user: int, 
-             timeout: float = DEFAULT_TIMEOUT_SECONDS) -> Dict[str, Any]:
+             timeout: float = DEFAULT_TIMEOUT_SECONDS) -> dict[str, Any]:
     """
     Perform a load test by simulating multiple concurrent users.
     

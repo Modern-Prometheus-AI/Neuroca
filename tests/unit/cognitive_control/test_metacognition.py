@@ -2,24 +2,31 @@
 Unit tests for the MetacognitiveMonitor component in cognitive control.
 """
 
-import pytest
-from typing import Dict, Any, Optional, List
+from typing import Any
 from unittest.mock import MagicMock, patch
 
-from neuroca.core.cognitive_control.metacognition import MetacognitiveMonitor
-from neuroca.core.health.dynamics import HealthState, ComponentHealth, HealthParameter, HealthParameterType
-from neuroca.memory.manager import MemoryItem, MemoryPriority # Assuming MemoryItem is available
+import pytest
+
 # Import GoalStatus needed for assess_current_state
-from neuroca.core.cognitive_control.goal_manager import GoalManager, Goal, GoalStatus 
+from neuroca.core.cognitive_control.goal_manager import Goal, GoalStatus
+from neuroca.core.cognitive_control.metacognition import MetacognitiveMonitor
+from neuroca.core.health.dynamics import (
+    ComponentHealth,
+    HealthParameter,
+    HealthParameterType,
+    HealthState,
+)
+from neuroca.memory.manager import MemoryItem  # Assuming MemoryItem is available
+
 
 # Mock context for testing
-def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> Dict[str, Any]:
+def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> dict[str, Any]:
     context = {"health_state": health_state}
     context.update(kwargs)
     return context
 
 # Mock HealthDynamicsManager
-@pytest.fixture
+@pytest.fixture()
 def mock_health_manager() -> MagicMock:
     manager = MagicMock()
     # Setup mock components and their health
@@ -33,7 +40,7 @@ def mock_health_manager() -> MagicMock:
     return manager
 
 # Mock MemoryManager
-@pytest.fixture
+@pytest.fixture()
 def mock_memory_manager() -> MagicMock:
     manager = MagicMock()
     manager.get_stats.return_value = {
@@ -45,7 +52,7 @@ def mock_memory_manager() -> MagicMock:
     return manager
 
 # Mock GoalManager
-@pytest.fixture
+@pytest.fixture()
 def mock_goal_manager() -> MagicMock:
     manager = MagicMock()
     mock_goal = MagicMock()
@@ -61,7 +68,7 @@ def mock_goal_manager() -> MagicMock:
 class TestMetacognitiveMonitor:
     """Tests for the MetacognitiveMonitor class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def monitor(self, mock_health_manager, mock_memory_manager, mock_goal_manager) -> MetacognitiveMonitor:
         """Fixture to create a MetacognitiveMonitor instance with mocks."""
         return MetacognitiveMonitor(
@@ -127,7 +134,8 @@ class TestMetacognitiveMonitor:
         assert metadata["error_source"] == "planning_subsystem"
         assert metadata["severity"] == "error"
         assert metadata["task"] == "daily_schedule"
-        assert "tags" in metadata and "error" in metadata["tags"]
+        assert "tags" in metadata
+        assert "error" in metadata["tags"]
 
     def test_log_action_completion(self, monitor: MetacognitiveMonitor):
         """Test logging action completion and updating metrics."""

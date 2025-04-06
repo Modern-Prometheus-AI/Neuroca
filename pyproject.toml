@@ -1,5 +1,5 @@
 # NeuroCognitive Architecture (NCA) for LLMs
-# 
+#
 # This pyproject.toml file defines the project configuration, dependencies,
 # development tools, and build system settings for the NeuroCognitive Architecture.
 # It follows modern Python packaging standards using Poetry for dependency management.
@@ -79,7 +79,7 @@ dev = [
     "black>=23.3.0",
     "isort>=5.12.0",
     "mypy>=1.3.0",
-    "ruff>=0.0.272",
+    "ruff>=0.0.272", # Current version uses flat config below
     "pre-commit>=3.3.3",
     "commitizen>=3.2.2",
     "bandit>=1.7.5",
@@ -106,22 +106,6 @@ test = [
 packages = [
     {include = "neuroca", from = "src"}
 ]
-
-# Remove dependencies from here as they are now in [project]
-# [tool.poetry.dependencies]
-# python = ">=3.9,<3.13"
-# ... (rest of dependencies removed) ...
-
-# Remove groups from here as they are now in [project.optional-dependencies]
-# [tool.poetry.group.dev.dependencies]
-# ... (dev dependencies removed) ...
-
-# [tool.poetry.group.test.dependencies]
-# ... (test dependencies removed) ...
-
-# Remove scripts from here as they are now in [project.scripts]
-# [tool.poetry.scripts]
-# ... (scripts removed) ...
 
 [tool.black]
 line-length = 100
@@ -170,11 +154,11 @@ module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 
+# === CORRECTED RUFF CONFIGURATION (for v0.0.272) START ===
 [tool.ruff]
+# ALL settings go directly under [tool.ruff] for this version (e.g., v0.0.272)
 line-length = 100
 target-version = "py39"
-select = ["E", "F", "B", "I", "N", "UP", "S", "BLE", "A", "C4", "T20", "PT", "RET", "SIM"]
-ignore = ["E203", "E501"]
 exclude = [
     ".git",
     ".mypy_cache",
@@ -184,8 +168,39 @@ exclude = [
     "docs",
     "build",
     "dist",
-    "archive", 
+    "archive",
 ]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "B",  # flake8-bugbear
+    "I",  # isort
+    "N",  # pep8-naming
+    "UP", # pyupgrade
+    "S",  # flake8-bandit (includes S101)
+    "BLE",# flake8-blind-except
+    "A",  # flake8-builtins
+    "C4", # flake8-comprehensions
+    "T20",# flake8-print
+    "PT", # flake8-pytest-style
+    "RET",# flake8-return
+    "SIM",# flake8-simplify
+]
+ignore = ["E203", "E501"]
+
+# per-file-ignores also goes directly under [tool.ruff]
+# Use the inline table syntax for the value
+per-file-ignores = { "tests/**/*.py" = ["S101"] }
+
+# Optional ignores commented out below:
+# per-file-ignores = {
+#    "tests/**/*.py" = ["S101", "S311"], # Example: Ignore assert and random in tests
+#    "**/__init__.py" = ["F401"]          # Example: Ignore unused imports in __init__
+# }
+
+# DO NOT include a [tool.ruff.lint] section for this version.
+# === CORRECTED RUFF CONFIGURATION (for v0.0.272) END ===
+
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -193,7 +208,7 @@ python_files = "test_*.py"
 python_functions = "test_*"
 python_classes = "Test*"
 addopts = "--strict-markers --cov=neuroca --cov-report=term --cov-report=xml"
-norecursedirs = ["archive", ".venv", ".git", "__pycache__"] 
+norecursedirs = ["archive", ".venv", ".git", "__pycache__"]
 collect_ignore = ["archive/development_scripts/test_cli.py"] # Explicitly ignore archived test
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

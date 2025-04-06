@@ -115,9 +115,9 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_current_user(
     security_scopes: SecurityScopes,
-    token: str = Depends(oauth2_scheme),
-    settings: Settings = Depends(get_settings),
-    db: Session = Depends(get_db)
+    token: str = Depends(oauth2_scheme),  # noqa: B008
+    settings: Settings = Depends(get_settings),  # noqa: B008
+    db: Session = Depends(get_db)  # noqa: B008
 ) -> User:
     """
     Validates the access token and returns the current user.
@@ -196,7 +196,7 @@ async def get_current_user(
     return user
 
 async def get_current_active_user(
-    current_user: User = Security(get_current_user, scopes=["user"])
+    current_user: User = Security(get_current_user, scopes=["user"])  # noqa: B008
 ) -> User:
     """
     Verifies that the current user is active.
@@ -224,7 +224,7 @@ async def get_current_active_user(
     return current_user
 
 async def get_current_admin_user(
-    current_user: User = Security(get_current_user, scopes=["admin"])
+    current_user: User = Security(get_current_user, scopes=["admin"])  # noqa: B008
 ) -> User:
     """
     Verifies that the current user is an admin.
@@ -247,8 +247,8 @@ async def get_current_admin_user(
 # ==================== Memory System Dependencies ====================
 
 def get_working_memory(
-    db: Session = Depends(get_db),
-    settings: Settings = Depends(get_settings)
+    db: Session = Depends(get_db),  # noqa: B008
+    settings: Settings = Depends(get_settings)  # noqa: B008
 ) -> WorkingMemoryManager:
     """
     Provides access to the working memory system.
@@ -270,13 +270,13 @@ def get_working_memory(
     """
     try:
         return WorkingMemoryManager(db=db, config=settings.memory.working_memory)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize working memory: {str(e)}")
-        raise ServiceUnavailableError("Working memory system unavailable")
+        raise ServiceUnavailableError("Working memory system unavailable") from e
 
 def get_episodic_memory(
-    db: Session = Depends(get_db),
-    settings: Settings = Depends(get_settings)
+    db: Session = Depends(get_db),  # noqa: B008
+    settings: Settings = Depends(get_settings)  # noqa: B008
 ) -> EpisodicMemoryManager:
     """
     Provides access to the episodic memory system.
@@ -297,13 +297,13 @@ def get_episodic_memory(
     """
     try:
         return EpisodicMemoryManager(db=db, config=settings.memory.episodic_memory)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize episodic memory: {str(e)}")
-        raise ServiceUnavailableError("Episodic memory system unavailable")
+        raise ServiceUnavailableError("Episodic memory system unavailable") from e
 
 def get_semantic_memory(
-    db: Session = Depends(get_db),
-    settings: Settings = Depends(get_settings)
+    db: Session = Depends(get_db),  # noqa: B008
+    settings: Settings = Depends(get_settings)  # noqa: B008
 ) -> SemanticMemoryManager:
     """
     Provides access to the semantic memory system.
@@ -325,14 +325,14 @@ def get_semantic_memory(
     """
     try:
         return SemanticMemoryManager(db=db, config=settings.memory.semantic_memory)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize semantic memory: {str(e)}")
-        raise ServiceUnavailableError("Semantic memory system unavailable")
+        raise ServiceUnavailableError("Semantic memory system unavailable") from e
 
 # ==================== Service Dependencies ====================
 
 def get_llm_service(
-    settings: Settings = Depends(get_settings)
+    settings: Settings = Depends(get_settings)  # noqa: B008
 ) -> LLMService:
     """
     Provides access to the LLM service for generating responses.
@@ -353,13 +353,13 @@ def get_llm_service(
     """
     try:
         return LLMService(config=settings.llm)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize LLM service: {str(e)}")
-        raise ServiceUnavailableError("LLM service unavailable")
+        raise ServiceUnavailableError("LLM service unavailable") from e
 
 def get_health_monitor(
-    db: Session = Depends(get_db),
-    settings: Settings = Depends(get_settings)
+    db: Session = Depends(get_db),  # noqa: B008
+    settings: Settings = Depends(get_settings)  # noqa: B008
 ) -> HealthMonitor:
     """
     Provides access to the system health monitoring service.
@@ -380,9 +380,9 @@ def get_health_monitor(
     """
     try:
         return HealthMonitor(db=db, config=settings.health)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to initialize health monitor: {str(e)}")
-        raise ServiceUnavailableError("Health monitoring system unavailable")
+        raise ServiceUnavailableError("Health monitoring system unavailable") from e
 
 # ==================== Request Context Dependencies ====================
 
@@ -434,7 +434,7 @@ async def get_client_info(request: Request) -> dict[str, str]:
 # ==================== System Status Dependencies ====================
 
 async def get_system_health(
-    health_monitor: HealthMonitor = Depends(get_health_monitor)
+    health_monitor: HealthMonitor = Depends(get_health_monitor)  # noqa: B008
 ) -> SystemHealth:
     """
     Provides the current system health status.
@@ -452,8 +452,9 @@ async def get_system_health(
     """
     try:
         return health_monitor.get_current_status()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to get system health: {str(e)}")
+        # Cannot raise here as it needs to return a SystemHealth object on failure
         return SystemHealth(
             status="degraded",
             message="Health monitoring system error",

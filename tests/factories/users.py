@@ -20,18 +20,17 @@ Usage:
 """
 
 import random
-import string
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 import factory
 import pytz
 from factory.faker import Faker
 from factory.fuzzy import FuzzyChoice, FuzzyDateTime, FuzzyInteger
 
-from neuroca.core.models.users import CognitiveProfile, User, UserPreferences, UserRole
 from neuroca.core.models.health import HealthMetrics
+from neuroca.core.models.users import CognitiveProfile, User, UserPreferences, UserRole
 from neuroca.db.database import db_session
 
 # Constants for generating realistic test data
@@ -56,7 +55,7 @@ class UserPreferencesFactory(factory.Factory):
     accessibility_mode = Faker('boolean', chance_of_getting_true=10)
     
     @factory.post_generation
-    def custom_settings(self, create: bool, extracted: Optional[Dict[str, Any]], **kwargs):
+    def custom_settings(self, create: bool, extracted: Optional[dict[str, Any]], **kwargs):
         """
         Add custom settings to the UserPreferences instance.
         
@@ -94,7 +93,7 @@ class CognitiveProfileFactory(factory.Factory):
     processing_speed = FuzzyInteger(*COGNITIVE_TRAIT_RANGE)
     
     @factory.post_generation
-    def traits(self, create: bool, extracted: Optional[Dict[str, int]], **kwargs):
+    def traits(self, create: bool, extracted: Optional[dict[str, int]], **kwargs):
         """
         Add additional cognitive traits to the profile.
         
@@ -132,7 +131,7 @@ class HealthMetricsFactory(factory.Factory):
     )
     
     @factory.post_generation
-    def metrics(self, create: bool, extracted: Optional[Dict[str, Any]], **kwargs):
+    def metrics(self, create: bool, extracted: Optional[dict[str, Any]], **kwargs):
         """
         Add additional health metrics to the instance.
         
@@ -193,7 +192,7 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
     health_metrics = factory.SubFactory(HealthMetricsFactory)
     
     @factory.post_generation
-    def tags(self, create: bool, extracted: Optional[List[str]], **kwargs):
+    def tags(self, create: bool, extracted: Optional[list[str]], **kwargs):
         """
         Add tags to the user instance.
         
@@ -256,7 +255,7 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
             self.cognitive_profile.adaptability = max(80, self.cognitive_profile.adaptability)
 
 
-def create_test_users(count: int = 10) -> List[User]:
+def create_test_users(count: int = 10) -> list[User]:
     """
     Utility function to create a diverse set of test users.
     

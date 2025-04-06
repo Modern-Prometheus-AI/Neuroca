@@ -5,26 +5,33 @@ This module tests the health monitoring integration with memory systems,
 including health checks, metrics tracking, and cognitive operation recording.
 """
 
-import pytest
-import time
-from unittest.mock import MagicMock, patch
 
-from neuroca.core.memory.working_memory import WorkingMemory
+import pytest
+
+from neuroca.core.health import (
+    ComponentStatus,
+    HealthCheckStatus,
+    get_health_dynamics,
+    get_health_monitor,
+    run_health_check,
+)
 from neuroca.core.memory.episodic_memory import EpisodicMemory
-# Import the concrete implementation from the correct location
-from neuroca.memory.semantic_memory import SemanticMemory 
 from neuroca.core.memory.factory import create_memory_system
 from neuroca.core.memory.health import (
-    get_memory_health_monitor, register_memory_system, record_memory_operation,
-    WorkingMemoryHealthCheck, EpisodicMemoryHealthCheck, SemanticMemoryHealthCheck
+    EpisodicMemoryHealthCheck,
+    SemanticMemoryHealthCheck,
+    WorkingMemoryHealthCheck,
+    get_memory_health_monitor,
+    record_memory_operation,
+    register_memory_system,
 )
-from neuroca.core.health import (
-    ComponentStatus, HealthCheckStatus, get_health_monitor, get_health_dynamics,
-    run_health_check
-)
+from neuroca.core.memory.working_memory import WorkingMemory
+
+# Import the concrete implementation from the correct location
+from neuroca.memory.semantic_memory import SemanticMemory
 
 
-@pytest.fixture
+@pytest.fixture()
 def memory_systems():
     """Provide memory systems for testing without health monitoring."""
     working = WorkingMemory()
@@ -39,7 +46,7 @@ def memory_systems():
     semantic.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def monitored_memory_systems():
     """Provide memory systems registered for health monitoring."""
     # Create memory systems with health monitoring
@@ -230,7 +237,7 @@ def test_health_dynamics_integration(monitored_memory_systems):
     assert working_health.parameters["cognitive_load"].value > 0.2
     
     # Record many operations to simulate intensive use
-    for i in range(20):
+    for _i in range(20):
         record_memory_operation("test_working", "store", 1)
         dynamics.update_all_components()
     
@@ -244,7 +251,7 @@ def test_health_dynamics_integration(monitored_memory_systems):
 def test_factory_integration():
     """Test memory factory integration with health monitoring."""
     # Create memory with health monitoring enabled
-    memory = create_memory_system("working", enable_health_monitoring=True)
+    create_memory_system("working", enable_health_monitoring=True)
     
     # Get component ID from memory type
     component_id = "working_memory"
@@ -265,7 +272,7 @@ def test_factory_integration():
     assert component_status.status in [ComponentStatus.OPTIMAL, ComponentStatus.FUNCTIONAL]
     
     # Create memory with health monitoring disabled
-    memory_no_health = create_memory_system("episodic", enable_health_monitoring=False)
+    create_memory_system("episodic", enable_health_monitoring=False)
     
     # Record operation (should not raise errors even though not monitored)
     record_memory_operation("episodic_memory", "store", 1)
@@ -282,7 +289,7 @@ def test_memory_health_monitor_singleton():
     
     # Register a memory system
     working = WorkingMemory()
-    health = register_memory_system(working, "working", "singleton_test")
+    register_memory_system(working, "working", "singleton_test")
     
     # Monitor should have the registered system
     assert "singleton_test" in monitor1._memory_systems

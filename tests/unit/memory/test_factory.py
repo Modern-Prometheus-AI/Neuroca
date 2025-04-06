@@ -8,18 +8,21 @@ ensuring that all memory types can be created without circular import issues.
 import pytest
 
 from neuroca.core.memory.factory import (
-    create_memory_system,
-    create_memory_trio,
     _memory_system_registry,
     _memory_type_aliases,
+    create_memory_system,
+    create_memory_trio,
 )
-from neuroca.core.memory.interfaces import MemorySystem
+
 # Import the interface instead of concrete classes for isinstance checks
-from neuroca.core.memory.interfaces import MemorySystem 
+from neuroca.core.memory.interfaces import MemorySystem
+
 # Keep concrete imports if needed for other assertions, or remove if not
 # from neuroca.core.memory.working_memory import WorkingMemory
 # from neuroca.core.memory.episodic_memory import EpisodicMemory
-from neuroca.memory.semantic_memory import SemanticMemory # Concrete implementation needed for isinstance check
+from neuroca.memory.semantic_memory import (
+    SemanticMemory,  # Concrete implementation needed for isinstance check
+)
 
 
 def test_memory_system_registry():
@@ -120,7 +123,7 @@ def test_create_memory_trio_with_prefix():
 def test_health_monitoring_disabled():
     """Test creating memory systems with health monitoring disabled."""
     # Create memory systems with health monitoring disabled
-    working = create_memory_system("working", enable_health_monitoring=False)
+    create_memory_system("working", enable_health_monitoring=False)
     # assert isinstance(working, WorkingMemory) # Removed concrete check
     
     # Create memory trio with health monitoring disabled

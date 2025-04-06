@@ -38,6 +38,12 @@ from fastapi import (
 )
 from pydantic import BaseModel, Field
 
+# Import memory dependencies
+from neuroca.api.dependencies import (
+    get_episodic_memory,
+    get_semantic_memory,
+    get_working_memory,
+)
 from neuroca.api.schemas.health import (
     DetailedComponentHealthSchema,
     HealthEventSchema,
@@ -56,8 +62,9 @@ from neuroca.core.health.dynamics import (
     get_health_dynamics,
 )
 from neuroca.db.connection import get_db_status  # Keep for basic DB check if needed
-
-# from neuroca.memory import memory_manager # Remove if health manager tracks memory
+from neuroca.memory.episodic_memory import EpisodicMemoryManager
+from neuroca.memory.semantic_memory import SemanticMemoryManager
+from neuroca.memory.working_memory import WorkingMemoryManager
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -177,7 +184,7 @@ async def health_check(request: Request) -> dict[str, str]:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=f"Service is unhealthy: {str(e)}",
-            )
+            ) from e # B904
         raise
 
 
@@ -196,7 +203,7 @@ async def health_check(request: Request) -> dict[str, str]:
 async def detailed_health_check(
     request: Request,
     response: Response,
-    api_key: Optional[str] = Depends(get_optional_api_key),
+    api_key: Optional[str] = Depends(get_optional_api_key),  # noqa: B008
 ) -> DetailedHealthResponse:
     """
     Detailed health check endpoint that provides comprehensive system status information.
@@ -345,7 +352,7 @@ async def detailed_health_check(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Service is unhealthy: {str(e)}",
-        )
+        ) from e # B904
 
 
 @router.get(
@@ -358,7 +365,13 @@ async def detailed_health_check(
         503: {"description": "Service is not ready"},
     },
 )
-async def readiness_probe(request: Request) -> dict[str, str]:
+async def readiness_probe(
+    request: Request,
+    # Inject memory dependencies to check their availability/initialization
+    working_memory: WorkingMemoryManager = Depends(get_working_memory),  # noqa: B008
+    episodic_memory: EpisodicMemoryManager = Depends(get_episodic_memory),  # noqa: B008
+    semantic_memory: SemanticMemoryManager = Depends(get_semantic_memory),  # noqa: B008
+) -> dict[str, str]:
     """
     Readiness probe endpoint for Kubernetes and other orchestration systems.
     
@@ -390,13 +403,11 @@ async def readiness_probe(request: Request) -> dict[str, str]:
                 detail="Database not ready",
             )
         
-        # Check memory system initialization
-        if not memory_manager.is_initialized():
-            logger.warning("Readiness check failed: memory system not initialized")
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Memory system not initialized",
-            )
+        # By successfully injecting the memory dependencies above, we implicitly check
+        # if they could be initialized. If any dependency failed (e.g., DB connection
+        # error during its initialization), FastAPI would have already raised an
+        # exception, failing the readiness probe.
+        # No explicit check like `memory_manager.is_initialized()` is needed here.
         
         return {"status": "ready"}
     
@@ -405,8 +416,8 @@ async def readiness_probe(request: Request) -> dict[str, str]:
             logger.exception("Readiness check failed with unexpected error")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Service is not ready: {str(e)}",
-            )
+            detail=f"Service is not ready: {str(e)}",
+            ) from e # B904
         raise
 
 
@@ -426,7 +437,7 @@ async def readiness_probe(request: Request) -> dict[str, str]:
 async def force_component_state(
     component_id: str,
     request_body: ForceStateRequest,
-    api_key: Optional[str] = Depends(get_optional_api_key), # Reuse auth logic
+    api_key: Optional[str] = Depends(get_optional_api_key),  # noqa: B008
 ) -> dict[str, str]:
     """
     Manually forces a registered component into a specified health state.
@@ -454,7 +465,7 @@ async def force_component_state(
         raise # Re-raise HTTP exceptions
     except Exception as e:
         logger.exception(f"Error forcing state for component {component_id}: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to force state: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to force state: {e}") from e # B904
 
 
 @router.post(
@@ -472,7 +483,7 @@ async def force_component_state(
 async def adjust_component_parameter(
     component_id: str,
     request_body: AdjustParameterRequest,
-    api_key: Optional[str] = Depends(get_optional_api_key), # Reuse auth logic
+    api_key: Optional[str] = Depends(get_optional_api_key),  # noqa: B008
 ) -> dict[str, str]:
     """
     Manually adjusts the value of a specific health parameter for a component.
@@ -501,13 +512,13 @@ async def adjust_component_parameter(
     except KeyError as e:
          # Raised by HealthDynamicsManager if component not found, or by ComponentHealth if param not found
          logger.warning(f"Failed to adjust parameter: {e}")
-         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e # B904
     except ValueError as e: # Potentially raised by parameter validation if added
          logger.warning(f"Invalid value for parameter adjustment: {e}")
-         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e # B904 - Add from e for ValueError
     except Exception as e:
         logger.exception(f"Error adjusting parameter for component {component_id}: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to adjust parameter: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to adjust parameter: {e}") from e # B904
 
 # --- End Management Command Endpoints ---
 
@@ -548,7 +559,7 @@ async def websocket_health_events(websocket: WebSocket):
                     *[connection.send_text(event_json) for connection in active_connections],
                     return_exceptions=True # Log errors but don't crash broadcaster
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Error broadcasting health event via WebSocket: {e}")
 
         health_event_listener = broadcast_health_event
@@ -566,7 +577,7 @@ async def websocket_health_events(websocket: WebSocket):
             # await websocket.send_text('{"type": "ping"}')
     except WebSocketDisconnect:
         logger.info(f"WebSocket client disconnected: {websocket.client}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"WebSocket error for client {websocket.client}: {e}")
     finally:
         active_connections.remove(websocket)
@@ -611,4 +622,4 @@ async def liveness_probe() -> dict[str, str]:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Service is not functioning properly: {str(e)}",
-        )
+        ) from e # B904

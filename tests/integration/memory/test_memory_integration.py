@@ -8,24 +8,24 @@ and Semantic Memory, focusing on:
 4. Biological constraints in the integrated system
 """
 
-import pytest
 import time
-from typing import List, Dict, Any
 
-from neuroca.core.memory.interfaces import MemorySystem, MemoryChunk
-from neuroca.core.memory.factory import create_memory_system
+import pytest
+
 # Import the concrete implementation instead of the abstract base class
-from neuroca.core.memory.consolidation import StandardMemoryConsolidator 
-from neuroca.core.memory.working_memory import WorkingMemory
+from neuroca.core.memory.consolidation import StandardMemoryConsolidator
 from neuroca.core.memory.episodic_memory import EpisodicMemory
-from neuroca.memory.semantic_memory import SemanticMemory # Corrected import path
+from neuroca.core.memory.factory import create_memory_system
+from neuroca.core.memory.working_memory import WorkingMemory
+from neuroca.memory.semantic_memory import SemanticMemory  # Corrected import path
+
 # Assuming Concept, Relationship, RelationshipType might be defined elsewhere or not needed directly if SemanticMemory handles them internally
 # If they are needed and defined in core, keep that part of the import or find their correct location.
 # For now, focusing on fixing the SemanticMemory instantiation.
 # from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType # Example if needed from core
 
 
-@pytest.fixture
+@pytest.fixture()
 def memory_system():
     """Provides a complete memory system with all three tiers and consolidation.
     
@@ -90,7 +90,7 @@ def test_emotional_content_preservation(memory_system):
     
     # Store memory with emotional content
     emotional_memory = "Received great news about the promotion"
-    chunk_id = working_memory.store(emotional_memory, activation=0.8, 
+    working_memory.store(emotional_memory, activation=0.8, 
                                     metadata={"emotional_salience": 0.9})
     
     # Consolidate to episodic memory
@@ -186,7 +186,7 @@ def test_end_to_end_information_flow(memory_system):
     e_to_s_ids = consolidator.consolidate(
         source=episodic_memory, target=semantic_memory
     )
-    e_to_s_count = len(e_to_s_ids)
+    len(e_to_s_ids)
     
     # 5. Verify that semantic memory contains fruit concept
     concepts = semantic_memory.retrieve_all_concepts()
@@ -358,7 +358,7 @@ def test_stress_memory_system(memory_system):
                              })
     
     # 4. Consolidate to semantic memory
-    semantic_consolidated = consolidator.consolidate_episodic_to_semantic(
+    consolidator.consolidate_episodic_to_semantic(
         episodic_memory, semantic_memory
     )
     
@@ -399,7 +399,7 @@ def test_adaptive_consolidation(memory_system):
         source=working_memory, target=episodic_memory
         # Pass thresholds if needed: activation_threshold=0.65, emotional_threshold=...
     )
-    consolidated = len(consolidated_ids)
+    len(consolidated_ids)
     
     # Should have consolidated only the high emotion/activation items
     episodes = episodic_memory.get_all_items() # Use correct method

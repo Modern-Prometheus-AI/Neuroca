@@ -5,8 +5,10 @@ These tests verify that the WorkingMemory system properly implements biological
 constraints like capacity limits, activation decay, and recency effects.
 """
 
-import pytest
 import time
+
+import pytest
+
 from neuroca.core.memory.factory import create_memory_system
 
 

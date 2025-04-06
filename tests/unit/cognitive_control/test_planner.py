@@ -2,17 +2,20 @@
 Unit tests for the Planner component in cognitive control.
 """
 
-import pytest
-from typing import Dict, Any, Optional
-from unittest.mock import MagicMock # Import MagicMock
+from typing import Any
+from unittest.mock import MagicMock  # Import MagicMock
 
-from neuroca.core.cognitive_control.planner import Planner, Plan, PlanStep
+import pytest
+
+from neuroca.core.cognitive_control.planner import Plan, Planner, PlanStep
 from neuroca.core.health.dynamics import HealthState
+
 # Import MemoryItem, MemoryType, and MemoryManager for mocking
-from neuroca.memory.manager import MemoryItem, MemoryType, MemoryManager 
+from neuroca.memory.manager import MemoryItem, MemoryManager
+
 
 # Mock context for testing
-def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> Dict[str, Any]:
+def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> dict[str, Any]:
     context = {"health_state": health_state}
     context.update(kwargs)
     return context
@@ -20,14 +23,14 @@ def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> 
 class TestPlanner:
     """Tests for the Planner class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_memory_manager(self) -> MagicMock:
         """Fixture for a mocked MemoryManager."""
         manager = MagicMock(spec=MemoryManager)
         manager.retrieve.return_value = [] # Default: no knowledge found
         return manager
         
-    @pytest.fixture
+    @pytest.fixture()
     def planner(self, mock_memory_manager: MagicMock) -> Planner:
         """Fixture to create a Planner instance with mocked memory."""
         # Pass mock memory manager, others None for now
@@ -138,7 +141,7 @@ class TestPlanner:
         original_plan.status = "failed"
         
         # Simulate replanning after resource failure
-        new_plan = planner.replan(original_plan, "energy resource low", context)
+        planner.replan(original_plan, "energy resource low", context)
         
         # The placeholder logic tries generate_plan again with a modified context
         # In the 'make tea' example, if health was NORMAL, it generates the standard plan again.

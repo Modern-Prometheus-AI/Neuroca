@@ -32,7 +32,7 @@ directly from this package to avoid circular imports.
 """
 
 import logging
-from typing import Dict, Any, List, Optional, Type, TypeVar, Union
+from typing import Any, Optional, TypeVar
 
 # Configure logging for the factories module
 logger = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ class BaseFactory(factory.Factory):
         abstract = True
 
     @classmethod
-    def create_batch_dict(cls, size: int, **kwargs) -> Dict[str, Any]:
+    def create_batch_dict(cls, size: int, **kwargs) -> dict[str, Any]:
         """
         Create a batch of objects and return them as a dictionary keyed by a specified attribute.
         
@@ -92,7 +92,7 @@ class BaseFactory(factory.Factory):
         return {getattr(obj, key_attr): obj for obj in batch}
 
     @classmethod
-    def attributes(cls, create: bool = False, **kwargs) -> Dict[str, Any]:
+    def attributes(cls, create: bool = False, **kwargs) -> dict[str, Any]:
         """
         Get a dictionary of attributes that would be used to create an instance.
         Useful for testing validation without creating objects.
@@ -129,7 +129,7 @@ class BaseDjangoFactory(DjangoModelFactory):
 
 
 # Utility functions for working with factories
-def register_factory(model_class: Type[T], factory_class: Type[factory.Factory]) -> None:
+def register_factory(model_class: type[T], factory_class: type[factory.Factory]) -> None:
     """
     Register a factory class for a model to enable lookup by model class.
     
@@ -147,7 +147,7 @@ def register_factory(model_class: Type[T], factory_class: Type[factory.Factory])
     logger.debug(f"Registered factory {factory_class.__name__} for model {model_class.__name__}")
 
 
-def get_factory_for_model(model_class: Type[T]) -> Optional[Type[factory.Factory]]:
+def get_factory_for_model(model_class: type[T]) -> Optional[type[factory.Factory]]:
     """
     Get the factory class registered for a model class.
     
@@ -167,7 +167,7 @@ def get_factory_for_model(model_class: Type[T]) -> Optional[Type[factory.Factory
     return register_factory.registry.get(model_class)
 
 
-def create_fixture_data(factories_config: List[Dict[str, Any]]) -> Dict[str, List[Any]]:
+def create_fixture_data(factories_config: list[dict[str, Any]]) -> dict[str, list[Any]]:
     """
     Create fixture data based on a configuration dictionary.
     Useful for setting up test data in fixtures or test setup.

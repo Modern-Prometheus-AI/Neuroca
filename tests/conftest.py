@@ -9,13 +9,13 @@ The fixtures defined here are automatically discovered by pytest and made
 available to all test functions without explicit imports.
 """
 
+import logging
 import os
 import sys
-import logging
 import tempfile
-import json
+from collections.abc import Generator
 from pathlib import Path
-from typing import Dict, Any, Generator, List, Optional, Callable
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -55,7 +55,7 @@ def setup_test_environment() -> None:
     logging.info("Cleaning up test environment")
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_dir() -> Generator[Path, None, None]:
     """
     Create a temporary directory for test file operations.
@@ -69,8 +69,8 @@ def temp_dir() -> Generator[Path, None, None]:
         yield Path(temp_dir)
 
 
-@pytest.fixture
-def sample_config() -> Dict[str, Any]:
+@pytest.fixture()
+def sample_config() -> dict[str, Any]:
     """
     Provide a sample configuration dictionary for testing.
     
@@ -117,7 +117,7 @@ def sample_config() -> Dict[str, Any]:
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_llm_client() -> MagicMock:
     """
     Create a mock LLM client for testing LLM integration components.
@@ -140,7 +140,7 @@ def mock_llm_client() -> MagicMock:
     return mock
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_db_session() -> Generator[MagicMock, None, None]:
     """
     Create a mock database session for testing database interactions.
@@ -158,11 +158,11 @@ def mock_db_session() -> Generator[MagicMock, None, None]:
     session.all.return_value = []
     session.first.return_value = None
     
-    yield session
+    return session
 
 
-@pytest.fixture
-def sample_memory_item() -> Dict[str, Any]:
+@pytest.fixture()
+def sample_memory_item() -> dict[str, Any]:
     """
     Provide a sample memory item for testing memory components.
     
@@ -184,7 +184,7 @@ def sample_memory_item() -> Dict[str, Any]:
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_file_system() -> Generator[None, None, None]:
     """
     Mock file system operations for testing file I/O.
@@ -213,7 +213,7 @@ def mock_file_system() -> Generator[None, None, None]:
                 yield
 
 
-@pytest.fixture
+@pytest.fixture()
 def api_client() -> MagicMock:
     """
     Create a mock API client for testing API interactions.
@@ -242,8 +242,8 @@ def api_client() -> MagicMock:
     return client
 
 
-@pytest.fixture
-def sample_health_state() -> Dict[str, Any]:
+@pytest.fixture()
+def sample_health_state() -> dict[str, Any]:
     """
     Provide a sample health state for testing health dynamics components.
     
@@ -270,7 +270,7 @@ def sample_health_state() -> Dict[str, Any]:
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def disable_external_calls() -> Generator[None, None, None]:
     """
     Disable all external API calls during tests.
@@ -284,8 +284,8 @@ def disable_external_calls() -> Generator[None, None, None]:
                 yield
 
 
-@pytest.fixture
-def capture_logs() -> Generator[List[Dict[str, Any]], None, None]:
+@pytest.fixture()
+def capture_logs() -> Generator[list[dict[str, Any]], None, None]:
     """
     Capture log messages during test execution.
     

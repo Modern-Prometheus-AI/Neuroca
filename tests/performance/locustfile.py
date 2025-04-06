@@ -20,11 +20,9 @@ Requirements:
     - locust>=2.15.0
 """
 
-import json
 import logging
 import random
 import time
-from typing import Dict, List, Optional, Union
 
 from locust import HttpUser, TaskSet, between, events, task
 from locust.exception import StopUser

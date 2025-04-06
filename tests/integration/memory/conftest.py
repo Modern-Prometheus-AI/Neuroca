@@ -4,22 +4,23 @@ This module provides pytest fixtures for testing integrated memory systems,
 including fully configured memory tiers with consolidation mechanisms.
 """
 
-import pytest
 import time
-from typing import Dict, List, Tuple, Any
 
-from neuroca.core.memory.interfaces import MemorySystem, MemoryChunk
-from neuroca.core.memory.working_memory import WorkingMemory
-from neuroca.core.memory.episodic_memory import EpisodicMemory
-# Import the concrete implementation from the correct location
-from neuroca.memory.semantic_memory import SemanticMemory 
-# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
-from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType 
+import pytest
+
 # Import the concrete implementation instead of the abstract base class
-from neuroca.core.memory.consolidation import StandardMemoryConsolidator 
+from neuroca.core.memory.consolidation import StandardMemoryConsolidator
+from neuroca.core.memory.episodic_memory import EpisodicMemory
+
+# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
+from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType
+from neuroca.core.memory.working_memory import WorkingMemory
+
+# Import the concrete implementation from the correct location
+from neuroca.memory.semantic_memory import SemanticMemory
 
 
-@pytest.fixture
+@pytest.fixture()
 def integrated_memory_system():
     """Provides a fully integrated memory system with all three tiers.
     
@@ -39,7 +40,7 @@ def integrated_memory_system():
     semantic_memory.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def populated_knowledge_graph():
     """Provides a semantic memory populated with a starter knowledge graph.
     
@@ -172,7 +173,7 @@ def populated_knowledge_graph():
     return memory
 
 
-@pytest.fixture
+@pytest.fixture()
 def realistic_memory_load():
     """Provides a memory system loaded with realistic cognitive data.
     

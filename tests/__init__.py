@@ -26,9 +26,9 @@ Note:
     - Common test fixtures and utilities are exposed for use in test modules
 """
 
+import logging
 import os
 import sys
-import logging
 from pathlib import Path
 
 # Configure test logging

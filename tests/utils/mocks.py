@@ -13,11 +13,10 @@ Usage:
     llm_provider = MockLLMProvider(response_template="Test response")
 """
 
-import json
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
+from typing import Any, Callable, Optional
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -97,7 +96,7 @@ class MockMemoryStore:
         logger.debug("Retrieved item from working memory: %s", key)
         return item["value"]
     
-    def store_episodic_memory(self, memory: Dict[str, Any]) -> str:
+    def store_episodic_memory(self, memory: dict[str, Any]) -> str:
         """
         Store an episodic memory.
         
@@ -117,7 +116,7 @@ class MockMemoryStore:
         logger.debug("Stored episodic memory with ID: %s", memory["id"])
         return memory["id"]
     
-    def retrieve_episodic_memory(self, memory_id: str) -> Optional[Dict[str, Any]]:
+    def retrieve_episodic_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """
         Retrieve an episodic memory by ID.
         
@@ -135,7 +134,7 @@ class MockMemoryStore:
         logger.debug("Episodic memory not found: %s", memory_id)
         return None
     
-    def query_episodic_memory(self, query: Dict[str, Any], limit: int = 10) -> List[Dict[str, Any]]:
+    def query_episodic_memory(self, query: dict[str, Any], limit: int = 10) -> list[dict[str, Any]]:
         """
         Query episodic memories based on criteria.
         
@@ -163,7 +162,7 @@ class MockMemoryStore:
         logger.debug("Query returned %d episodic memories", len(results))
         return results
     
-    def store_semantic_memory(self, concept: str, data: Dict[str, Any]) -> bool:
+    def store_semantic_memory(self, concept: str, data: dict[str, Any]) -> bool:
         """
         Store semantic memory for a concept.
         
@@ -185,7 +184,7 @@ class MockMemoryStore:
         logger.debug("Stored semantic memory for concept: %s", concept)
         return True
     
-    def retrieve_semantic_memory(self, concept: str) -> Optional[Dict[str, Any]]:
+    def retrieve_semantic_memory(self, concept: str) -> Optional[dict[str, Any]]:
         """
         Retrieve semantic memory for a concept.
         
@@ -246,7 +245,7 @@ class MockLLMProvider:
         logger.debug("Initialized MockLLMProvider with failure_rate=%f, delay=%f", 
                     failure_rate, delay)
     
-    def generate_response(self, prompt: str, **kwargs) -> Dict[str, Any]:
+    def generate_response(self, prompt: str, **kwargs) -> dict[str, Any]:
         """
         Generate a mock response to the given prompt.
         
@@ -260,8 +259,8 @@ class MockLLMProvider:
         Raises:
             RuntimeError: If the simulated call fails based on failure_rate
         """
-        import time
         import random
+        import time
         
         # Record the call
         self.call_history.append({
@@ -301,7 +300,7 @@ class MockLLMProvider:
         logger.debug("Generated mock LLM response for prompt: %s...", prompt[:50])
         return response
     
-    def get_embedding(self, text: str) -> List[float]:
+    def get_embedding(self, text: str) -> list[float]:
         """
         Generate a mock embedding vector for the given text.
         
@@ -508,7 +507,7 @@ class MockEventBus:
         
         logger.debug("Published event of type: %s", event_type)
     
-    def get_published_events(self, event_type: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_published_events(self, event_type: Optional[str] = None) -> list[dict[str, Any]]:
         """
         Get history of published events, optionally filtered by type.
         
@@ -531,7 +530,7 @@ def create_mock_context(
     llm_provider: Optional[MockLLMProvider] = None,
     health_system: Optional[MockHealthSystem] = None,
     event_bus: Optional[MockEventBus] = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create a complete mock context for testing components.
     
@@ -556,7 +555,7 @@ def create_mock_context(
     return context
 
 
-def patch_dependencies(target_module: str) -> Dict[str, MagicMock]:
+def patch_dependencies(target_module: str) -> dict[str, MagicMock]:
     """
     Create and apply patches for common dependencies in a module.
     

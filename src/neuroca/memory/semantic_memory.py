@@ -12,10 +12,11 @@ from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem  # Import i
 
 # Attempt to import Concept and Relationship for type checking in store method
 try:
-    from neuroca.core.memory.semantic_memory import Concept, Relationship
+    # Correct import path
+    from neuroca.core.models.memory import Concept, Relationship
 except ImportError:
-    Concept = None
-    Relationship = None
+    Concept = None # type: ignore
+    Relationship = None # type: ignore
     import logging
     logging.warning("Could not import Concept/Relationship for SemanticMemory.store type checking.")
 
@@ -43,7 +44,7 @@ class SemanticMemoryChunk(MemoryChunk[dict[str, Any]]): # Content is facts dict
         return max(0.0, min(1.0, activation))
 
     @property
-    def id(self) -> str: return self._id
+    def chunk_id(self) -> str: return self._id # A003 Fix: Renamed from id
     @property
     def content(self) -> dict[str, Any]: return self._facts # Return facts as content
     @property
@@ -99,49 +100,50 @@ class SemanticMemory(MemorySystem): # Inherit from MemorySystem
         # Assuming unlimited capacity for this simple implementation
         return None
 
-    def store(self, content: Any, **metadata) -> str: # Implement store
+    def store(self, content: Any, **metadata) -> str:
         """
         Store content as a semantic memory. Updates if concept exists.
-        
+
         Args:
-            content: The facts dictionary.
-            **metadata: Must include 'concept'. Optional: 'related_concepts', 'confidence'.
-            
+            content: The facts dictionary, Concept object, or Relationship object.
+            **metadata: Must include 'concept' if content is dict. Optional: 'related_concepts', 'confidence'.
+
         Returns:
             str: The ID of the stored/updated memory chunk.
-            
+
         Raises:
-            ValueError: If 'concept' is not in metadata or content type is unsupported.
+            ValueError: If 'concept' is not in metadata (for dict content), content type is unsupported, or concept name cannot be determined.
         """
         now = datetime.now()
-        concept_name = None
+        concept_name: Optional[str] = None
         facts = {}
         related_concepts = set(metadata.get('related_concepts', []))
         confidence = metadata.get('confidence', 1.0)
         is_relationship = False
+        structured_rel_id: Optional[str] = None # Initialize for clarity
 
+        # --- Determine Content Type and Extract Data ---
         if Concept and isinstance(content, Concept):
             concept_name = content.name
             facts = content.properties
-            confidence = content.confidence # Use confidence from Concept object
+            # Use confidence from Concept object, allow metadata override
+            confidence = metadata.get('confidence', content.confidence)
             # Merge metadata passed in kwargs for flexibility
-            related_concepts.update(metadata.get('related_concepts', set())) 
-            confidence = metadata.get('confidence', confidence) # Allow metadata confidence override
+            related_concepts.update(metadata.get('related_concepts', set()))
 
         elif Relationship and isinstance(content, Relationship):
-             # Handle relationship storage - Needs a more robust solution later
-             # For now, store basic info. Use structured ID.
-             is_relationship = True
-             concept_name = f"rel:{content.source_id}-{content.relationship_type.name}-{content.target_id}" # Artificial concept name for logging/debug
-             facts = { # Store relationship details in facts dict
-                 "source": content.source_id,
-                 "target": content.target_id,
-                 "type": content.relationship_type.name,
-                 "attributes": content.attributes
-             }
-             confidence = content.confidence
-             # Use the structured relationship ID for storage key
-             structured_rel_id = f"relationship:{content.source_id}:{content.relationship_type.name}:{content.target_id}"
+            is_relationship = True
+            # Artificial concept name for logging/debug (optional usage)
+            concept_name = f"rel:{content.source_id}-{content.relationship_type.name}-{content.target_id}"
+            facts = { # Store relationship details in facts dict
+                "source": content.source_id,
+                "target": content.target_id,
+                "type": content.relationship_type.name,
+                "attributes": content.attributes
+            }
+            confidence = content.confidence
+            # Use the structured relationship ID for storage key
+            structured_rel_id = f"relationship:{content.source_id}:{content.relationship_type.name}:{content.target_id}"
 
         elif isinstance(content, dict):
             # Existing logic: content is facts, concept name from metadata
@@ -149,69 +151,80 @@ class SemanticMemory(MemorySystem): # Inherit from MemorySystem
             if not concept_name:
                 raise ValueError("Metadata must include 'concept' when content is a dict.")
             facts = content
-            confidence = metadata.get('confidence', 1.0) 
+            confidence = metadata.get('confidence', 1.0)
             related_concepts = set(metadata.get('related_concepts', []))
 
         else:
             raise ValueError(f"Unsupported content type for SemanticMemory store: {type(content)}. Expecting Concept, Relationship, or dict.")
 
-        if not concept_name:
-             raise ValueError("Could not determine concept name or relationship identifier for storage.")
+        # Ensure we have an identifier (concept name or structured relationship ID)
+        if not is_relationship and not concept_name:
+             raise ValueError("Could not determine concept name for storage.")
+        # Check structured_rel_id specifically if it's a relationship
+        if is_relationship and not structured_rel_id:
+            # This case should technically be prevented by the Relationship instance check, but good practice
+            raise ValueError("Could not determine relationship identifier for storage.")
+
 
         # --- Storage Logic ---
         if is_relationship:
             # Handle Relationship update/creation using structured ID
+            # We already checked structured_rel_id is not None if is_relationship is True
             existing_chunk_id = structured_rel_id
             if existing_chunk_id in SemanticMemory._storage:
                 # Update existing relationship chunk
                 chunk = SemanticMemory._storage[existing_chunk_id]
                 chunk._facts.update(facts) # Merge/overwrite attributes
-                new_confidence = (chunk._confidence + confidence) / 2 # Average confidence
+                # Consider a more sophisticated confidence update if needed
+                new_confidence = (chunk._confidence + confidence) / 2 # Example: Average confidence
                 chunk._confidence = new_confidence
-                chunk.update_activation()
-                return existing_chunk_id
-            else:
-                # Create new relationship chunk with the structured ID
-                chunk = SemanticMemoryChunk(
-                    chunk_id=existing_chunk_id, # Use structured ID
-                    concept=concept_name, # Artificial concept name
-                    facts=facts,
-                    related_concepts=related_concepts, # Likely empty for relationships
-                    confidence=confidence,
-                    created_at=now,
-                    last_updated=now,
-                    access_count=0
-                )
-                SemanticMemory._storage[existing_chunk_id] = chunk
-                # Do NOT add relationships to concept_index
-                return existing_chunk_id
-        else:
-            # Handle Concept update/creation using concept_index and UUIDs
-            existing_chunk_id = SemanticMemory._concept_index.get(concept_name)
-            if existing_chunk_id and existing_chunk_id in SemanticMemory._storage:
-                # Update existing concept chunk
-                chunk = SemanticMemory._storage[existing_chunk_id]
-                chunk._facts.update(facts) # Merge facts/properties
-                chunk._related_concepts.update(related_concepts)
-                chunk._confidence = confidence # Use updated confidence
-                chunk.update_activation()
-                return existing_chunk_id # Return the existing storage key (UUID)
-            else:
-                # Create new concept chunk
-                new_chunk_id = str(uuid.uuid4()) # Use UUID for storage key
-                chunk = SemanticMemoryChunk(
-                    chunk_id=new_chunk_id,
-                    concept=concept_name,
-                    facts=facts,
-                    related_concepts=related_concepts,
-                    confidence=confidence,
+                # chunk.update_activation() # Assuming this method exists on the chunk
+                chunk.last_updated = now # Update timestamp
+                return existing_chunk_id # Return the ID used for storage
+
+            # If relationship chunk doesn't exist, create it (Correctly unindented)
+            chunk = SemanticMemoryChunk( # Assuming SemanticMemoryChunk exists and takes these args
+                chunk_id=existing_chunk_id, # Use structured ID as the key
+                concept=concept_name, # Store artificial concept name if useful
+                facts=facts,
+                related_concepts=set(), # Relationships typically don't have separate related concepts in this model
+                confidence=confidence,
                 created_at=now,
                 last_updated=now,
                 access_count=0
             )
-            SemanticMemory._storage[chunk_id] = chunk
-            SemanticMemory._concept_index[concept] = chunk_id
-            return chunk_id
+            SemanticMemory._storage[existing_chunk_id] = chunk
+            # Do NOT add relationships to the concept_index by default
+            return existing_chunk_id # Return the ID used for storage
+
+        # Handle Concept update/creation
+        # We already checked concept_name is not None if is_relationship is False
+        existing_chunk_id = SemanticMemory._concept_index.get(concept_name)
+        if existing_chunk_id and existing_chunk_id in SemanticMemory._storage:
+            # Update existing concept chunk
+            chunk = SemanticMemory._storage[existing_chunk_id]
+            chunk._facts.update(facts) # Merge facts/properties
+            chunk._related_concepts.update(related_concepts)
+            chunk._confidence = confidence # Update confidence (overwrite or blend as needed)
+            # chunk.update_activation() # Assuming this method exists
+            chunk.last_updated = now # Update timestamp
+            return existing_chunk_id # Return the existing storage key (UUID)
+
+        # If concept chunk doesn't exist, create it (Correctly unindented)
+        new_chunk_id = str(uuid.uuid4()) # Generate a new UUID for storage key
+        chunk = SemanticMemoryChunk( # Assuming SemanticMemoryChunk exists and takes these args
+            chunk_id=new_chunk_id,
+            concept=concept_name,
+            facts=facts,
+            related_concepts=related_concepts,
+            confidence=confidence,
+            created_at=now,
+            last_updated=now,
+            access_count=0
+        )
+        SemanticMemory._storage[new_chunk_id] = chunk # Store using the new UUID
+        SemanticMemory._concept_index[concept_name] = new_chunk_id # Map concept name to the new UUID
+        return new_chunk_id # Return the new ID
 
     def retrieve(self, query: Any, limit: int = 10, **parameters) -> list[MemoryChunk]: # Implement retrieve
         """

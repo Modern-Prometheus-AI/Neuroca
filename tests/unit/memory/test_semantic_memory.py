@@ -9,16 +9,17 @@ focusing on:
 5. Abstraction from episodic to semantic memory
 """
 
+
 import pytest
-from datetime import datetime
+
+# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
+from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType
 
 # Import the concrete implementation from the correct location
-from neuroca.memory.semantic_memory import SemanticMemory 
-# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
-from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType 
+from neuroca.memory.semantic_memory import SemanticMemory
 
 
-@pytest.fixture
+@pytest.fixture()
 def semantic_memory():
     """Fixture providing a clean semantic memory instance for each test."""
     memory = SemanticMemory()
@@ -26,7 +27,7 @@ def semantic_memory():
     memory.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def populated_semantic_memory():
     """Fixture providing a semantic memory with sample concepts and relationships."""
     memory = SemanticMemory()
@@ -286,14 +287,11 @@ def test_path_inference(populated_semantic_memory):
     
     # Extract the concept IDs along the path
     path_ids = []
-    current = "golden"
     for rel, is_forward in path:
         if is_forward:
             path_ids.append(rel.target_id)
-            current = rel.target_id
         else:
             path_ids.append(rel.source_id)
-            current = rel.source_id
     
     # The path should be: golden -> dog -> mammal -> animal
     assert "dog" in path_ids

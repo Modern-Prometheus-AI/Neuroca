@@ -27,7 +27,7 @@ import datetime
 import logging
 import random
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import factory
 from factory.fuzzy import FuzzyChoice, FuzzyDateTime, FuzzyFloat, FuzzyText
@@ -70,8 +70,8 @@ except ImportError:
             importance: float = 0.5,
             relevance: float = 0.5,
             priority: str = MemoryPriority.MEDIUM,
-            metadata: Dict[str, Any] = None,
-            embedding: List[float] = None,
+            metadata: dict[str, Any] = None,
+            embedding: list[float] = None,
         ):
             self.id = id or str(uuid.uuid4())
             self.content = content
@@ -85,17 +85,17 @@ except ImportError:
             self.embedding = embedding or []
             
     class WorkingMemory:
-        def __init__(self, capacity: int = 7, items: List[MemoryItem] = None):
+        def __init__(self, capacity: int = 7, items: list[MemoryItem] = None):
             self.capacity = capacity
             self.items = items or []
             
     class EpisodicMemory:
-        def __init__(self, capacity: int = 100, episodes: List[Dict] = None):
+        def __init__(self, capacity: int = 100, episodes: list[dict] = None):
             self.capacity = capacity
             self.episodes = episodes or []
             
     class SemanticMemory:
-        def __init__(self, facts: Dict[str, Any] = None, concepts: Dict[str, Any] = None):
+        def __init__(self, facts: dict[str, Any] = None, concepts: dict[str, Any] = None):
             self.facts = facts or {}
             self.concepts = concepts or {}
 
@@ -158,7 +158,7 @@ class MemoryItemFactory(factory.Factory):
     @classmethod
     def create_batch_with_related_content(
         cls, size: int, base_content: str, **kwargs
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """
         Create a batch of memory items with related content based on a common theme.
         
@@ -449,7 +449,7 @@ def create_memory_system(
     episodic_memory_episode_count: int = 10,
     semantic_memory_fact_count: int = 20,
     semantic_memory_concept_count: int = 10
-) -> Tuple[WorkingMemory, EpisodicMemory, SemanticMemory]:
+) -> tuple[WorkingMemory, EpisodicMemory, SemanticMemory]:
     """
     Create a complete memory system with all three memory tiers.
     
@@ -547,7 +547,7 @@ def create_memory_system(
             list(facts.keys()), k=min(5, len(facts))
         )
         concepts[concept_key]["related_concepts"] = random.sample(
-            [k for k in concepts.keys() if k != concept_key], 
+            [k for k in concepts if k != concept_key], 
             k=min(3, len(concepts) - 1)
         )
     
@@ -565,7 +565,7 @@ def create_memory_with_consistent_theme(
     episodic_episodes: int = 5,
     semantic_facts: int = 10,
     semantic_concepts: int = 5
-) -> Tuple[WorkingMemory, EpisodicMemory, SemanticMemory]:
+) -> tuple[WorkingMemory, EpisodicMemory, SemanticMemory]:
     """
     Create a memory system with a consistent theme across all memory types.
     
@@ -674,7 +674,7 @@ def create_memory_with_consistent_theme(
             list(themed_facts.keys()), k=min(3, len(themed_facts))
         )
         themed_concepts[concept_key]["related_concepts"] = random.sample(
-            [k for k in themed_concepts.keys() if k != concept_key], 
+            [k for k in themed_concepts if k != concept_key], 
             k=min(2, max(0, len(themed_concepts) - 1))
         )
     

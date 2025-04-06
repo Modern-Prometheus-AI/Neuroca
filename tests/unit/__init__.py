@@ -45,8 +45,9 @@ __version__ = '0.1.0'
 
 # This allows running the tests as a module
 if __name__ == '__main__':
-    import pytest
     import sys
+
+    import pytest
     sys.exit(pytest.main())
 
 """

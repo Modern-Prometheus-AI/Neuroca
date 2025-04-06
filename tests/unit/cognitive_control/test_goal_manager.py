@@ -6,17 +6,22 @@ hierarchical goal structures, dependency management, resource allocation, memory
 and health-state adaptative behaviors.
 """
 
-import pytest
-import time
-from typing import Dict, Any, Optional, List, Set
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import MagicMock
 
-from neuroca.core.cognitive_control.goal_manager import GoalManager, Goal, GoalStatus, GOAL_MANAGER_COMPONENT_ID
-from neuroca.core.health.dynamics import HealthState, HealthDynamicsManager
+import pytest
+
+from neuroca.core.cognitive_control.goal_manager import (
+    Goal,
+    GoalManager,
+    GoalStatus,
+)
+from neuroca.core.health.dynamics import HealthDynamicsManager, HealthState
 from neuroca.memory.manager import MemoryManager
 
+
 # Mock context for testing
-def create_context(health_state: HealthState = HealthState.NORMAL, emotional_state: float = 0.5, **kwargs) -> Dict[str, Any]:
+def create_context(health_state: HealthState = HealthState.NORMAL, emotional_state: float = 0.5, **kwargs) -> dict[str, Any]:
     context = {
         "health_state": health_state,
         "emotional_state": emotional_state
@@ -26,18 +31,18 @@ def create_context(health_state: HealthState = HealthState.NORMAL, emotional_sta
 
 # Mock memory result for tests
 class MockMemoryResult:
-    def __init__(self, content: Dict[str, Any]):
+    def __init__(self, content: dict[str, Any]):
         self.content = content
 
 class TestGoalManager:
     """Tests for the GoalManager class with biologically-inspired features."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def goal_manager(self) -> GoalManager:
         """Fixture to create a basic GoalManager instance."""
         return GoalManager()
         
-    @pytest.fixture
+    @pytest.fixture()
     def goal_manager_with_health(self) -> GoalManager:
         """Fixture to create a GoalManager with mocked health manager."""
         health_manager = MagicMock(spec=HealthDynamicsManager)
@@ -46,7 +51,7 @@ class TestGoalManager:
         health_manager.get_component_health.return_value = mock_health
         return GoalManager(health_manager=health_manager)
         
-    @pytest.fixture
+    @pytest.fixture()
     def goal_manager_with_memory(self) -> GoalManager:
         """Fixture to create a GoalManager with mocked memory manager."""
         memory_manager = MagicMock(spec=MemoryManager)
@@ -60,7 +65,7 @@ class TestGoalManager:
         memory_manager.retrieve.side_effect = mock_retrieve
         return GoalManager(memory_manager=memory_manager)
         
-    @pytest.fixture
+    @pytest.fixture()
     def goal_manager_full(self) -> GoalManager:
         """Fixture to create a GoalManager with both health and memory managers."""
         health_manager = MagicMock(spec=HealthDynamicsManager)
@@ -201,7 +206,7 @@ class TestGoalManager:
         """Test retrieving active goals, sorted by priority."""
         g1 = goal_manager.add_goal("Goal 1", priority=5)
         g2 = goal_manager.add_goal("Goal 2", priority=2)
-        g3 = goal_manager.add_goal("Goal 3", priority=8)
+        goal_manager.add_goal("Goal 3", priority=8)
         g4 = goal_manager.add_goal("Goal 4", priority=2) # Same priority as g2
         
         goal_manager.activate_goal(g1.id)
@@ -458,7 +463,7 @@ class TestGoalManager:
         # Create several goals with different priorities, some with dependencies
         g1 = goal_manager.add_goal("High Priority", priority=1)
         g2 = goal_manager.add_goal("Medium Priority", priority=3)
-        g3 = goal_manager.add_goal("Low Priority", priority=7)
+        goal_manager.add_goal("Low Priority", priority=7)
         g4 = goal_manager.add_goal("Dependent Goal", priority=2)
         
         # Add dependency - g4 depends on g2

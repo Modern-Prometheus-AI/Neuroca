@@ -2,16 +2,18 @@
 Unit tests for the AttentionManager component in cognitive control.
 """
 
-import pytest
 import time
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Any
 from unittest.mock import MagicMock, patch
 
-from neuroca.core.cognitive_control.attention_manager import AttentionManager, AttentionFocus
-from neuroca.core.health.dynamics import HealthState, ComponentHealth
+import pytest
+
+from neuroca.core.cognitive_control.attention_manager import AttentionFocus, AttentionManager
+from neuroca.core.health.dynamics import ComponentHealth, HealthState
+
 
 # Mock context for testing
-def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> Dict[str, Any]:
+def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> dict[str, Any]:
     context = {"health_state": health_state}
     context.update(kwargs)
     return context
@@ -19,7 +21,7 @@ def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> 
 class TestAttentionManager:
     """Tests for the AttentionManager class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_memory_manager(self) -> MagicMock:
         """Fixture to create a mock MemoryManager."""
         manager = MagicMock()
@@ -48,7 +50,7 @@ class TestAttentionManager:
         manager.retrieve.return_value = [mock_item2, mock_item1]  # Most recent first
         return manager
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_health_manager(self) -> MagicMock:
         """Fixture to create a mock HealthDynamicsManager."""
         manager = MagicMock()
@@ -58,7 +60,7 @@ class TestAttentionManager:
         manager.get_component_health.return_value = comp_health
         return manager
 
-    @pytest.fixture
+    @pytest.fixture()
     def attention_manager(self, mock_memory_manager, mock_health_manager) -> AttentionManager:
         """Fixture to create an AttentionManager instance with mocks."""
         return AttentionManager(
@@ -66,8 +68,8 @@ class TestAttentionManager:
             memory_manager=mock_memory_manager
         )
 
-    @pytest.fixture
-    def sample_targets(self) -> List[Tuple[str, str, float]]:
+    @pytest.fixture()
+    def sample_targets(self) -> list[tuple[str, str, float]]:
         """Fixture providing sample attention targets."""
         return [
             ("goal", "goal_1", 0.8),       # High priority goal
@@ -92,7 +94,7 @@ class TestAttentionManager:
         assert focus is None
         assert attention_manager.current_focus is None
 
-    def test_allocate_attention_normal_health(self, attention_manager: AttentionManager, sample_targets: List[Tuple[str, str, float]]):
+    def test_allocate_attention_normal_health(self, attention_manager: AttentionManager, sample_targets: list[tuple[str, str, float]]):
         """Test allocation in NORMAL health state."""
         context = create_context(HealthState.NORMAL)
         focus = attention_manager.allocate_attention(sample_targets, context)
@@ -105,7 +107,7 @@ class TestAttentionManager:
         assert focus.intensity == pytest.approx(0.8)
         assert attention_manager.current_focus is focus
 
-    def test_allocate_attention_fatigued_health(self, attention_manager: AttentionManager, sample_targets: List[Tuple[str, str, float]]):
+    def test_allocate_attention_fatigued_health(self, attention_manager: AttentionManager, sample_targets: list[tuple[str, str, float]]):
         """Test allocation in FATIGUED health state (reduced capacity)."""
         context = create_context(HealthState.FATIGUED)
         focus = attention_manager.allocate_attention(sample_targets, context)
@@ -117,7 +119,7 @@ class TestAttentionManager:
         # Intensity = min(capacity=0.7, score=0.8) = 0.7
         assert focus.intensity == pytest.approx(0.7)
 
-    def test_allocate_attention_critical_health(self, attention_manager: AttentionManager, sample_targets: List[Tuple[str, str, float]]):
+    def test_allocate_attention_critical_health(self, attention_manager: AttentionManager, sample_targets: list[tuple[str, str, float]]):
         """Test allocation in CRITICAL health state (severely reduced capacity)."""
         context = create_context(HealthState.CRITICAL)
         focus = attention_manager.allocate_attention(sample_targets, context)

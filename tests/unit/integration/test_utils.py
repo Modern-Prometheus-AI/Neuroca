@@ -10,17 +10,16 @@ This module tests the utility functions in the integration.utils module, includi
 """
 
 import json
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-import re
+import pytest
 
 from neuroca.integration.utils import (
     count_tokens,
+    create_embedding,
     format_prompt,
     parse_response,
     sanitize_input,
-    create_embedding
 )
 
 
@@ -115,7 +114,8 @@ class TestPromptFormatting:
         
         # The result should contain JSON stringified versions of the complex objects
         assert '["apple","banana","cherry"]' in result
-        assert '"color":"red"' in result and '"size":"large"' in result
+        assert '"color":"red"' in result
+        assert '"size":"large"' in result
 
 
 class TestResponseParsing:
@@ -264,7 +264,7 @@ class TestEmbeddingCreation:
         mock_model.encode.return_value = [0.1, 0.2, 0.3, 0.4, 0.5]
         
         with patch('neuroca.integration.utils.SentenceTransformer', return_value=mock_model):
-            embedding = await create_embedding(
+            await create_embedding(
                 text="Test text",
                 model="custom-model",
                 device="cuda"

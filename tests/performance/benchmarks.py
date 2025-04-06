@@ -24,21 +24,21 @@ Usage:
                                   payload_size=1024)
 """
 
-import time
-import logging
-import statistics
-import json
-import os
 import datetime
-import psutil
-import matplotlib.pyplot as plt
-from typing import Dict, List, Any, Optional, Union, Callable, Tuple
-from dataclasses import dataclass, field, asdict
+import json
+import logging
+import os
+import statistics
+import time
 from contextlib import contextmanager
+from dataclasses import asdict, dataclass, field
 from functools import wraps
-import numpy as np
-import pandas as pd
 from pathlib import Path
+from typing import Any, Optional
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import psutil
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -53,13 +53,13 @@ BENCHMARK_RESULTS_DIR = Path("benchmark_results")
 class BenchmarkResult:
     """Data class to store benchmark results."""
     name: str
-    execution_times: List[float]
+    execution_times: list[float]
     start_time: datetime.datetime
     end_time: datetime.datetime
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    memory_usage: Dict[str, float] = field(default_factory=dict)
-    cpu_usage: Dict[str, float] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
+    memory_usage: dict[str, float] = field(default_factory=dict)
+    cpu_usage: dict[str, float] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     @property
     def mean_execution_time(self) -> float:
@@ -91,7 +91,7 @@ class BenchmarkResult:
         """Calculate the total benchmark duration in seconds."""
         return (self.end_time - self.start_time).total_seconds()
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the benchmark result to a dictionary."""
         result = asdict(self)
         # Add computed properties
@@ -134,7 +134,7 @@ def measure_time() -> float:
         yield
     finally:
         end_time = time.perf_counter()
-        execution_time = end_time - start_time
+        end_time - start_time
 
 
 @contextmanager
@@ -277,9 +277,9 @@ def run_benchmark(benchmark_name: str, **kwargs) -> BenchmarkResult:
     return result
 
 
-def run_benchmark_suite(benchmarks: Optional[List[str]] = None, 
+def run_benchmark_suite(benchmarks: Optional[list[str]] = None, 
                         save_results: bool = True,
-                        generate_report: bool = True) -> Dict[str, BenchmarkResult]:
+                        generate_report: bool = True) -> dict[str, BenchmarkResult]:
     """
     Run a suite of benchmarks and collect their results.
     
@@ -327,7 +327,7 @@ def run_benchmark_suite(benchmarks: Optional[List[str]] = None,
     return results
 
 
-def generate_benchmark_report(results: Dict[str, BenchmarkResult], 
+def generate_benchmark_report(results: dict[str, BenchmarkResult], 
                              output_dir: Optional[Path] = None) -> Path:
     """
     Generate a comprehensive report from benchmark results.
@@ -372,7 +372,7 @@ def generate_benchmark_report(results: Dict[str, BenchmarkResult],
         f.write("th{background-color:#f2f2f2;}")
         f.write("tr:nth-child(even){background-color:#f9f9f9;}")
         f.write("h1,h2{color:#333;}</style></head><body>")
-        f.write(f"<h1>NeuroCognitive Architecture Benchmark Report</h1>")
+        f.write("<h1>NeuroCognitive Architecture Benchmark Report</h1>")
         f.write(f"<p>Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>")
         
         # Summary table
@@ -410,7 +410,7 @@ def generate_benchmark_report(results: Dict[str, BenchmarkResult],
     return report_path
 
 
-def compare_benchmarks(benchmark_results: List[BenchmarkResult], 
+def compare_benchmarks(benchmark_results: list[BenchmarkResult], 
                       metric: str = "mean_execution_time",
                       output_path: Optional[Path] = None) -> Optional[Path]:
     """
@@ -562,13 +562,13 @@ def benchmark_memory_tier_comparison(tier_type: str = "all", operation: str = "r
     if tier_type == "semantic" or tier_type == "all":
         # Semantic memory operations (slowest but most structured)
         # Simulate with a graph-like structure
-        nodes = {i: {"connections": [j for j in range(max(0, i-5), min(data_size, i+5))]} for i in range(data_size)}
+        nodes = {i: {"connections": list(range(max(0, i-5), min(data_size, i+5)))} for i in range(data_size)}
         if operation == "read":
             for i in range(data_size):
                 _ = nodes.get(i)
         elif operation == "write":
             for i in range(data_size):
-                nodes[i] = {"connections": [j for j in range(max(0, i-3), min(data_size, i+3))]}
+                nodes[i] = {"connections": list(range(max(0, i-3), min(data_size, i+3)))}
         elif operation == "search":
             for i in range(data_size // 10):  # Reduce iterations for search as it's more complex
                 target = i * 10

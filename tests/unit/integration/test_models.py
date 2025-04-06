@@ -9,19 +9,16 @@ This module tests the data models used in the LLM integration layer, including:
 5. LLMError
 """
 
-import json
 import time
-import pytest
-from unittest.mock import MagicMock
 
 from neuroca.integration.models import (
-    TokenUsage,
-    ProviderConfig,
+    LLMError,
+    LLMProvider,
     LLMRequest,
     LLMResponse,
-    LLMError,
+    ProviderConfig,
     ResponseType,
-    LLMProvider
+    TokenUsage,
 )
 
 

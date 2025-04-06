@@ -5,24 +5,23 @@ This module provides common fixtures for testing memory components such as
 working memory, episodic memory, semantic memory, and consolidation processes.
 """
 
-import pytest
-from neuroca.core.memory.factory import create_memory_system
-from neuroca.core.memory.consolidation import StandardMemoryConsolidator
 from datetime import datetime, timedelta
-import time
-from typing import Dict, List, Tuple
 
-from neuroca.core.memory.working_memory import WorkingMemory
-from neuroca.core.memory.episodic_memory import EpisodicMemory
-# Import the concrete implementation from the correct location
-from neuroca.memory.semantic_memory import SemanticMemory 
-# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
-from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType 
+import pytest
+
 # Import the concrete implementation instead of the abstract base class
-from neuroca.core.memory.consolidation import StandardMemoryConsolidator 
+from neuroca.core.memory.consolidation import StandardMemoryConsolidator
+from neuroca.core.memory.episodic_memory import EpisodicMemory
+
+# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
+from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType
+from neuroca.core.memory.working_memory import WorkingMemory
+
+# Import the concrete implementation from the correct location
+from neuroca.memory.semantic_memory import SemanticMemory
 
 
-@pytest.fixture
+@pytest.fixture()
 def working_memory():
     """Fixture that provides a clean working memory instance."""
     memory = WorkingMemory()
@@ -31,7 +30,7 @@ def working_memory():
     memory.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def episodic_memory():
     """Fixture that provides a clean episodic memory instance."""
     memory = EpisodicMemory()
@@ -40,7 +39,7 @@ def episodic_memory():
     memory.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def semantic_memory():
     """Fixture that provides a clean semantic memory instance."""
     memory = SemanticMemory()
@@ -49,7 +48,7 @@ def semantic_memory():
     memory.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def memory_consolidator():
     """Fixture that provides a standard memory consolidator."""
     # Instantiate the concrete class
@@ -57,7 +56,7 @@ def memory_consolidator():
     return consolidator
 
 
-@pytest.fixture
+@pytest.fixture()
 def populated_working_memory():
     """Fixture that provides a working memory with some sample memories."""
     memory = WorkingMemory()
@@ -77,7 +76,7 @@ def populated_working_memory():
     memory.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def populated_episodic_memory():
     """Fixture that provides an episodic memory with some sample memories."""
     memory = EpisodicMemory()
@@ -125,7 +124,7 @@ def populated_episodic_memory():
     memory.clear()
 
 
-@pytest.fixture
+@pytest.fixture()
 def populated_semantic_memory():
     """Provides a semantic memory with sample concepts and relationships.
     

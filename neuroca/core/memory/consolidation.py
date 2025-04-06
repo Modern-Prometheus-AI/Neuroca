@@ -8,11 +8,11 @@ information between memory systems with various transformations. Key processes i
 2. Episodic to Semantic: Abstracting repeated experiences into general knowledge
 """
 
-from typing import Any, Dict, List, Optional, Set
 import time
 
-from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem, MemoryConsolidator
 from neuroca.core.memory.factory import create_memory_system
+from neuroca.core.memory.interfaces import MemoryConsolidator, MemorySystem
+
 
 class StandardMemoryConsolidator(MemoryConsolidator):
     """
@@ -39,14 +39,14 @@ class StandardMemoryConsolidator(MemoryConsolidator):
         self._activation_threshold = activation_threshold
         self._repetition_threshold = repetition_threshold
         self._emotional_threshold = emotional_threshold
-        self._pattern_counter: Dict[str, int] = {}  # Track repeated patterns for abstraction
+        self._pattern_counter: dict[str, int] = {}  # Track repeated patterns for abstraction
     
     def consolidate(
         self,
         source: MemorySystem,
         target: MemorySystem,
         **parameters
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Consolidate memories from source system to target system.
         
@@ -156,7 +156,7 @@ class StandardMemoryConsolidator(MemoryConsolidator):
 
 
 # Helper function to consolidate working memory to episodic memory
-def consolidate_working_to_episodic(**parameters) -> List[str]:
+def consolidate_working_to_episodic(**parameters) -> list[str]:
     """Consolidate items from working memory to episodic memory."""
     working = create_memory_system("working")
     episodic = create_memory_system("episodic")
@@ -165,7 +165,7 @@ def consolidate_working_to_episodic(**parameters) -> List[str]:
 
 
 # Helper function to consolidate episodic memory to semantic memory
-def consolidate_episodic_to_semantic(**parameters) -> List[str]:
+def consolidate_episodic_to_semantic(**parameters) -> list[str]:
     """Consolidate items from episodic memory to semantic memory."""
     episodic = create_memory_system("episodic")
     semantic = create_memory_system("semantic")
@@ -174,7 +174,7 @@ def consolidate_episodic_to_semantic(**parameters) -> List[str]:
 
 
 # Function to run a complete consolidation cycle (both steps)
-def run_consolidation_cycle(**parameters) -> Dict[str, List[str]]:
+def run_consolidation_cycle(**parameters) -> dict[str, list[str]]:
     """
     Run a complete consolidation cycle, similar to what might occur during sleep.
     

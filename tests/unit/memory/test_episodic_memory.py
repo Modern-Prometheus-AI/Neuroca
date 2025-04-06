@@ -5,10 +5,8 @@ These tests verify that the EpisodicMemory system properly implements biological
 features like temporal context, emotional salience, and sequence tracking.
 """
 
-import pytest
 import time
-from datetime import datetime, timedelta
-from neuroca.core.memory.factory import create_memory_system
+from datetime import datetime
 
 
 class TestEpisodicMemory:

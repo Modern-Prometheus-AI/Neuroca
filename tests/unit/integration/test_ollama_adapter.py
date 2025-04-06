@@ -11,20 +11,19 @@ adapter correctly handles:
 5. Error handling
 """
 
-import asyncio
-import json
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import aiohttp
-from aiohttp import ClientResponse, ClientSession
+import pytest
+from aiohttp import ClientSession
 
-from neuroca.integration.adapters.ollama import OllamaAdapter, OllamaError
 # Corrected import: Use BaseAdapter instead of LLMAdapter (which doesn't exist in base.py)
 # Also import other necessary items from base
-from neuroca.integration.adapters.base import BaseAdapter, AdapterError, LLMResponse, ResponseType 
+from neuroca.integration.adapters.base import LLMResponse
+from neuroca.integration.adapters.ollama import OllamaAdapter, OllamaError
 from neuroca.integration.models import (
-    LLMRequest, TokenUsage # LLMResponse is imported above now
+    LLMRequest,  # LLMResponse is imported above now
+    TokenUsage,
 )
 
 
@@ -56,7 +55,7 @@ class MockResponse:
 class TestOllamaAdapter:
     """Test suite for the OllamaAdapter class."""
     
-    @pytest.fixture
+    @pytest.fixture()
     def basic_config(self):
         """Create a basic configuration for testing."""
         return {
@@ -66,7 +65,7 @@ class TestOllamaAdapter:
             "max_retries": 3
         }
     
-    @pytest.fixture
+    @pytest.fixture()
     def mock_session(self):
         """Create a mock aiohttp session for testing."""
         session = MagicMock(spec=ClientSession)
@@ -76,7 +75,7 @@ class TestOllamaAdapter:
         session.close = AsyncMock()
         return session
     
-    @pytest.fixture
+    @pytest.fixture()
     def ollama_adapter(self, basic_config, mock_session):
         """Create an OllamaAdapter instance for testing."""
         with patch('neuroca.integration.adapters.ollama.aiohttp.ClientSession', return_value=mock_session):

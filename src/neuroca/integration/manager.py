@@ -22,10 +22,12 @@ from neuroca.core.cognitive_control.goal_manager import GoalManager
 from neuroca.core.health.dynamics import HealthDynamicsManager, HealthState
 from neuroca.memory.manager import MemoryManager
 
+from .adapters import AnthropicAdapter, OpenAIAdapter, VertexAIAdapter
+from .adapters import (  # Import necessary adapter classes
+    BaseAdapter as LLMAdapter,  # Assuming BaseAdapter is the intended type for LLMAdapter
+)
 from .context.manager import ContextManager
 from .exceptions import LLMIntegrationError, ProviderNotFoundError
-
-# from .adapters import AnthropicAdapter, OpenAIAdapter, VertexAIAdapter # Commented out direct imports - rely on registry/config
 from .models import LLMRequest, LLMResponse
 
 # from .prompts.templates import get_template # Removed incorrect import
@@ -197,7 +199,7 @@ class LLMIntegrationManager:
             
             return processed_response
             
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error during LLM query: {str(e)}")
             raise LLMIntegrationError(f"Failed to execute query: {str(e)}") from e
             
@@ -259,7 +261,7 @@ class LLMIntegrationManager:
             }
             enhanced_prompt = self.template_manager.render_template(template_name, variables)
             logger.debug(f"Enhanced prompt using template '{template_name}'")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Failed to render prompt template: {e}. Using base prompt.")
             enhanced_prompt = base_prompt # Fallback to base prompt
 
@@ -376,7 +378,7 @@ class LLMIntegrationManager:
         # Sort by relevance
         all_results.sort(key=lambda x: x["relevance"], reverse=True)
         
-        return all_results
+        return all_results  # noqa: RET504 - Variable used for building list before return
         
     async def _get_health_context(self) -> dict[str, Any]:
         """
@@ -390,14 +392,13 @@ class LLMIntegrationManager:
             
         system_health = self.health_manager.get_system_health()
         
-        health_context = {
+        # RET504 Fix: Return dictionary directly
+        return {
             "state": system_health.state.name,
             "energy_level": system_health.parameters.get("energy", 1.0),
             "attention_capacity": system_health.parameters.get("attention_capacity", 1.0),
             "stress_level": system_health.parameters.get("stress", 0.0)
         }
-        
-        return health_context
         
     async def _get_goal_context(self) -> dict[str, Any]:
         """
@@ -412,7 +413,8 @@ class LLMIntegrationManager:
         active_goals = self.goal_manager.get_active_goals(sorted_by_priority=True)
         highest_priority_goal = self.goal_manager.get_highest_priority_active_goal()
         
-        goal_context = {
+        # RET504 Fix: Return dictionary directly
+        return {
             "active_goals": [
                 {
                     "description": goal.description,
@@ -427,8 +429,6 @@ class LLMIntegrationManager:
                 "completion_rate": highest_priority_goal.completion_rate if highest_priority_goal else None
             } if highest_priority_goal else None
         }
-        
-        return goal_context
         
     def get_providers(self) -> list[str]:
         """

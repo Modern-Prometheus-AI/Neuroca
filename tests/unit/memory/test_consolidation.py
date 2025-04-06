@@ -6,14 +6,10 @@ tiers (Working → Episodic → Semantic) based on biological principles such as
 activation level, emotional salience, and pattern recognition.
 """
 
-import pytest
-import time
-from neuroca.core.memory.factory import create_memory_system
 from neuroca.core.memory.consolidation import (
     StandardMemoryConsolidator,
     consolidate_working_to_episodic,
-    consolidate_episodic_to_semantic,
-    run_consolidation_cycle
+    run_consolidation_cycle,
 )
 
 
@@ -23,7 +19,7 @@ class TestMemoryConsolidation:
     def test_working_to_episodic_high_activation(self, working_memory, episodic_memory, memory_consolidator):
         """Test that high-activation working memories get consolidated to episodic memory."""
         # Add an item to working memory
-        chunk_id = working_memory.store("Remember this important fact")
+        working_memory.store("Remember this important fact")
         
         # Initially, episodic memory should be empty
         assert len(episodic_memory.dump()) == 0
@@ -39,7 +35,7 @@ class TestMemoryConsolidation:
         
         # Content should match
         episodic_content = episodic_memory.dump()[0]["content"]
-        assert "Remember this important fact" == episodic_content
+        assert episodic_content == "Remember this important fact"
     
     def test_working_to_episodic_emotional_content(self, working_memory, episodic_memory):
         """Test that emotional content is transferred even with lower activation."""
@@ -73,7 +69,7 @@ class TestMemoryConsolidation:
         """Test that consolidation preserves and enhances temporal context."""
         # Store memory with a timestamp in metadata
         original_time = "2023-01-01T12:00:00"
-        chunk_id = working_memory.store(
+        working_memory.store(
             "Historical event", 
             event_time=original_time
         )
@@ -97,8 +93,8 @@ class TestMemoryConsolidation:
         consolidator = StandardMemoryConsolidator()
         
         # Store the same content multiple times
-        for i in range(3):
-            chunk_id = working_memory.store("Repeated pattern")
+        for _i in range(3):
+            working_memory.store("Repeated pattern")
             consolidator.consolidate(working_memory, episodic_memory)
         
         # The pattern counter should have tracked this
@@ -123,7 +119,7 @@ class TestMemoryConsolidation:
         # Episodic memory should now have the memory
         episodic_dump = episodic_memory.dump()
         assert len(episodic_dump) == 1
-        assert "Helper function test" == episodic_dump[0]["content"]
+        assert episodic_dump[0]["content"] == "Helper function test"
     
     def test_run_consolidation_cycle(self, working_memory, episodic_memory):
         """Test that the full consolidation cycle works correctly."""

@@ -30,12 +30,11 @@ import string
 import tempfile
 import time
 import uuid
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, Generator, Callable
-
-import pytest
+from typing import Any, Callable, Optional
 
 # Configure logging for test utilities
 logger = logging.getLogger(__name__)
@@ -62,7 +61,7 @@ def get_test_data_path() -> Path:
     return test_data_path
 
 
-def load_test_json(filename: str) -> Dict[str, Any]:
+def load_test_json(filename: str) -> dict[str, Any]:
     """
     Load a JSON file from the test data directory.
     
@@ -79,7 +78,7 @@ def load_test_json(filename: str) -> Dict[str, Any]:
     file_path = get_test_data_path() / filename
     
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
         logger.error(f"Test data file not found: {file_path}")
@@ -200,9 +199,9 @@ class MockResponse:
     def __init__(
         self,
         status_code: int = 200,
-        json_data: Optional[Dict[str, Any]] = None,
+        json_data: Optional[dict[str, Any]] = None,
         text: str = "",
-        headers: Optional[Dict[str, str]] = None,
+        headers: Optional[dict[str, str]] = None,
         content: bytes = b"",
         raise_for_status: Optional[Callable[[], None]] = None
     ):
@@ -224,7 +223,7 @@ class MockResponse:
         self.content = content
         self._raise_for_status = raise_for_status
     
-    def json(self) -> Dict[str, Any]:
+    def json(self) -> dict[str, Any]:
         """Return the JSON data."""
         return self.json_data
     
@@ -304,7 +303,7 @@ class TimeMock:
             time.time = self.original_time_function
 
 
-def assert_dict_subset(subset: Dict[str, Any], full_dict: Dict[str, Any]) -> None:
+def assert_dict_subset(subset: dict[str, Any], full_dict: dict[str, Any]) -> None:
     """
     Assert that all key-value pairs in subset exist in full_dict.
     

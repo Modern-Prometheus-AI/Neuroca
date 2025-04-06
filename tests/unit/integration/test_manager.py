@@ -10,30 +10,28 @@ of the LLM integration layer. It verifies that the manager correctly handles:
 5. Response processing
 """
 
-import asyncio
-import json
-import os
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from neuroca.integration.manager import LLMIntegrationManager
-# Corrected import: Use BaseAdapter instead of LLMAdapter
-from neuroca.integration.adapters.base import BaseAdapter, LLMResponse, ResponseType, AdapterError 
-from neuroca.integration.models import (
-    LLMRequest, TokenUsage, ProviderConfig # LLMResponse is imported above now
-)
-from neuroca.integration.exceptions import (
-    LLMIntegrationError, ProviderNotFoundError, ModelNotAvailableError
-)
-from neuroca.core.health.dynamics import HealthDynamicsManager, HealthState
-from neuroca.memory.manager import MemoryManager
+import pytest
+
 from neuroca.core.cognitive_control.goal_manager import GoalManager
+from neuroca.core.health.dynamics import HealthState
+
+# Corrected import: Use BaseAdapter instead of LLMAdapter
+from neuroca.integration.adapters.base import LLMResponse
+from neuroca.integration.exceptions import ProviderNotFoundError
+from neuroca.integration.manager import LLMIntegrationManager
+from neuroca.integration.models import (
+    LLMRequest,  # LLMResponse is imported above now
+    TokenUsage,
+)
+from neuroca.memory.manager import MemoryManager
 
 
 class TestLLMIntegrationManager:
     """Test suite for the LLMIntegrationManager class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_memory_manager(self):
         """Create a mock memory manager for testing."""
         manager = MagicMock(spec=MemoryManager)
@@ -41,7 +39,7 @@ class TestLLMIntegrationManager:
         manager.retrieve = AsyncMock(return_value=[])
         return manager
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_health_manager(self):
         """Create a mock health manager for testing."""
         # Removed spec=HealthDynamicsManager to avoid potential spec-related issues
@@ -56,7 +54,7 @@ class TestLLMIntegrationManager:
         manager.get_system_health.return_value = health_state
         return manager
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_goal_manager(self):
         """Create a mock goal manager for testing."""
         manager = MagicMock(spec=GoalManager)
@@ -64,7 +62,7 @@ class TestLLMIntegrationManager:
         manager.get_highest_priority_active_goal.return_value = None
         return manager
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_adapter(self):
         """Create a mock LLM adapter for testing."""
         adapter = MagicMock()
@@ -72,7 +70,7 @@ class TestLLMIntegrationManager:
         adapter.close = AsyncMock()
         return adapter
 
-    @pytest.fixture
+    @pytest.fixture()
     def basic_config(self):
         """Create a basic configuration for testing."""
         return {
@@ -94,16 +92,16 @@ class TestLLMIntegrationManager:
             "goal_directed": True
         }
 
-    @pytest.fixture
+    @pytest.fixture()
     def llm_manager(self, basic_config, mock_memory_manager, mock_health_manager, 
                     mock_goal_manager, mock_adapter):
         """Create an LLMIntegrationManager instance for testing."""
         # Patch the adapter classes where they are potentially imported/used in manager.py
         # Assuming manager.py might import them directly or via adapters/__init__.py
-        with patch('neuroca.integration.manager.OpenAIAdapter', new_callable=MagicMock, create=True) as mock_openai, \
-             patch('neuroca.integration.manager.AnthropicAdapter', new_callable=MagicMock, create=True) as mock_anthropic, \
-             patch('neuroca.integration.manager.VertexAIAdapter', new_callable=MagicMock, create=True) as mock_vertexai, \
-             patch('neuroca.integration.manager.OllamaAdapter', new_callable=MagicMock, create=True) as mock_ollama: 
+        with patch('neuroca.integration.manager.OpenAIAdapter', new_callable=MagicMock, create=True), \
+             patch('neuroca.integration.manager.AnthropicAdapter', new_callable=MagicMock, create=True), \
+             patch('neuroca.integration.manager.VertexAIAdapter', new_callable=MagicMock, create=True), \
+             patch('neuroca.integration.manager.OllamaAdapter', new_callable=MagicMock, create=True): 
             
             # Configure the manager to use our mock adapter for the configured providers
             manager = LLMIntegrationManager(
@@ -122,10 +120,10 @@ class TestLLMIntegrationManager:
                                  mock_health_manager, mock_goal_manager):
         """Test that the manager initializes correctly."""
         # Patch the adapter classes where they are potentially imported/used in manager.py
-        with patch('neuroca.integration.manager.OpenAIAdapter', new_callable=MagicMock, create=True) as mock_openai, \
-             patch('neuroca.integration.manager.AnthropicAdapter', new_callable=MagicMock, create=True) as mock_anthropic, \
-             patch('neuroca.integration.manager.VertexAIAdapter', new_callable=MagicMock, create=True) as mock_vertexai, \
-             patch('neuroca.integration.manager.OllamaAdapter', new_callable=MagicMock, create=True) as mock_ollama: 
+        with patch('neuroca.integration.manager.OpenAIAdapter', new_callable=MagicMock, create=True), \
+             patch('neuroca.integration.manager.AnthropicAdapter', new_callable=MagicMock, create=True), \
+             patch('neuroca.integration.manager.VertexAIAdapter', new_callable=MagicMock, create=True), \
+             patch('neuroca.integration.manager.OllamaAdapter', new_callable=MagicMock, create=True): 
             
             manager = LLMIntegrationManager(
                 config=basic_config,
@@ -187,7 +185,7 @@ class TestLLMIntegrationManager:
         mock_adapter.execute.return_value = mock_response
         
         # Execute query
-        response = await llm_manager.query(
+        await llm_manager.query(
             prompt="Test prompt",
             provider="other_provider",
             model="other_model"
@@ -304,7 +302,7 @@ class TestLLMIntegrationManager:
         mock_adapter.execute.return_value = mock_response
         
         # Execute query
-        response = await llm_manager.query("Test prompt", goal_directed=True)
+        await llm_manager.query("Test prompt", goal_directed=True)
         
         # Verify goal information was incorporated
         assert mock_goal_manager.get_active_goals.called
@@ -336,7 +334,7 @@ class TestLLMIntegrationManager:
         mock_adapter.execute.return_value = mock_response
         
         # Execute query with additional parameters
-        response = await llm_manager.query(
+        await llm_manager.query(
             prompt="Test prompt",
             temperature=0.7,
             max_tokens=100,

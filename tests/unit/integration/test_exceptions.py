@@ -5,27 +5,26 @@ This module tests the exception classes in the LLM integration layer, ensuring
 that they behave correctly and provide the expected functionality.
 """
 
-import pytest
 
 from neuroca.integration.exceptions import (
-    LLMIntegrationError,
-    ProviderNotFoundError,
-    ModelNotAvailableError,
+    AdapterExecutionError,
     AuthenticationError,
-    RateLimitError,
-    ContextLengthExceededError,
-    InvalidRequestError,
-    ProviderAPIError,
-    ProviderTimeoutError,
-    ProviderConnectionError,
-    ResponseParsingError,
     ConfigurationError,
-    ResourceExhaustedError,
+    ContextLengthExceededError,
     FeatureNotSupportedError,
-    MemoryContextError,
-    HealthAwarenessError,
     GoalContextError,
-    AdapterExecutionError
+    HealthAwarenessError,
+    InvalidRequestError,
+    LLMIntegrationError,
+    MemoryContextError,
+    ModelNotAvailableError,
+    ProviderAPIError,
+    ProviderConnectionError,
+    ProviderNotFoundError,
+    ProviderTimeoutError,
+    RateLimitError,
+    ResourceExhaustedError,
+    ResponseParsingError,
 )
 
 

@@ -5,22 +5,21 @@ Tests the functionality of ComponentHealth, HealthParameter, HealthState,
 HealthDynamicsManager, and the application of natural processes and coping strategies.
 """
 
+from unittest.mock import patch
+
 import pytest
-import time
-from typing import List, Optional
-from unittest.mock import patch, MagicMock
 
 from neuroca.core.health.dynamics import (
-    HealthParameter,
-    HealthParameterType,
     ComponentHealth,
-    HealthState,
+    HealthDynamicsManager,
     HealthEvent,
     HealthEventType,
-    HealthDynamicsManager,
+    HealthParameter,
+    HealthParameterType,
+    HealthState,
     get_health_dynamics,
-    register_component_for_health_tracking,
     record_cognitive_operation,
+    register_component_for_health_tracking,
 )
 
 # Constants for testing
@@ -35,7 +34,7 @@ def get_param_value(health: ComponentHealth, name: str, default: float = 0.0) ->
 class TestComponentHealth:
     """Tests for the ComponentHealth class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def component_health(self) -> ComponentHealth:
         """Fixture to create a ComponentHealth instance with default parameters."""
         health = ComponentHealth(TEST_COMPONENT_ID)
@@ -252,7 +251,7 @@ class TestComponentHealth:
 
         # Coping strategy effect: decay * 0.1, recovery * 3.0
         reduced_energy_decay = energy_param.decay_rate * 0.1
-        max_energy_recovery = energy_param.recovery_rate * 3.0
+        energy_param.recovery_rate * 3.0
         reduced_fatigue_decay = fatigue_param.decay_rate * 0.1
         max_fatigue_recovery = fatigue_param.recovery_rate * 3.0
 
@@ -286,7 +285,7 @@ class TestComponentHealth:
 class TestHealthDynamicsManager:
     """Tests for the HealthDynamicsManager class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def manager(self) -> HealthDynamicsManager:
         """Fixture to create a HealthDynamicsManager instance."""
         # Use a fresh instance for each test to avoid state leakage
@@ -337,7 +336,7 @@ class TestHealthDynamicsManager:
         initial_fatigue = get_param_value(health, "fatigue")
         
         complexity = 0.8
-        events = manager.record_operation(TEST_COMPONENT_ID, "complex_thought", complexity)
+        manager.record_operation(TEST_COMPONENT_ID, "complex_thought", complexity)
         
         # Energy should decrease
         expected_energy_cost = 0.01 * complexity
@@ -366,7 +365,7 @@ class TestHealthDynamicsManager:
         """Test that listeners are notified of events."""
         manager.register_component(TEST_COMPONENT_ID)
         
-        received_events: List[HealthEvent] = []
+        received_events: list[HealthEvent] = []
         def listener_callback(event: HealthEvent):
             received_events.append(event)
             
@@ -434,7 +433,7 @@ def reset_global_manager():
     """Fixture to reset the global manager before each test function."""
     global _health_dynamics
     # Store original and replace
-    original_manager = get_health_dynamics()
+    get_health_dynamics()
     new_manager = HealthDynamicsManager()
     
     # Use patch to replace the global instance within the dynamics module
@@ -458,7 +457,7 @@ def test_global_record_operation():
     health = get_health_dynamics().get_component_health(TEST_COMPONENT_ID)
     initial_energy = get_param_value(health, "energy")
     
-    events = record_cognitive_operation(TEST_COMPONENT_ID, "global_op", 0.5)
+    record_cognitive_operation(TEST_COMPONENT_ID, "global_op", 0.5)
     
     # Check that parameters changed, not event count
     assert get_param_value(health, "energy") < initial_energy

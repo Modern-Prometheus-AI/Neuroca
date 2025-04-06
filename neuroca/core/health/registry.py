@@ -5,14 +5,12 @@ This module provides a central registry for registering health checks
 and components that need health monitoring.
 """
 
-from typing import Dict, List, Set, Any, Callable, Optional, Type
-import logging
-import inspect
 import functools
-from abc import ABC
+import inspect
+import logging
+from typing import Any, Callable, Optional
 
 from neuroca.core.health.monitor import HealthCheck
-
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +24,10 @@ class HealthRegistry:
     """
     def __init__(self):
         """Initialize the health registry."""
-        self._checks: Dict[str, HealthCheck] = {}
-        self._components: Dict[str, Any] = {}
-        self._component_checks: Dict[str, Set[str]] = {}
-        self._check_components: Dict[str, str] = {}
+        self._checks: dict[str, HealthCheck] = {}
+        self._components: dict[str, Any] = {}
+        self._component_checks: dict[str, set[str]] = {}
+        self._check_components: dict[str, str] = {}
     
     def register_component(self, component_id: str, component: Any) -> None:
         """
@@ -121,7 +119,7 @@ class HealthRegistry:
         """
         return self._components.get(component_id)
     
-    def get_component_checks(self, component_id: str) -> List[HealthCheck]:
+    def get_component_checks(self, component_id: str) -> list[HealthCheck]:
         """
         Get all health checks for a specific component.
         
@@ -137,7 +135,7 @@ class HealthRegistry:
         return [self._checks[check_id] for check_id in self._component_checks[component_id]
                 if check_id in self._checks]
     
-    def get_all_checks(self) -> List[HealthCheck]:
+    def get_all_checks(self) -> list[HealthCheck]:
         """
         Get all registered health checks.
         
@@ -146,7 +144,7 @@ class HealthRegistry:
         """
         return list(self._checks.values())
     
-    def get_all_components(self) -> Dict[str, Any]:
+    def get_all_components(self) -> dict[str, Any]:
         """
         Get all registered components.
         
@@ -238,7 +236,7 @@ def register_component_checks(component_id: str, instance: Any) -> None:
         component_id: The ID of the component
         instance: The component instance
     """
-    for name, method in inspect.getmembers(instance, predicate=inspect.ismethod):
+    for _name, method in inspect.getmembers(instance, predicate=inspect.ismethod):
         if hasattr(method, 'health_check_class'):
             # Create a health check from the decorated method
             check_class = method.health_check_class

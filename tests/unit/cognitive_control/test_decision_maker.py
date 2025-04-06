@@ -2,18 +2,20 @@
 Unit tests for the DecisionMaker component in cognitive control.
 """
 
-import pytest
-from typing import List, Dict, Any, Optional
+from typing import Any
+from unittest.mock import MagicMock  # Import MagicMock
 
-from unittest.mock import MagicMock # Import MagicMock
+import pytest
 
 from neuroca.core.cognitive_control.decision_maker import DecisionMaker, DecisionOption
 from neuroca.core.health.dynamics import HealthState
+
 # Import MemoryItem and MemoryType for mocking memory results
-from neuroca.memory.manager import MemoryItem, MemoryType, MemoryManager 
+from neuroca.memory.manager import MemoryItem, MemoryManager
+
 
 # Mock context for testing (can reuse or adapt from planner tests)
-def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> Dict[str, Any]:
+def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> dict[str, Any]:
     context = {"health_state": health_state}
     context.update(kwargs)
     return context
@@ -21,21 +23,21 @@ def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> 
 class TestDecisionMaker:
     """Tests for the DecisionMaker class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_memory_manager(self) -> MagicMock:
         """Fixture for a mocked MemoryManager."""
         manager = MagicMock(spec=MemoryManager)
         manager.retrieve.return_value = [] # Default: no past attempts found
         return manager
 
-    @pytest.fixture
+    @pytest.fixture()
     def decision_maker(self, mock_memory_manager: MagicMock) -> DecisionMaker:
         """Fixture to create a DecisionMaker instance with mocked memory."""
         # Pass mock memory manager
         return DecisionMaker(memory_manager=mock_memory_manager)
 
-    @pytest.fixture
-    def sample_options(self) -> List[DecisionOption]:
+    @pytest.fixture()
+    def sample_options(self) -> list[DecisionOption]:
         """Fixture providing sample decision options."""
         return [
             DecisionOption(description="Option A (Low Risk, Med Utility)", action="action_a", estimated_utility=0.6, risk=0.1),
@@ -56,7 +58,7 @@ class TestDecisionMaker:
         choice = decision_maker.choose_action([], context=create_context())
         assert choice is None
 
-    def test_choose_action_normal_health(self, decision_maker: DecisionMaker, sample_options: List[DecisionOption]):
+    def test_choose_action_normal_health(self, decision_maker: DecisionMaker, sample_options: list[DecisionOption]):
         """Test action choice in NORMAL health state (default risk aversion)."""
         context = create_context(HealthState.NORMAL)
         choice = decision_maker.choose_action(sample_options, context)
@@ -71,7 +73,7 @@ class TestDecisionMaker:
         assert choice.description in ["Option A (Low Risk, Med Utility)", "Option B (High Risk, High Utility)"]
         # If logic consistently picks first on tie: assert choice.description == "Option A (Low Risk, Med Utility)"
 
-    def test_choose_action_stressed_health(self, decision_maker: DecisionMaker, sample_options: List[DecisionOption]):
+    def test_choose_action_stressed_health(self, decision_maker: DecisionMaker, sample_options: list[DecisionOption]):
         """Test action choice in STRESSED health state (higher risk aversion)."""
         context = create_context(HealthState.STRESSED)
         choice = decision_maker.choose_action(sample_options, context)
@@ -84,7 +86,7 @@ class TestDecisionMaker:
         assert choice is not None
         assert choice.description == "Option A (Low Risk, Med Utility)"
 
-    def test_choose_action_critical_health(self, decision_maker: DecisionMaker, sample_options: List[DecisionOption]):
+    def test_choose_action_critical_health(self, decision_maker: DecisionMaker, sample_options: list[DecisionOption]):
         """Test action choice in CRITICAL health state (highest risk aversion)."""
         context = create_context(HealthState.CRITICAL)
         choice = decision_maker.choose_action(sample_options, context)
@@ -97,7 +99,7 @@ class TestDecisionMaker:
         assert choice is not None
         assert choice.description == "Option A (Low Risk, Med Utility)"
 
-    def test_choose_action_optimal_health(self, decision_maker: DecisionMaker, sample_options: List[DecisionOption]):
+    def test_choose_action_optimal_health(self, decision_maker: DecisionMaker, sample_options: list[DecisionOption]):
         """Test action choice in OPTIMAL health state (lower risk aversion)."""
         context = create_context(HealthState.OPTIMAL)
         choice = decision_maker.choose_action(sample_options, context)

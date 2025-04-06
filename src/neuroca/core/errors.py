@@ -270,7 +270,7 @@ class NCAError(Exception):
 
 # Domain-specific exception classes
 
-class SystemError(NCAError):
+class NCASystemError(NCAError): # Renamed from SystemError
     """Errors related to system operations and initialization."""
     pass
 
@@ -280,7 +280,7 @@ class ConfigurationError(NCAError):
     pass
 
 
-class MemoryError(NCAError):
+class NCAMemoryError(NCAError): # Renamed from MemoryError
     """Errors related to the memory subsystem."""
     pass
 
@@ -355,7 +355,7 @@ def log_error(
             log.log(level, f"Caused by: {error.cause}", exc_info=error.cause)
     else:
         # For standard exceptions, log as error with traceback
-        log.error(f"Unexpected error: {error}", exc_info=include_traceback)
+        log.error(f"Unexpected error: {error}", exc_info=include_traceback)  # noqa: BLE001
 
 
 def format_error_context(
@@ -393,7 +393,7 @@ def format_error_context(
 
 
 def handle_exceptions(
-    error_map: dict[Type[Exception], ErrorCode],
+    error_map: dict[type[Exception], ErrorCode],
     default_code: ErrorCode = ErrorCode.SYSTEM_INITIALIZATION_FAILED,
     logger_instance: Optional[logging.Logger] = None,
     reraise: bool = True
@@ -421,7 +421,7 @@ def handle_exceptions(
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Intentionally catching Exception in decorator
                 # Find the most specific matching exception type
                 matched_code = None
                 for exc_type, code in error_map.items():

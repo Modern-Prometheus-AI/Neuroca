@@ -35,8 +35,8 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-from unittest.mock import MagicMock, patch
+from typing import Any, Callable, Optional, Union
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -81,7 +81,7 @@ def generate_test_memory_data(
     memory_type: str = "episodic",
     with_embeddings: bool = True,
     with_metadata: bool = True
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Generate test memory data for testing memory-related functionality.
     
@@ -134,10 +134,10 @@ def generate_test_memory_data(
 
 
 def generate_test_health_data(
-    metrics: Optional[List[str]] = None,
+    metrics: Optional[list[str]] = None,
     time_points: int = 10,
     with_fluctuations: bool = True
-) -> Dict[str, List[float]]:
+) -> dict[str, list[float]]:
     """
     Generate test health metrics data for testing health dynamics functionality.
     
@@ -159,7 +159,7 @@ def generate_test_health_data(
         base_value = random.uniform(0.5, 0.9)
         values = []
         
-        for i in range(time_points):
+        for _i in range(time_points):
             if with_fluctuations:
                 # Add some random fluctuation
                 fluctuation = random.uniform(-0.1, 0.1)
@@ -194,7 +194,7 @@ class MockLLMResponse:
     
     def __init__(
         self,
-        responses: List[str],
+        responses: list[str],
         delay: Optional[float] = None,
         error_rate: float = 0.0,
         error_message: str = "Simulated LLM error"
@@ -269,7 +269,7 @@ class MockLLMResponse:
         return response
 
 
-def assert_memory_consistency(expected: Dict[str, Any], actual: Dict[str, Any], tolerance: float = 1e-6):
+def assert_memory_consistency(expected: dict[str, Any], actual: dict[str, Any], tolerance: float = 1e-6):
     """
     Assert that two memory items are consistent, with special handling for embeddings.
     
@@ -305,9 +305,9 @@ def assert_memory_consistency(expected: Dict[str, Any], actual: Dict[str, Any], 
 
 @contextmanager
 def setup_test_environment(
-    config_overrides: Optional[Dict[str, Any]] = None,
+    config_overrides: Optional[dict[str, Any]] = None,
     temp_dir: bool = False,
-    env_vars: Optional[Dict[str, str]] = None
+    env_vars: Optional[dict[str, str]] = None
 ):
     """
     Context manager to set up a controlled test environment.
@@ -442,7 +442,7 @@ class TeardownManager:
         self.cleanup()
 
 
-def create_test_file(content: Union[str, Dict, List], file_path: Optional[Path] = None) -> Path:
+def create_test_file(content: Union[str, dict, list], file_path: Optional[Path] = None) -> Path:
     """
     Create a test file with the specified content.
     
@@ -467,7 +467,7 @@ def create_test_file(content: Union[str, Dict, List], file_path: Optional[Path] 
     return file_path
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_llm_response():
     """
     Pytest fixture for mocking LLM responses.
@@ -484,7 +484,7 @@ def mock_llm_response():
         yield mock
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_memory_data():
     """
     Pytest fixture providing test memory data.
@@ -495,7 +495,7 @@ def test_memory_data():
     return generate_test_memory_data(size=10)
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_health_data():
     """
     Pytest fixture providing test health metrics data.
@@ -506,7 +506,7 @@ def test_health_data():
     return generate_test_health_data()
 
 
-@pytest.fixture
+@pytest.fixture()
 def teardown_manager():
     """
     Pytest fixture providing a TeardownManager.

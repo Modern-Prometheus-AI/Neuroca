@@ -8,11 +8,10 @@ This module implements a biologically-inspired episodic memory system with:
 - Adaptive decay based on emotional importance
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional, TypeVar, Tuple
-import uuid
 import time
-import math
+import uuid
+from datetime import datetime
+from typing import Any, Optional, TypeVar
 
 from neuroca.core.memory.interfaces import MemoryChunk, MemorySystem
 
@@ -26,9 +25,9 @@ class EpisodicMemoryChunk(MemoryChunk[T]):
     def __init__(
         self, 
         content: T, 
-        temporal_context: Dict[str, Any] = None,
+        temporal_context: dict[str, Any] = None,
         emotional_salience: float = 0.5,
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ):
         self._id = str(uuid.uuid4())
         self._content = content
@@ -73,11 +72,11 @@ class EpisodicMemoryChunk(MemoryChunk[T]):
         return self._last_accessed
     
     @property
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         return self._metadata
     
     @property
-    def temporal_context(self) -> Dict[str, Any]:
+    def temporal_context(self) -> dict[str, Any]:
         return self._temporal_context
     
     @property
@@ -116,12 +115,12 @@ class EpisodicMemory(MemorySystem):
         """
         self._name = "episodic_memory"
         self._capacity = None  # Unlimited capacity
-        self._chunks: Dict[str, EpisodicMemoryChunk] = {}
+        self._chunks: dict[str, EpisodicMemoryChunk] = {}
         self._decay_rate = decay_rate
         self._last_decay_time = time.time()
         
         # Temporal sequence tracking
-        self._sequence_map: Dict[int, List[str]] = {}  # Maps sequence IDs to chunk IDs
+        self._sequence_map: dict[int, list[str]] = {}  # Maps sequence IDs to chunk IDs
     
     @property
     def name(self) -> str:
@@ -135,7 +134,7 @@ class EpisodicMemory(MemorySystem):
         self, 
         content: Any, 
         emotional_salience: float = 0.5,
-        temporal_context: Dict[str, Any] = None,
+        temporal_context: dict[str, Any] = None,
         **metadata
     ) -> str:
         """
@@ -175,9 +174,9 @@ class EpisodicMemory(MemorySystem):
         query: Any, 
         limit: int = 10, 
         min_emotional_salience: float = 0.0,
-        temporal_range: Tuple[Optional[float], Optional[float]] = (None, None),
+        temporal_range: tuple[Optional[float], Optional[float]] = (None, None),
         **parameters
-    ) -> List[MemoryChunk]:
+    ) -> list[MemoryChunk]:
         """
         Retrieve episodic memories based on query and filters.
         
@@ -236,7 +235,7 @@ class EpisodicMemory(MemorySystem):
             chunk.update_activation(min(1.0, chunk.activation + boost))
         return chunk
     
-    def retrieve_sequence(self, sequence_id: int) -> List[MemoryChunk]:
+    def retrieve_sequence(self, sequence_id: int) -> list[MemoryChunk]:
         """Retrieve all memories that belong to a particular sequence."""
         self._apply_decay()
         
@@ -281,11 +280,11 @@ class EpisodicMemory(MemorySystem):
         self._chunks.clear()
         self._sequence_map.clear()
 
-    def get_all_items(self) -> List[MemoryChunk]:
+    def get_all_items(self) -> list[MemoryChunk]:
         """Get all items currently in episodic memory."""
         return list(self._chunks.values())
     
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get statistics about the episodic memory state."""
         if not self._chunks:
             return {
@@ -312,7 +311,7 @@ class EpisodicMemory(MemorySystem):
             "sequence_count": len(self._sequence_map),
         }
     
-    def dump(self) -> List[Dict[str, Any]]:
+    def dump(self) -> list[dict[str, Any]]:
         """Dump all episodic memories for consolidation or inspection."""
         # Apply decay before dumping to ensure activations are current
         self._apply_decay() 

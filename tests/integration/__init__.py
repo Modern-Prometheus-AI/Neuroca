@@ -33,7 +33,8 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional
+
 import pytest
 
 # Configure logging for integration tests
@@ -54,7 +55,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Test environment configuration
-TEST_ENV: Dict[str, str] = {
+TEST_ENV: dict[str, str] = {
     "ENVIRONMENT": os.environ.get("TEST_ENVIRONMENT", "test"),
     "LOG_LEVEL": os.environ.get("TEST_LOG_LEVEL", "INFO"),
 }
@@ -67,7 +68,7 @@ MAX_RETRIES = 3  # Default number of retries for flaky tests
 class IntegrationTestError(Exception):
     """Base exception for integration test errors."""
 
-    def __init__(self, message: str, details: Optional[Dict] = None):
+    def __init__(self, message: str, details: Optional[dict] = None):
         """
         Initialize an integration test error.
 
@@ -81,7 +82,7 @@ class IntegrationTestError(Exception):
         logger.error(f"Integration test error: {self}")
 
 
-def setup_test_environment() -> Dict[str, str]:
+def setup_test_environment() -> dict[str, str]:
     """
     Set up the integration test environment.
 
@@ -111,7 +112,7 @@ def setup_test_environment() -> Dict[str, str]:
     if config_path.exists():
         import json
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 test_config = json.load(f)
                 logger.debug(f"Loaded test configuration from {config_path}")
         except Exception as e:

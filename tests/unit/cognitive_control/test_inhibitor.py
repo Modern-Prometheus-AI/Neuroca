@@ -2,25 +2,26 @@
 Unit tests for the Inhibitor component in cognitive control.
 """
 
-import pytest
-import time
-from typing import Dict, Any, Optional, List
+from typing import Any
 from unittest.mock import MagicMock, patch
 
-from neuroca.core.cognitive_control.inhibitor import Inhibitor, InhibitionTarget, InhibitionDecision
-from neuroca.core.health.dynamics import HealthState, ComponentHealth
+import pytest
+
 # Mock GoalManager and Goal for testing goal conflicts
-from neuroca.core.cognitive_control.goal_manager import GoalManager, Goal, GoalStatus
+from neuroca.core.cognitive_control.goal_manager import Goal, GoalManager, GoalStatus
+from neuroca.core.cognitive_control.inhibitor import InhibitionDecision, InhibitionTarget, Inhibitor
+from neuroca.core.health.dynamics import ComponentHealth, HealthState
 from neuroca.memory.manager import MemoryManager
 
+
 # Mock context for testing
-def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> Dict[str, Any]:
+def create_context(health_state: HealthState = HealthState.NORMAL, **kwargs) -> dict[str, Any]:
     context = {"health_state": health_state}
     context.update(kwargs)
     return context
 
 # Mock fixtures
-@pytest.fixture
+@pytest.fixture()
 def mock_memory_manager() -> MagicMock:
     """Create a mocked MemoryManager."""
     manager = MagicMock(spec=MemoryManager)
@@ -71,7 +72,7 @@ def mock_memory_manager() -> MagicMock:
     
     return manager
 
-@pytest.fixture
+@pytest.fixture()
 def mock_health_manager() -> MagicMock:
     """Create a mocked HealthDynamicsManager."""
     manager = MagicMock()
@@ -86,7 +87,7 @@ def mock_health_manager() -> MagicMock:
     return manager
 
 # Mock GoalManager setup
-@pytest.fixture
+@pytest.fixture()
 def mock_goal_manager() -> MagicMock:
     """Create a mocked GoalManager with test goals."""
     manager = MagicMock(spec=GoalManager)
@@ -123,7 +124,7 @@ def mock_goal_manager() -> MagicMock:
 class TestInhibitor:
     """Tests for the Inhibitor class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def inhibitor(self, mock_goal_manager, mock_health_manager, mock_memory_manager) -> Inhibitor:
         """Fixture to create an Inhibitor instance with mocked dependencies."""
         return Inhibitor(
@@ -132,7 +133,7 @@ class TestInhibitor:
             memory_manager=mock_memory_manager
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def sample_target(self) -> InhibitionTarget:
         """Fixture for a sample inhibition target."""
         return InhibitionTarget(target_type="action", target_id="act_123", description="perform risky maneuver", activation=0.7)

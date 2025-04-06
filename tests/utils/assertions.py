@@ -31,9 +31,9 @@ Usage:
 import inspect
 import json
 import logging
-import math
 import re
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
+from collections.abc import Sequence
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -225,8 +225,8 @@ def assert_almost_equal(
 
 
 def assert_dict_contains_subset(
-    subset: Dict[Any, Any], 
-    full_dict: Dict[Any, Any], 
+    subset: dict[Any, Any], 
+    full_dict: dict[Any, Any], 
     msg: Optional[str] = None
 ) -> None:
     """
@@ -284,7 +284,7 @@ def assert_raises(
         AssertionError: If the expected exception is not raised
     """
     try:
-        result = callable_obj(*args, **kwargs)
+        callable_obj(*args, **kwargs)
         caller = inspect.getframeinfo(inspect.currentframe().f_back)
         error_msg = (f"Expected {expected_exception.__name__} to be raised, but no exception was raised. "
                     f"Called from {caller.filename}:{caller.lineno}")
@@ -301,8 +301,8 @@ def assert_raises(
 
 
 def assert_json_equal(
-    actual_json: Union[str, Dict, List], 
-    expected_json: Union[str, Dict, List],
+    actual_json: Union[str, dict, list], 
+    expected_json: Union[str, dict, list],
     msg: Optional[str] = None
 ) -> None:
     """
@@ -341,13 +341,13 @@ def assert_json_equal(
         expected_str = json.dumps(expected_obj, sort_keys=True, indent=2)
         
         error_msg = msg or f"JSON objects are not equal:\nExpected:\n{expected_str}\n\nActual:\n{actual_str}"
-        logger.debug(f"JSON equality assertion failed")
+        logger.debug("JSON equality assertion failed")
         raise AssertionError(error_msg)
 
 
 def assert_response_contains(
     response_text: str, 
-    expected_content: Union[str, List[str], Set[str]],
+    expected_content: Union[str, list[str], set[str]],
     case_sensitive: bool = True,
     msg: Optional[str] = None
 ) -> None:
@@ -387,7 +387,7 @@ def assert_memory_state(
     expected_activation: Optional[float] = None,
     expected_decay_rate: Optional[float] = None,
     expected_content: Optional[Any] = None,
-    expected_attributes: Optional[Dict[str, Any]] = None,
+    expected_attributes: Optional[dict[str, Any]] = None,
     tolerance: float = 1e-5,
     msg: Optional[str] = None
 ) -> None:
@@ -413,7 +413,7 @@ def assert_memory_state(
     # Check activation if specified
     if expected_activation is not None:
         if not hasattr(memory_obj, 'activation'):
-            errors.append(f"Memory object has no 'activation' attribute")
+            errors.append("Memory object has no 'activation' attribute")
         else:
             actual_activation = memory_obj.activation
             if abs(actual_activation - expected_activation) > tolerance:
@@ -422,7 +422,7 @@ def assert_memory_state(
     # Check decay rate if specified
     if expected_decay_rate is not None:
         if not hasattr(memory_obj, 'decay_rate'):
-            errors.append(f"Memory object has no 'decay_rate' attribute")
+            errors.append("Memory object has no 'decay_rate' attribute")
         else:
             actual_decay_rate = memory_obj.decay_rate
             if abs(actual_decay_rate - expected_decay_rate) > tolerance:
@@ -431,7 +431,7 @@ def assert_memory_state(
     # Check content if specified
     if expected_content is not None:
         if not hasattr(memory_obj, 'content'):
-            errors.append(f"Memory object has no 'content' attribute")
+            errors.append("Memory object has no 'content' attribute")
         else:
             actual_content = memory_obj.content
             if actual_content != expected_content:
@@ -460,7 +460,7 @@ def assert_memory_state(
 
 def assert_health_metrics(
     health_obj: Any,
-    expected_metrics: Dict[str, Union[float, Tuple[float, float]]],
+    expected_metrics: dict[str, Union[float, tuple[float, float]]],
     tolerance: float = 1e-5,
     msg: Optional[str] = None
 ) -> None:
@@ -510,8 +510,8 @@ def assert_network_structure(
     network: Any,
     expected_nodes: Optional[int] = None,
     expected_edges: Optional[int] = None,
-    expected_connections: Optional[List[Tuple[Any, Any]]] = None,
-    expected_node_attributes: Optional[Dict[Any, Dict[str, Any]]] = None,
+    expected_connections: Optional[list[tuple[Any, Any]]] = None,
+    expected_node_attributes: Optional[dict[Any, dict[str, Any]]] = None,
     msg: Optional[str] = None
 ) -> None:
     """
