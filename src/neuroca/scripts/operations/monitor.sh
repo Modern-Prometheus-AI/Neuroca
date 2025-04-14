@@ -24,7 +24,7 @@
 #   ./monitor.sh --service memory          # Monitor only memory subsystem
 #   ./monitor.sh --output json --alert     # Output in JSON and send alerts
 #
-# Author: NCA Team
+# Author: Justin Lietz - NCA Team
 # Version: 1.0.0
 # License: Proprietary
 

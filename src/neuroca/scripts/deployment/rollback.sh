@@ -22,8 +22,8 @@
 #   ./rollback.sh --component memory --force
 #   ./rollback.sh --dry-run
 #
-# Author: NCA Team
-# Last Updated: 2023
+# Author: Justin Lietz - NCA Team
+# Last Updated: 2025
 #############################################################################
 
 set -eo pipefail

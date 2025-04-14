@@ -3,7 +3,21 @@ Memory consolidation functionality for the NCA system.
 
 This module handles the process of memory consolidation, which moves information
 from short-term memory to long-term memory with appropriate transformations.
+
+⚠️ DEPRECATION WARNING ⚠️
+This module is deprecated and will be removed in a future release.
+Please use neuroca.memory.manager.MemoryManager for memory consolidation operations.
+See src/neuroca/memory/README.md for migration guidance.
 """
+
+import warnings
+
+warnings.warn(
+    "The memory_consolidation module is deprecated. "
+    "Use neuroca.memory.manager.MemoryManager for memory consolidation operations.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from datetime import datetime
 from typing import Any
@@ -95,4 +109,4 @@ def prioritize_memories_for_consolidation(memories: list[dict[str, Any]],
         return importance * (1.0 / (access_count + 1))
         
     sorted_memories = sorted(memories, key=priority_score, reverse=True)
-    return sorted_memories[:limit] 
+    return sorted_memories[:limit]

@@ -42,31 +42,16 @@ __author__ = "NeuroCognitive Architecture Team"
 __license__ = "MIT"
 
 # Import CLI components to make them available at the package level
+# F401 Fix: Removed unused imports that were only intended to expose submodules
 try:
-    # These imports will be implemented in separate files within the cli package
-    # They're included here to define the public API of the cli package
-    from .commands import (  # type: ignore
-        configure,
-        diagnose,
-        evaluate,
-        export,
-        import_model,
-        monitor,
-        run,
-        train,
+    # Import submodules directly if needed for package structure,
+    # but avoid importing specific unused names here.
+    from . import (
+        commands,  # Example if commands module itself is needed
+        exceptions,  # Example if exceptions module itself is needed
+        utils,  # Example if utils module itself is needed
     )
-    from .exceptions import (  # type: ignore
-        AuthenticationError,
-        CLIError,
-        ConfigurationError,
-        ConnectionError,
-    )
-    from .utils import (  # type: ignore
-        format_output,
-        get_system_info,
-        setup_logging,
-        validate_config,
-    )
+    pass # Keep try-except structure if needed for graceful handling
 except ImportError as e:
     # During early development or testing, some modules might not exist yet
     # This graceful handling allows for incremental development
@@ -102,7 +87,7 @@ def setup_cli_environment() -> None:
         os.makedirs(os.path.join(os.path.expanduser("~"), ".neuroca"), exist_ok=True)
         
         logger.debug("CLI environment setup completed successfully")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to set up CLI environment: {e}")
         raise CLIError(f"Environment setup failed: {e}") from e
 
@@ -139,7 +124,7 @@ def get_cli_config() -> dict[str, Any]:
         
         logger.debug(f"CLI configuration loaded: {config}")
         return config
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to load CLI configuration: {e}")
         raise ConfigurationError(f"Configuration loading failed: {e}") from e
 
@@ -174,15 +159,15 @@ def main() -> int:
             # This will be replaced with proper command registration and dispatch
             logger.info(f"Command '{command}' not yet implemented")
             return 1
-        else:
-            # No command provided, show help
-            logger.info("Usage: neuroca <command> [options]")
-            logger.info("Run 'neuroca help' for more information")
-            return 0
+        # RET505 Fix: Removed unnecessary else & unindented block
+        # No command provided, show help
+        logger.info("Usage: neuroca <command> [options]")
+        logger.info("Run 'neuroca help' for more information")
+        return 0
             
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"CLI execution failed: {e}", exc_info=True)
-        print(f"Error: {e}", file=sys.stderr)
+        logger.error(f"Error: {e}", file=sys.stderr) # T201 Fix: Replaced print with logger.error
         return 1
 
 

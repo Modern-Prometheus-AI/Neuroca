@@ -22,7 +22,7 @@
 #   ./deploy.sh -e staging -v latest -c custom-config.yaml
 #   ./deploy.sh --dry-run --environment prod
 #
-# Author: NCA Team
+# Author: Justin Lietz - NCA Team
 # Date: $(date +%Y-%m-%d)
 
 set -eo pipefail

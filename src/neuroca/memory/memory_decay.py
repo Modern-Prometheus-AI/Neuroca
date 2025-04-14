@@ -3,7 +3,21 @@ Memory decay functionality for the NCA system.
 
 This module handles the decay of memories over time to simulate
 the natural forgetting process of human memory.
+
+⚠️ DEPRECATION WARNING ⚠️
+This module is deprecated and will be removed in a future release.
+Please use neuroca.memory.manager.MemoryManager for memory decay operations.
+See src/neuroca/memory/README.md for migration guidance.
 """
+
+import warnings
+
+warnings.warn(
+    "The memory_decay module is deprecated. "
+    "Use neuroca.memory.manager.MemoryManager for memory decay operations.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import math
 from datetime import datetime, timedelta
@@ -46,4 +60,4 @@ def apply_decay_to_memories(memories: list[dict[str, Any]]) -> list[dict[str, An
     for memory in memories:
         memory['strength'] = memory.get('strength', 1.0) * calculate_decay(memory)
     
-    return memories 
+    return memories

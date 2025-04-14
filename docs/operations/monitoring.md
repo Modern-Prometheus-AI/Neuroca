@@ -380,6 +380,6 @@ Example Fluentd configuration for log collection:
 
 | Date       | Version | Author        | Description                      |
 |------------|---------|---------------|----------------------------------|
-| 2023-10-01 | 1.0     | NCA Team      | Initial documentation            |
-| 2023-11-15 | 1.1     | NCA Team      | Added cognitive metrics section  |
-| 2024-01-10 | 1.2     | NCA Team      | Updated alerting strategy        |
+| 2023-10-01 | 1.0     | Justin Lietz - NCA Team      | Initial documentation            |
+| 2023-11-15 | 1.1     | Justin Lietz - NCA Team      | Added cognitive metrics section  |
+| 2024-01-10 | 1.2     | Justin Lietz - NCA Team      | Updated alerting strategy        |

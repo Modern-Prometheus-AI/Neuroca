@@ -35,17 +35,8 @@ from typing import Optional
 
 # Import Pydantic for schema definitions
 try:
-    from pydantic import (
-        BaseModel,
-        Extra,
-        Field,
-        ValidationError,
-        confloat,
-        conint,
-        constr,
-        root_validator,
-        validator,
-    )
+    # Removed unused imports: Extra, Field, ValidationError, confloat, conint, constr, root_validator, validator
+    from pydantic import BaseModel
 except ImportError:
     logging.critical("Pydantic is required for API schema definitions. Please install it with: pip install pydantic")
     raise

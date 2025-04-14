@@ -656,72 +656,83 @@ class Neo4jConnectionPool:
     def _acquire_connection(self) -> Neo4jConnection:
         """
         Acquire a connection from the pool or create a new one if needed.
-        
+
         Returns:
             Neo4jConnection: A Neo4j connection.
-        
+
         Raises:
             Neo4jConnectionError: If unable to acquire a connection within the timeout.
         """
         start_time = time.time()
-        
+
         while time.time() - start_time < self.connection_timeout:
-            # Try to get a connection from the pool
+            # Try to get a connection from the pool without waiting
             try:
                 connection = self.pool.get_nowait()
                 logger.debug("Acquired connection from pool")
-                
-                # Validate the connection before returning it
+
+                # Validate the connection
                 if connection.is_connected():
-                    return connection
-                else:
-                    logger.warning("Acquired invalid connection from pool, closing and retrying")
-                    try:
-                        connection.close()
-                    except Exception as e:
-                        logger.error(f"Error closing invalid connection: {str(e)}")
-                    # Continue to try to get another connection or create a new one
-            
+                    return connection # <<< Path 1: Got valid connection immediately
+
+                # RET505 Fix 1: Removed 'else:' and unindented block below
+                logger.warning("Acquired invalid connection from pool, closing and retrying")
+                try:
+                    connection.close()
+                except neo4j.exceptions.Neo4jError as e: # BLE001 Fix 1: Catch specific error
+                    logger.error(f"Error closing invalid connection: {str(e)}")
+                # Loop continues to try again
+
             except Empty:
-                # No connections available in the pool
+                # Pool was empty, try to create or wait
                 with self.lock:
-                    total_connections = self.pool.qsize() + len(self.in_use)
-                    
+                    total_connections = self.pool.qsize() + len(self.in_use) # Assuming self.in_use exists
+
                     if total_connections < self.max_connections:
                         # Create a new connection if below max capacity
                         try:
                             connection = self._create_connection()
                             logger.debug("Created new connection for pool")
-                            return connection
+                            return connection # <<< Path 2: Created new connection
                         except Neo4jConnectionError as e:
                             logger.error(f"Failed to create new connection: {str(e)}")
-                            # Wait before retrying
-                            time.sleep(1)
-                    else:
-                        # At max capacity, wait for a connection to become available
-                        logger.debug("Connection pool at capacity, waiting for available connection")
-                        try:
-                            connection = self.pool.get(timeout=1)
-                            
-                            # Validate the connection before returning it
-                            if connection.is_connected():
-                                logger.debug("Acquired connection from pool after waiting")
-                                return connection
-                            else:
-                                logger.warning("Acquired invalid connection from pool after waiting, closing and retrying")
-                                try:
-                                    connection.close()
-                                except Exception as e:
-                                    logger.error(f"Error closing invalid connection: {str(e)}")
-                                # Continue to try to get another connection
-                        
-                        except Empty:
-                            # Timeout waiting for a connection, continue the loop
-                            continue
-        
-        # If we've reached here, we couldn't get a connection within the timeout
+                            # Wait before potentially retrying creation in next loop iteration
+                            time.sleep(0.5) # Short sleep after creation failure
+                            continue # Continue loop to retry logic
+
+                    # Implicitly else (at max capacity), fall through to wait below
+
+                # At max capacity, wait briefly for a connection
+                logger.debug("Connection pool at capacity, waiting for available connection")
+                try:
+                    connection = self.pool.get(timeout=1) # Wait up to 1 second
+
+                    # Validate the connection acquired after waiting
+                    if connection.is_connected():
+                        logger.debug("Acquired connection from pool after waiting")
+                        return connection # <<< Path 3: Got valid connection after waiting
+
+                    # RET505 Fix 2: Removed 'else:' and unindented block below
+                    logger.warning("Acquired invalid connection from pool after waiting, closing and retrying")
+                    try:
+                        connection.close()
+                    except neo4j.exceptions.Neo4jError as e: # BLE001 Fix 2: Catch specific error
+                        logger.error(f"Error closing invalid connection after waiting: {str(e)}")
+                    # Loop continues to try again
+
+                except Empty:
+                    # Timeout waiting for a connection, loop continues
+                    logger.debug("Timeout waiting for connection from pool")
+                    # Optional: Small sleep if pool is often at capacity and timing out
+                    # time.sleep(0.1)
+                    continue # Loop continues
+
+            # Optional: Small sleep to prevent extremely tight loops in edge cases
+            time.sleep(0.05)
+
+        # If loop finishes, timeout occurred
         raise Neo4jConnectionError(f"Unable to acquire a connection within {self.connection_timeout} seconds")
-    
+
     def close_all(self) -> None:
         """
         Close all connections in the pool.

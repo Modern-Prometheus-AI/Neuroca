@@ -2,7 +2,21 @@
 Memory retrieval functionality for the NCA system.
 
 This module provides functions for retrieving memories from different memory stores.
+
+⚠️ DEPRECATION WARNING ⚠️
+This module is deprecated and will be removed in a future release.
+Please use neuroca.memory.manager.MemoryManager for memory retrieval operations.
+See src/neuroca/memory/README.md for migration guidance.
 """
+
+import warnings
+
+warnings.warn(
+    "The memory_retrieval module is deprecated. "
+    "Use neuroca.memory.manager.MemoryManager for memory retrieval operations.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from typing import Any, Optional
 
@@ -37,4 +51,4 @@ def search_memories(query: str, limit: int = 10) -> list[dict[str, Any]]:
     return [
         {"id": f"memory_{i}", "relevance": 1.0 - (i * 0.1), "content": f"Memory for {query} {i}"} 
         for i in range(min(5, limit))
-    ] 
+    ]

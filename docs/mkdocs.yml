@@ -6,7 +6,7 @@
 
 site_name: NeuroCognitive Architecture (NCA)
 site_description: A biological-inspired cognitive architecture for large language models
-site_author: NCA Team
+site_author: Justin Lietz - NCA Team
 site_url: https://neuroca.ai/docs/
 repo_url: https://github.com/neuroca/neuroca
 repo_name: neuroca/neuroca

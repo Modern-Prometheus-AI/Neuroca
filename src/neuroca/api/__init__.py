@@ -34,7 +34,7 @@ from typing import Optional
 
 # Third-party imports
 try:
-    from flask import Blueprint, Flask, jsonify, request
+    from flask import Flask, jsonify, request  # Removed unused Blueprint
     from flask_cors import CORS
     from flask_limiter import Limiter
     from flask_limiter.util import get_remote_address

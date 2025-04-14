@@ -200,5 +200,9 @@ Thumbs.db
 
 # Ignore internal development tracking folder
 /.DEV/
-CHECKLIST.md
-Apex_Software_Synthesis_Neuroca.yaml
+benchmark_sandbox/.gitkeep
+benchmark_sandbox/agno_benchmarks.py
+benchmark_sandbox/neuroca_benchmarks.py
+benchmark_sandbox/README.md
+benchmark_sandbox/requirements.txt
+benchmark_sandbox/run_benchmarks.py

@@ -510,6 +510,6 @@ For quick reference, all restore commands are available in the script:
 
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
-| 2023-10-01 | 1.0 | NCA Team | Initial version |
-| 2023-12-15 | 1.1 | NCA Team | Added vector database backup procedures |
-| 2024-02-10 | 1.2 | NCA Team | Updated restore verification steps |
+| 2023-10-01 | 1.0 | Justin Lietz - NCA Team | Initial version |
+| 2023-12-15 | 1.1 | Justin Lietz - NCA Team | Added vector database backup procedures |
+| 2024-02-10 | 1.2 | Justin Lietz - NCA Team | Updated restore verification steps |
