@@ -13,4 +13,5 @@ class BackendType(str, Enum):
     MEMORY = "memory"  # In-memory storage (non-persistent)
     REDIS = "redis"    # Redis-based storage
     SQL = "sql"        # SQL database storage
+    SQLITE = "sqlite"    # SQLite database storage
     VECTOR = "vector"  # Vector database storage

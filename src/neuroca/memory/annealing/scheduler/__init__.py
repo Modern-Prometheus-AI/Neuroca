@@ -1,16 +1,16 @@
 """
-Annealing Temperature Scheduler for Memory Optimization (Import Redirection)
+Annealing Temperature Scheduler Package
 
-This module redirects imports to the new modular implementation in the scheduler package.
-This maintains backward compatibility with existing code that imports from this module.
+This package provides temperature scheduling functionality for simulated annealing processes,
+with various cooling schedules to control how the "temperature" parameter decreases over time.
 
-Original module description:
-This module provides temperature scheduling functionality for simulated annealing processes
-in the NeuroCognitive Architecture memory system. It implements various cooling schedules
-that control how the "temperature" parameter decreases over time during annealing.
+The scheduler components include:
+- Base scheduler interface and abstract base class
+- Various cooling schedule implementations (Linear, Exponential, etc.)
+- Factory for creating schedulers
+- Configuration utilities
 """
 
-# Re-export all scheduler components from the scheduler package
 from neuroca.memory.annealing.scheduler.types import SchedulerType
 from neuroca.memory.annealing.scheduler.core import AnnealingScheduler
 from neuroca.memory.annealing.scheduler.linear import LinearScheduler
@@ -27,7 +27,7 @@ from neuroca.memory.annealing.scheduler.factory import (
     create_adaptive_scheduler
 )
 
-# Export all components for backward compatibility
+# Re-export all components for backward compatibility
 __all__ = [
     'SchedulerType',
     'AnnealingScheduler',

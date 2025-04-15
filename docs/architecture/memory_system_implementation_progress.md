@@ -169,14 +169,26 @@ This document tracks the progress of the Neuroca memory system refactoring imple
     - [x] Refactor into modular component-based implementation (AMOS compliant)
     - [x] Components for connection, utils, indexing, CRUD, search, batch, stats, and core
     - [x] Backward compatibility through import redirection
-  - [ ] Implement SQL backend
-    - [ ] Refactor into modular component-based implementation (AMOS compliant)
-    - [ ] Define components (e.g., connection, schema, crud, search, batch, stats, core)
-    - [ ] Update tests
-  - [ ] Implement Vector backend
-    - [ ] Refactor into modular component-based implementation (AMOS compliant)
-    - [ ] Define components (e.g., connection, schema, crud, search, stats, core)
-    - [ ] Update tests
+  - [x] Implement SQL backend
+    - [x] Refactor into modular component-based implementation (AMOS compliant)
+    - [x] Components for connection, schema, CRUD, search, batch, and stats
+    - [x] Backward compatibility through import redirection
+  - [x] Implement Vector backend
+    - [x] Refactor into modular component-based implementation (AMOS compliant)
+    - [x] Components for index, storage, CRUD, search, stats, and models
+    - [x] Backward compatibility through import redirection
+  - [x] Refactor BaseStorageBackend (base.py)
+    - [x] Split into modular component-based implementation (AMOS compliant)
+    - [x] Components for core, operations, batch, and stats
+    - [x] Backward compatibility through import redirection
+  - [ ] Refactor Annealing Module (> 500 lines per file)
+    - [x] Refactor scheduler.py into component-based implementation
+      - [x] Created modularity with core, types, and scheduler implementations
+      - [x] Extracted each scheduler type into separate files
+      - [x] Implemented factory and configuration classes
+      - [x] Maintained backward compatibility through import redirection
+    - [ ] Refactor optimizer.py into component-based implementation
+    - [ ] Refactor phases.py into component-based implementation
   - [ ] Add configuration options for all backends
 
 - [ ] **Comprehensive Test Coverage**
@@ -194,21 +206,93 @@ This document tracks the progress of the Neuroca memory system refactoring imple
   - [ ] Verify functionality against initial requirements
   - [ ] Validate performance metrics and memory usage
 
+## Additional Areas Requiring AMOS Compliance
+
+These additional modules have been identified as exceeding the 500-line limit and will need refactoring to comply with the Apex Modular Organization Standard:
+
+Exceeds 500 lines:
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\memory\tubules
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\monitoring\health
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\tools\development
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\tools\visualization
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\tools\caching.py
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\tools\profiler.py
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\tools\analysis
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\monitoring
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\integration\adapters
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\integration\langchain
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\db
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\core\cognitive_control
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\cli\commands\system.py
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\api
+
+Take note of:
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\scripts
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\infrastructure
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\config
+
+### Memory System
+- [ ] **Memory Tubules Module** - Refactor into component-based implementation
+
+### Core System
+- [ ] **Cognitive Control Module** - Refactor into component-based implementation
+
+### Tools & Utilities
+- [ ] **Caching Module** (caching.py)
+  - [ ] Split into modular component-based implementation
+- [ ] **Profiler Module** (profiler.py)
+  - [ ] Split into modular component-based implementation
+- [ ] **Analysis Module**
+  - [ ] Refactor into component-based implementation
+- [ ] **Visualization Module**
+  - [ ] Refactor into component-based implementation
+- [ ] **Development Module**
+  - [ ] Refactor into component-based implementation
+
+### System Integration
+- [ ] **Monitoring Module**
+  - [ ] Refactor into component-based implementation
+- [ ] **Monitoring Health Module**
+  - [ ] Refactor into component-based implementation
+- [ ] **Integration Adapters Module**
+  - [ ] Refactor into component-based implementation
+- [ ] **Integration LangChain Module**
+  - [ ] Refactor into component-based implementation
+
+### Data & API
+- [ ] **DB Module**
+  - [ ] Refactor into component-based implementation
+- [ ] **API Module**
+  - [ ] Refactor into component-based implementation
+- [ ] **CLI Commands** (system.py)
+  - [ ] Split into modular component-based implementation
+
+### Areas to Evaluate
+These areas should be evaluated for potential refactoring needs:
+- [ ] **Scripts Module**
+- [ ] **Infrastructure Module**
+- [ ] **Config Module**
+
 ## Next Steps
 
-1. **Continue Phase 5 implementation tasks:**
-   - Refactor `sql_backend` into modular components (AMOS compliant)
-   - Refactor `vector_backend` into modular components (AMOS compliant)
+1. **Complete Current Phase 5 implementation tasks:**
+   - Complete refactoring of Annealing module (optimizer.py and phases.py)
+   - Add configuration options for all backends
    - Implement integration tests for all refactored backends
    - Complete comprehensive test coverage
    - Update all documentation with final implementation details
 
-2. **Performance Testing & Optimization:**
+2. **Plan for Additional Refactoring Work:**
+   - Prioritize remaining modules that exceed 500-line limit
+   - Create detailed refactoring plan for each module
+   - Schedule refactoring work in phases
+
+3. **Performance Testing & Optimization:**
    - Set up test harness for memory system benchmarks
    - Identify and address performance bottlenecks
    - Optimize memory usage patterns
 
-3. **Final Documentation Update:**
+4. **Final Documentation Update:**
    - Ensure all documentation reflects final implementation
    - Create detailed usage examples
    - Finalize architecture diagrams and explanations
