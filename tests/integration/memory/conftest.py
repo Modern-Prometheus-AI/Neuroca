@@ -8,16 +8,20 @@ import time
 
 import pytest
 
-# Import the concrete implementation instead of the abstract base class
-from neuroca.core.memory.consolidation import StandardMemoryConsolidator
-from neuroca.core.memory.episodic_memory import EpisodicMemory
+# Direct imports from the new memory system structure
+from neuroca.memory.tiers.ltm.core import LongTermMemory as EpisodicMemory
+from neuroca.memory.manager.memory_manager import MemoryManager
+from neuroca.memory.manager.consolidation import StandardMemoryConsolidator
 
-# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
-from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType
-from neuroca.core.memory.working_memory import WorkingMemory
+# Import from LTM relationship component for concept models
+from neuroca.memory.tiers.ltm.components.relationship import Concept, Relationship, RelationshipType
 
-# Import the concrete implementation from the correct location
-from neuroca.memory.semantic_memory import SemanticMemory
+# Import working memory from the models
+from neuroca.memory.models.working_memory import WorkingMemoryItem, WorkingMemoryBuffer
+from neuroca.memory.tiers.stm.core import ShortTermMemory as WorkingMemory
+
+# Use LTM with appropriate configuration as semantic memory
+from neuroca.memory.tiers.ltm.core import LongTermMemory as SemanticMemory
 
 
 @pytest.fixture()
@@ -30,7 +34,7 @@ def integrated_memory_system():
     working_memory = WorkingMemory()
     episodic_memory = EpisodicMemory()
     semantic_memory = SemanticMemory()
-    consolidator = MemoryConsolidator()
+    consolidator = StandardMemoryConsolidator()
     
     yield (working_memory, episodic_memory, semantic_memory, consolidator)
     

@@ -41,12 +41,12 @@ def run_coverage() -> bool:
     # Ensure coverage reports directory exists
     os.makedirs("reports/coverage", exist_ok=True)
     
-    # Run pytest with coverage
+# Run pytest with coverage
     cmd = [
         "pytest",
         "tests/unit/memory",
         "tests/integration/memory",
-        "--cov=src/neuroca/memory",
+        "--cov=neuroca.memory",  # Use module path without src prefix since conftest.py handles paths
         "--cov-report=term",
         "--cov-report=html:reports/coverage/html",
         "--cov-report=json:reports/coverage/coverage.json"

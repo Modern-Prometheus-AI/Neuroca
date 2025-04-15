@@ -18,9 +18,11 @@ By defining these interfaces clearly, we enable:
 from neuroca.memory.interfaces.storage_backend import StorageBackendInterface
 from neuroca.memory.interfaces.memory_tier import MemoryTierInterface
 from neuroca.memory.interfaces.memory_manager import MemoryManagerInterface
+from neuroca.memory.interfaces.stats import StorageStats
 
 __all__ = [
     "StorageBackendInterface",
     "MemoryTierInterface",
     "MemoryManagerInterface",
+    "StorageStats",
 ]
