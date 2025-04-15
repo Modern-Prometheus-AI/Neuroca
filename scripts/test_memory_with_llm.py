@@ -141,14 +141,25 @@ class ConversationalAgent:
                 ]
 
                 completion = openai.chat.completions.create(
-                    model="o3-mini", # Changed model name
+                    model="gpt-4o", # Changed model name to gpt-4o
                     messages=messages,
-                    # temperature=0.7, # Removed unsupported parameter
-                    max_completion_tokens=500 # Corrected parameter name
+                    # temperature=0.7, # Keeping temperature commented out for now
+                    max_completion_tokens=500
                 )
 
-                response = completion.choices[0].message.content
-                print(f"Generated response using OpenAI API")
+                # Debugging: Print the message object structure
+                if completion.choices and completion.choices[0].message:
+                    print(f"DEBUG: Message object: {completion.choices[0].message}")
+                    response = completion.choices[0].message.content
+                    if not response: # Check if content is empty
+                         print("DEBUG: Response content is empty.")
+                         response = "[Model returned empty content]" # Placeholder for empty response
+                    else:
+                         print(f"Generated response using OpenAI API")
+                else:
+                    print("DEBUG: No valid choices or message found in completion.")
+                    response = "[Error retrieving model response]"
+
             except Exception as e:
                 print(f"Error using OpenAI API: {e}")
                 response = f"I'd respond to '{user_message}' here, but there was an issue with the OpenAI API. Using memory system with {self.backend_type} backend."
