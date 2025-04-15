@@ -15,6 +15,7 @@ from neuroca.memory.exceptions import (
     ItemNotFoundError as MemoryNotFoundError,
     StorageBackendError,
     StorageInitializationError,
+    ConfigurationError, # Import ConfigurationError
 )
 from neuroca.memory.backends import (
     BackendType,
@@ -64,8 +65,8 @@ class MemoryManager:
         ltm_storage_type: BackendType = BackendType.SQL,
         vector_storage_type: BackendType = BackendType.VECTOR,
         working_buffer_size: int = 20,
-        embedding_dimension: int = 768,
-    ):
+            embedding_dimension: int = 768,
+        ):
         """
         Initialize the Memory Manager.
         
@@ -78,8 +79,43 @@ class MemoryManager:
             working_buffer_size: Size of the working memory buffer
             embedding_dimension: Dimension of embedding vectors
         """
-        self.config = config or get_settings().get("memory", {})
+        # Set up configuration with defaults and provided configs
+        default_config = {
+            "stm": {"ttl_seconds": 3600},
+            "mtm": {"capacity": 1000},
+            "ltm": {"relationship_types": ["RELATED", "CAUSES", "PART_OF", "EXAMPLE_OF", "CONTRADICTS", "SUPPORTS", "PRECEDES"]},
+            "vector": {"dimension": embedding_dimension, "similarity_threshold": 0.65},
+            "consolidation_interval_seconds": 300,
+            "decay_interval_seconds": 600,
+            "buffer_update_interval_seconds": 60
+        }
+
+        # Start with defaults, then try to get settings from config object, and override with provided config
+        self.config = default_config.copy()
         
+        # Try to get settings from the settings object, safely
+        try:
+            settings = get_settings()
+            if hasattr(settings, 'MEMORY_SYSTEM'):
+                memory_settings = settings.MEMORY_SYSTEM
+                # Convert to dict for compatibility
+                if hasattr(memory_settings, 'model_dump'):
+                    memory_config_dict = memory_settings.model_dump()
+                elif hasattr(memory_settings, 'dict'):
+                    memory_config_dict = memory_settings.dict()
+                else:
+                    # If it's already a dict or similar structure that can be accessed by key
+                    memory_config_dict = dict(memory_settings)
+                
+                # Update with settings from config
+                self.config.update(memory_config_dict)
+        except Exception as e:
+            logger.warning(f"Could not load settings from configuration: {e}. Using defaults.")
+        
+        # Finally override with any explicitly provided config
+        if config:
+            self.config.update(config)
+
         # Initialize storage components
         self.stm_storage = stm_storage or StorageBackendFactory.create_storage(
             tier=MemoryTier.STM,
@@ -97,16 +133,42 @@ class MemoryManager:
             backend_type=ltm_storage_type,
             config=self.config.get("ltm", {})
         )
-        
-        self.vector_storage = StorageBackendFactory.create_storage(
-            tier=MemoryTier.LTM,
-            backend_type=vector_storage_type,
-            config=self.config.get("vector", {
-                "dimension": embedding_dimension,
-                "similarity_threshold": 0.65,
-            })
-        )
-        
+
+        # Attempt to create vector storage, fall back to InMemory if VECTOR is unsupported
+        try:
+            self.vector_storage = StorageBackendFactory.create_storage(
+                tier=MemoryTier.LTM, # Vector storage is typically associated with LTM
+                backend_type=vector_storage_type,
+                config=self.config.get("vector", {
+                    "dimension": embedding_dimension,
+                    "similarity_threshold": 0.65,
+                })
+            )
+        except ConfigurationError as e:
+            if vector_storage_type == BackendType.VECTOR:
+                logger.warning(
+                    f"VectorBackend (type: {vector_storage_type}) is not available or registered "
+                    f"in the factory ({e}). Falling back to InMemoryBackend for vector operations."
+                )
+                # Fallback to InMemoryBackend for vector storage functionality
+                self.vector_storage = StorageBackendFactory.create_storage(
+                    tier=MemoryTier.LTM, # Use LTM tier context
+                    backend_type=BackendType.MEMORY, # Explicitly use MEMORY type
+                    config=self.config.get("vector", { # Still pass vector config if needed by InMemory
+                        "dimension": embedding_dimension,
+                        "similarity_threshold": 0.65,
+                    }),
+                    # Use a distinct instance name to avoid conflict if LTM also uses MEMORY
+                    instance_name="ltm_vector_fallback_memory"
+                )
+            else:
+                # If a different specific type was requested and failed, re-raise
+                raise e
+        except Exception as e:
+            # Catch other potential errors during creation
+            logger.error(f"Unexpected error creating vector storage: {e}", exc_info=True)
+            raise StorageInitializationError(f"Failed to create vector storage: {e}") from e
+
         # Working memory settings
         self.working_buffer_size = working_buffer_size
         self.working_memory: List[RankedMemory] = []

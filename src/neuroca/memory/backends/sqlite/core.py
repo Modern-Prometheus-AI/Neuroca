@@ -8,7 +8,7 @@ to implement the BaseStorageBackend interface for the memory system.
 import asyncio
 import logging
 import uuid
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from neuroca.memory.backends.base import BaseStorageBackend
 from neuroca.memory.backends.sqlite.components.batch import SQLiteBatch
@@ -45,8 +45,116 @@ class SQLiteBackend(BaseStorageBackend):
     - Statistics tracking
     """
     
+    # Required abstract methods from BaseStorageBackend
+    async def _initialize_backend(self) -> None:
+        """Initialize the backend storage."""
+        # Already implemented in initialize()
+        pass
+
+    async def _shutdown_backend(self) -> None:
+        """Shutdown the backend storage."""
+        # Already implemented in shutdown()
+        pass
+
+    async def _create_item(self, item_data: dict) -> str:
+        """Create a new item in storage."""
+        try:
+            # Convert dict to MemoryItem
+            memory_item = MemoryItem.model_validate(item_data)
+            return await self.store(memory_item)
+        except Exception as e:
+            raise StorageOperationError(f"Failed to create item: {str(e)}") from e
+
+    async def _read_item(self, item_id: str) -> Optional[dict]:
+        """Read an item from storage by ID."""
+        try:
+            memory_item = await self.retrieve(item_id)
+            if memory_item is None:
+                return None
+            # Convert MemoryItem to dict
+            return memory_item.model_dump()
+        except Exception as e:
+            raise StorageOperationError(f"Failed to read item {item_id}: {str(e)}") from e
+
+    async def _update_item(self, item_id: str, item_data: dict) -> bool:
+        """Update an existing item in storage."""
+        try:
+            # Convert dict to MemoryItem
+            memory_item = MemoryItem.model_validate(item_data)
+            return await self.update(memory_item)
+        except Exception as e:
+            raise StorageOperationError(f"Failed to update item {item_id}: {str(e)}") from e
+
+    async def _delete_item(self, item_id: str) -> bool:
+        """Delete an item from storage by ID."""
+        try:
+            return await self.delete(item_id)
+        except Exception as e:
+            raise StorageOperationError(f"Failed to delete item {item_id}: {str(e)}") from e
+
+    async def _query_items(self, filter_criteria: dict) -> List[dict]:
+        """Query items based on filter criteria."""
+        try:
+            # Convert to proper search filter
+            search_filter = SearchFilter.model_validate(filter_criteria)
+            results = await self.search("", search_filter)
+            # Ensure results.results is accessed correctly
+            return [item.memory.model_dump() for item in getattr(results, 'results', [])]
+        except Exception as e:
+            raise StorageOperationError(f"Failed to query items: {str(e)}") from e
+
+    async def _count_items(self, filter_criteria: Optional[dict] = None) -> int:
+        """Count items matching filter criteria."""
+        try:
+            # Convert to proper search filter if provided
+            search_filter = None
+            if filter_criteria:
+                search_filter = SearchFilter.model_validate(filter_criteria)
+            return await self.count(search_filter)
+        except Exception as e:
+            raise StorageOperationError(f"Failed to count items: {str(e)}") from e
+
+    async def _clear_all_items(self) -> int:
+        """Clear all items from storage."""
+        try:
+            # Use connection to execute a delete all query
+            def _clear_all():
+                cursor = self.connection.get_connection().cursor()
+                cursor.execute("DELETE FROM memories")
+                return cursor.rowcount
+            
+            return await self.connection.execute_async(_clear_all)
+        except Exception as e:
+            raise StorageOperationError(f"Failed to clear all items: {str(e)}") from e
+
+    async def _get_backend_stats(self) -> dict:
+        """Get statistics about the backend storage."""
+        try:
+            stats = await self.get_stats()
+            return stats.model_dump()
+        except Exception as e:
+            raise StorageOperationError(f"Failed to get backend stats: {str(e)}") from e
+            
+    async def exists(self, memory_id: str) -> bool:
+        """Check if a memory item exists by ID."""
+        try:
+            # Use connection to check if item exists
+            def _exists():
+                cursor = self.connection.get_connection().cursor()
+                cursor.execute("SELECT 1 FROM memories WHERE id = ?", (memory_id,))
+                return cursor.fetchone() is not None
+            
+            return await self.connection.execute_async(_exists)
+        except Exception as e:
+            raise StorageOperationError(f"Failed to check if memory {memory_id} exists: {str(e)}") from e
+            
+    async def _item_exists(self, item_id: str) -> bool:
+        """Check if an item exists in storage by ID."""
+        return await self.exists(item_id)
+    
     def __init__(
         self,
+        config: Optional[Dict[str, Any]] = None,
         db_path: Optional[str] = None,
         tier_name: str = "generic",
         connection_timeout: float = 30.0,
@@ -56,17 +164,81 @@ class SQLiteBackend(BaseStorageBackend):
         Initialize the SQLite backend.
         
         Args:
+            config: Optional configuration dictionary
             db_path: Path to the SQLite database file. If None, uses a default path
                 in the system's temporary directory.
             tier_name: Name of the memory tier using this backend (for filename)
             connection_timeout: Connection timeout in seconds
             **kwargs: Additional configuration options
         """
-        super().__init__()
+        super().__init__(config)
         
+        # Initialize with default configuration structure
+        self.config = {
+            "cache": {
+                "enabled": True,
+                "max_size": 1000,
+                "ttl_seconds": 300
+            },
+            "batch": {
+                "max_batch_size": 100,
+                "auto_commit": True
+            },
+            "performance": {
+                "connection_pool_size": 5,
+                "connection_timeout_seconds": 10
+            },
+            "sqlite": {
+                "connection": {
+                    "database_path": db_path or ":memory:",
+                    "create_if_missing": True,
+                    "timeout_seconds": connection_timeout
+                },
+                "performance": {
+                    "journal_mode": "WAL",
+                    "synchronous": "NORMAL"
+                },
+                "schema": {
+                    "auto_migrate": True,
+                    "enable_fts": True
+                }
+            }
+        }
+        
+        # Update configuration with provided values (deep merge)
+        if config:
+            self._deep_update(self.config, config)
+            
+        # Extract database path from config if provided
+        # Ensure db_path is correctly assigned before _setup_path
+        db_path_from_config = self.config.get("sqlite", {}).get("connection", {}).get("database_path")
+        if db_path_from_config and db_path_from_config != ":memory:":
+            db_path = db_path_from_config
+        elif not db_path: # If db_path wasn't passed and not in config, use default
+             db_path = ":memory:" # Default to in-memory if not specified
+            
         # Set up path and create components
         self._setup_path(db_path, tier_name, **kwargs)
-        self._create_components(connection_timeout)
+        self._create_components(self.config["sqlite"]["connection"]["timeout_seconds"])
+
+    def _deep_update(self, target: Dict[str, Any], source: Dict[str, Any]) -> None:
+        """
+        Deep update for nested dictionaries.
+        
+        Updates target dictionary with values from source dictionary, 
+        recursively handling nested dictionaries.
+        
+        Args:
+            target: Target dictionary to update
+            source: Source dictionary with new values
+        """
+        for key, value in source.items():
+            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                # Recursively update nested dictionaries
+                self._deep_update(target[key], value)
+            else:
+                # Direct update for non-dictionary values or new keys
+                target[key] = value
     
     def _setup_path(self, db_path: Optional[str], tier_name: str, **kwargs) -> None:
         """
@@ -79,10 +251,16 @@ class SQLiteBackend(BaseStorageBackend):
         """
         import os
         
-        if db_path:
+        if db_path and db_path != ":memory:":
             self.db_path = db_path
+            # Ensure directory exists if a file path is given
+            db_dir = os.path.dirname(self.db_path)
+            if db_dir:
+                 os.makedirs(db_dir, exist_ok=True)
+        elif db_path == ":memory:":
+             self.db_path = ":memory:"
         else:
-            # Use default path in data directory
+            # Use default path in data directory if db_path is None
             data_dir = kwargs.get('data_dir', os.path.join(os.getcwd(), 'data', 'memory'))
             os.makedirs(data_dir, exist_ok=True)
             self.db_path = os.path.join(data_dir, f"neuroca_memory_{tier_name}.db")

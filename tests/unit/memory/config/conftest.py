@@ -32,8 +32,8 @@ def test_config_dir():
             "default_backend": "in_memory"
         }
         
-        # Create backend-specific config file
-        backend_config = {
+        # Create in-memory backend-specific config file
+        in_memory_config = {
             "in_memory": {
                 "memory": {
                     "initial_capacity": 500
@@ -46,14 +46,33 @@ def test_config_dir():
             }
         }
         
+        # Create sqlite backend-specific config file
+        sqlite_config = {
+            "sqlite": {
+                "connection": {
+                    "database_path": ":memory:",
+                    "timeout_seconds": 10
+                }
+            },
+            "common": {
+                "cache": {
+                    "ttl_seconds": 600
+                }
+            }
+        }
+        
         # Write the config files
         base_path = Path(temp_dir) / "base_config.yaml"
-        backend_path = Path(temp_dir) / "in_memory_config.yaml"
+        in_memory_path = Path(temp_dir) / "in_memory_config.yaml"
+        sqlite_path = Path(temp_dir) / "sqlite_config.yaml"
         
         with open(base_path, 'w') as f:
             yaml.dump(base_config, f)
             
-        with open(backend_path, 'w') as f:
-            yaml.dump(backend_config, f)
+        with open(in_memory_path, 'w') as f:
+            yaml.dump(in_memory_config, f)
+            
+        with open(sqlite_path, 'w') as f:
+            yaml.dump(sqlite_config, f)
             
         yield temp_dir

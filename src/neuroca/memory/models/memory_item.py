@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class MemoryStatus(str, Enum):
@@ -44,7 +44,7 @@ class MemoryContent(BaseModel):
     content_type: Optional[str] = None
     language: Optional[str] = "en"
     
-    @validator("raw_content", pre=True)
+    @field_validator("raw_content", mode="before")
     def validate_raw_content(cls, v):
         """Ensure raw_content is JSON serializable."""
         if v is None:
@@ -171,14 +171,14 @@ class MemoryItem(BaseModel):
     # Vector embedding for similarity search
     embedding: Optional[List[float]] = None
     
-    @validator("content", pre=True)
+    @field_validator("content", mode="before")
     def validate_content(cls, v):
         """Ensure content is a MemoryContent object."""
         if isinstance(v, dict):
             return MemoryContent(**v)
         return v
     
-    @validator("metadata", pre=True)
+    @field_validator("metadata", mode="before")
     def validate_metadata(cls, v):
         """Ensure metadata is a MemoryMetadata object."""
         if isinstance(v, dict):

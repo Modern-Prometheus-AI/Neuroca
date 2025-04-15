@@ -33,6 +33,7 @@ class TierStatsManager:
             "operations_count": 0,
             "items_count": 0,
             "store_count": 0,
+            "batch_store_count": 0,
             "retrieve_count": 0,
             "update_count": 0,
             "delete_count": 0,

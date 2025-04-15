@@ -43,15 +43,70 @@ class InMemoryBackend(BaseStorageBackend):
         Initialize the in-memory backend.
         
         Args:
-            config: Optional configuration parameters:
-                - max_items: Maximum number of items to store (defaults to no limit)
+            config: Optional configuration parameters
         """
         super().__init__(config)
-        self.config = config or {}
+        
+        # Initialize with default configuration structure
+        self.config = {
+            "cache": {
+                "enabled": True,
+                "max_size": 100,
+                "ttl_seconds": 60
+            },
+            "batch": {
+                "max_batch_size": 25,
+                "auto_commit": True
+            },
+            "performance": {
+                "connection_pool_size": 1,
+                "connection_timeout_seconds": 3
+            },
+            "in_memory": {
+                "memory": {
+                    "initial_capacity": 500,
+                    "auto_expand": True,
+                    "expansion_factor": 1.5
+                },
+                "data_structure": {
+                    "index_type": "hashmap",
+                    "enable_secondary_indices": False
+                },
+                "pruning": {
+                    "enabled": False,
+                    "max_items": 250,
+                    "strategy": "fifo"
+                }
+            }
+        }
+        
+        # Update configuration with provided values (deep merge)
+        if config:
+            self._deep_update(self.config, config)
+            
         self.initialized = False
         
         # Create components
         self._create_components()
+
+    def _deep_update(self, target: Dict[str, Any], source: Dict[str, Any]) -> None:
+        """
+        Deep update for nested dictionaries.
+        
+        Updates target dictionary with values from source dictionary, 
+        recursively handling nested dictionaries.
+        
+        Args:
+            target: Target dictionary to update
+            source: Source dictionary with new values
+        """
+        for key, value in source.items():
+            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                # Recursively update nested dictionaries
+                self._deep_update(target[key], value)
+            else:
+                # Direct update for non-dictionary values or new keys
+                target[key] = value
     
     def _create_components(self) -> None:
         """
@@ -67,7 +122,8 @@ class InMemoryBackend(BaseStorageBackend):
         self.crud = InMemoryCRUD(self.storage)
         self.search = InMemorySearch(self.storage)
         self.batch = InMemoryBatch(self.storage, self.crud)
-        self.stats = InMemoryStats(self.storage)
+        # Rename to avoid conflict with BaseStorageBackend.stats
+        self._in_memory_stats_component = InMemoryStats(self.storage)
     
     # Implementation of required abstract methods from BaseStorageBackend
     async def _initialize_backend(self) -> None:
@@ -85,13 +141,16 @@ class InMemoryBackend(BaseStorageBackend):
     
     async def _get_backend_stats(self) -> Dict[str, Union[int, float, str, datetime]]:
         """Get statistics from the specific backend."""
-        stats_obj = await self.stats.get_stats()
+        # Use the renamed component
+        stats_obj = await self._in_memory_stats_component.get_stats()
         # Convert StorageStats to a dictionary
         return stats_obj.model_dump() if hasattr(stats_obj, "model_dump") else {"items_count": self.storage.count()}
     
     # Additional required abstract methods
     async def _create_item(self, item_id: str, data: Dict[str, Any]) -> bool:
         """Create a new item in storage."""
+        # Important: Do not modify or transform the data here
+        # Ensure the data structure is completely preserved for proper validation
         return await self.crud.create_item(item_id, data)
     
     async def _read_item(self, item_id: str) -> Optional[Dict[str, Any]]:
@@ -110,9 +169,22 @@ class InMemoryBackend(BaseStorageBackend):
         """Check if an item exists in storage."""
         return await self.crud.item_exists(item_id)
     
-    async def _query_items(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _query_items(
+        self,
+        filters: Optional[Dict[str, Any]] = None,
+        sort_by: Optional[str] = None,
+        ascending: bool = True,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         """Query items in storage."""
-        return await self.search.filter_items(filters=query)
+        return await self.search.filter_items(
+            filters=filters,
+            sort_by=sort_by,
+            ascending=ascending,
+            limit=limit,
+            offset=offset
+        )
     
     async def _count_items(self, query: Optional[Dict[str, Any]] = None) -> int:
         """Count items in storage."""
@@ -127,41 +199,11 @@ class InMemoryBackend(BaseStorageBackend):
         return True
     
     # Core CRUD operations implementation
-    async def create(self, item_id: str, data: Dict[str, Any]) -> bool:
-        """
-        Create a new item in storage.
-        
-        Args:
-            item_id: Unique identifier for the item
-            data: Data to store
-            
-        Returns:
-            bool: True if the operation was successful
-        """
-        try:
-            return await self.crud.create_item(item_id, data)
-        except Exception as e:
-            error_msg = f"Failed to create item {item_id}: {str(e)}"
-            logger.error(error_msg, exc_info=True)
-            raise StorageOperationError(error_msg) from e
+    # The create method is NOT overridden here, allowing BaseStorageBackend.create to be used
+    # This ensures proper statistics tracking via the base class implementation
     
-    async def read(self, item_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Retrieve an item by its ID.
-        
-        Args:
-            item_id: The ID of the item to retrieve
-            
-        Returns:
-            The item data if found, None otherwise
-        """
-        try:
-            return await self.crud.read_item(item_id)
-        except Exception as e:
-            error_msg = f"Failed to read item {item_id}: {str(e)}"
-            logger.error(error_msg, exc_info=True)
-            raise StorageOperationError(error_msg) from e
-    
+    # The read method is NOT overridden here, allowing BaseStorageBackend.read to be used
+
     async def update(self, item_id: str, data: Dict[str, Any]) -> bool:
         """
         Update an existing item.
@@ -362,7 +404,8 @@ class InMemoryBackend(BaseStorageBackend):
             Dictionary of statistics
         """
         try:
-            stats_obj = await self.stats.get_stats()
+            # Use the renamed component
+            stats_obj = await self._in_memory_stats_component.get_stats()
             if hasattr(stats_obj, "model_dump"):
                 return stats_obj.model_dump()
             return {

@@ -34,6 +34,23 @@ def normalize_memory_format(
         if isinstance(memory, dict):
             result.update(memory)
             result["id"] = memory.get("id", "")
+            
+            # Ensure content field exists (required by MemoryItem.model_validate)
+            if "content" not in result and isinstance(memory.get("content_dict"), dict):
+                result["content"] = memory.get("content_dict")
+            elif "content" not in result and isinstance(memory.get("content"), dict):
+                result["content"] = memory.get("content")
+            elif "content" not in result:
+                # Create a content field if none exists
+                content_data = {}
+                # Try to extract text from known fields
+                if "text" in memory:
+                    content_data["text"] = memory["text"]
+                elif isinstance(memory.get("data"), dict) and "text" in memory["data"]:
+                    content_data["text"] = memory["data"]["text"]
+                
+                result["content"] = content_data
+                
             return result
     
     elif tier == MemoryTier.MTM:

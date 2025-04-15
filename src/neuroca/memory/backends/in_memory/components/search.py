@@ -238,3 +238,46 @@ class InMemorySearch:
             return current
         
         return item.get(field)
+
+    async def filter_items(
+        self,
+        filters: Optional[Dict[str, Any]] = None,
+        sort_by: Optional[str] = None,
+        ascending: bool = True,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Filter memory items based on specified criteria.
+        This method is an alias for query_items to maintain compatibility.
+        
+        Args:
+            filters: Dict of field-value pairs to filter by
+            sort_by: Field to sort results by
+            ascending: Sort order
+            limit: Maximum number of results
+            offset: Number of results to skip
+            
+        Returns:
+            List of items matching the filter criteria
+        """
+        # If no filters, sort or pagination, just return all items
+        if not filters and not sort_by and not limit and not offset:
+            await self.storage.acquire_lock()
+            try:
+                all_items = []
+                for item_id, item in self.storage.get_all_items().items():
+                    item_with_id = {"_id": item_id, **item}
+                    all_items.append(item_with_id)
+                return all_items
+            finally:
+                self.storage.release_lock()
+                
+        # Otherwise use the regular query method
+        return await self.query_items(
+            filters=filters,
+            sort_by=sort_by,
+            ascending=ascending,
+            limit=limit,
+            offset=offset
+        )
