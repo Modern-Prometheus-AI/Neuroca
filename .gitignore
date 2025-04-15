@@ -107,6 +107,7 @@ tmp/
 temp/
 .tmp/
 .temp/
+.ruff_cache/
 
 # Documentation build
 docs/_build/
