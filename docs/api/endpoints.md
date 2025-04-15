@@ -7,7 +7,7 @@ This document provides detailed specifications for all API endpoints in the Neur
 ## Base URL
 
 ```
-https://api.neuroca.ai/v1
+https://api.neuroca.ai/v1 // Not implemented
 ```
 
 ## Authentication
