@@ -332,6 +332,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Cognitive science research that inspired this architecture
+- Mary Shelly's "Frankenstein: The Modern Prometheus"
 - The open-source AI community
 - Contributors and early adopters
 
