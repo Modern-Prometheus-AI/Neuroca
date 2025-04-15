@@ -23,49 +23,7 @@ from neuroca.memory.config.loader import (
 )
 
 
-@pytest.fixture
-def temp_config_dir():
-    """Create a temporary directory with test configuration files."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Create base config file
-        base_config = {
-            "common": {
-                "cache": {
-                    "enabled": True,
-                    "max_size": 1000
-                },
-                "batch": {
-                    "max_batch_size": 100
-                }
-            },
-            "default_backend": "in_memory"
-        }
-        
-        # Create backend-specific config file
-        backend_config = {
-            "in_memory": {
-                "memory": {
-                    "initial_capacity": 500
-                }
-            },
-            "common": {
-                "cache": {
-                    "ttl_seconds": 500
-                }
-            }
-        }
-        
-        # Write the config files
-        base_path = Path(temp_dir) / "base_config.yaml"
-        backend_path = Path(temp_dir) / "in_memory_config.yaml"
-        
-        with open(base_path, 'w') as f:
-            yaml.dump(base_config, f)
-            
-        with open(backend_path, 'w') as f:
-            yaml.dump(backend_config, f)
-            
-        yield temp_dir
+# Using the fixture from conftest.py instead of defining it here
 
 
 class TestConfigurationLoader:
