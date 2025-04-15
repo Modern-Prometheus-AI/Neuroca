@@ -58,11 +58,11 @@ async def main():
             query="test memory",
             limit=5
         )
-        # Access the 'results' attribute for the list of memories
+        # Access the 'results' attribute for the list of MemorySearchResult objects
         print(f"Found {len(search_results.results)} memories")
-        for memory_item in search_results.results:
-            # Access attributes directly from the MemoryItem object
-            print(f"- {memory_item.id}: {memory_item.get_text()}")
+        for search_result in search_results.results:
+            # Access attributes via the 'memory' attribute of MemorySearchResult
+            print(f"- ID: {search_result.memory.id}, Text: {search_result.memory.get_text()}, Relevance: {search_result.relevance:.2f}, Tier: {search_result.tier}")
 
         # Wait a bit to allow background processes to run
         print("\nWaiting for 2 seconds to allow background processes to run...")

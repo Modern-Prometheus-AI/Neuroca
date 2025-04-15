@@ -114,10 +114,12 @@ class MemoryMetadata(BaseModel):
     # Vector representation
     embedding_model: Optional[str] = None  # Name of the model used to generate embedding
     embedding_dimensions: Optional[int] = None  # Dimensionality of the embedding
-    
+    # Relevance score (often added during search)
+    relevance: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+
     # Extensible metadata
     additional_metadata: Dict[str, Any] = Field(default_factory=dict)
-    
+
     def dict(self, *args, **kwargs) -> Dict[str, Any]:
         """Override dict() to handle empty fields and enum serialization."""
         result = super().dict(*args, **kwargs)

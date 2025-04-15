@@ -7,12 +7,12 @@ including adding, retrieving, updating, and searching memories.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple # Added Tuple import
 
 from neuroca.memory.backends import MemoryTier
 from neuroca.memory.models.memory_item import MemoryItem, MemoryMetadata, MemoryStatus
 # Import SearchResults and MemorySearchOptions
-from neuroca.memory.models.search import MemorySearchResults as SearchResults, MemorySearchOptions
+from neuroca.memory.models.search import MemorySearchResults as SearchResults, MemorySearchOptions, MemorySearchResult # Added MemorySearchResult import
 from enum import Enum
 from neuroca.memory.manager.utils import normalize_memory_format, calculate_text_relevance
 
@@ -42,7 +42,7 @@ async def add_memory(
     """
     Add a new memory to the system. By default, memories start in STM
     and may be consolidated to MTM/LTM based on importance and access patterns.
-    
+
     Args:
         stm_storage: STM storage backend
         mtm_storage: MTM storage backend
@@ -55,7 +55,7 @@ async def add_memory(
         tags: Tags for categorization
         embedding: Optional pre-computed embedding vector
         initial_tier: Initial storage tier (defaults to STM)
-        
+
     Returns:
         Memory ID
     """
@@ -66,14 +66,14 @@ async def add_memory(
         content_dict = content
     else:
         content_dict = {"data": str(content)}
-    
+
     # Prepare metadata
     metadata_dict = metadata or {}
     if importance is not None:
         metadata_dict["importance"] = importance
-    
+
     tags_list = tags or []
-    
+
     # Store in appropriate tier
     memory_id = None
     if initial_tier == MemoryTier.STM:
@@ -94,7 +94,7 @@ async def add_memory(
         # Store in STM using the MemoryItem object
         memory_id = await stm_storage.store(memory_item)
         logger.debug(f"Stored memory in STM with ID: {memory_id}")
-        
+
     elif initial_tier == MemoryTier.MTM:
         # Store in MTM
         mtm_priority = MemoryPriority.MEDIUM
@@ -122,7 +122,7 @@ async def add_memory(
         # Store in MTM using the MemoryItem object
         memory_id = await mtm_storage.store(memory_item)
         logger.debug(f"Stored memory in MTM with ID: {memory_id}")
-        
+
     elif initial_tier == MemoryTier.LTM:
         # Store in LTM
         memory_item = MemoryItem(
@@ -131,20 +131,21 @@ async def add_memory(
             embedding=embedding,
             metadata=MemoryMetadata(
                 status=MemoryStatus.ACTIVE,
-                tags=tags_list,
+                tags={tag: True for tag in tags_list}, # Corrected: Convert list to dict for LTM too
                 importance=importance,
                 created_at=datetime.now(),
+                 **{k: v for k, v in metadata_dict.items() if k not in ['importance', 'tags']} # Added other metadata
             )
         )
-        
+
         memory_id = await ltm_storage.store(memory_item)
         logger.debug(f"Stored memory in LTM with ID: {memory_id}")
-        
+
         # If embedding is provided, also store in vector storage
         if embedding:
             await vector_storage.store(memory_item)
             logger.debug(f"Stored memory in vector storage with ID: {memory_id}")
-    
+
     return memory_id
 
 
@@ -158,7 +159,7 @@ async def retrieve_memory(
 ) -> Optional[MemoryItem]: # Changed return type hint
     """
     Retrieve a specific memory by ID.
-    
+
     Args:
         stm_storage: STM storage backend
         mtm_storage: MTM storage backend
@@ -166,73 +167,44 @@ async def retrieve_memory(
         vector_storage: Vector storage backend
         memory_id: Memory ID
         tier: Optional tier to search in (searches all tiers if not specified)
-    
+
     Returns:
         MemoryItem object if found, otherwise None
     """
-    result_dict = None
-    result_tier = None
+    # The backend's retrieve method should return a validated MemoryItem or None
+    memory_item: Optional[MemoryItem] = None
     try:
-        # If tier is specified, only search that tier
         if tier == MemoryTier.STM:
-            result_dict = await stm_storage.retrieve(memory_id)
-            if result_dict: result_tier = MemoryTier.STM
-        
+            memory_item = await stm_storage.retrieve(memory_id)
         elif tier == MemoryTier.MTM:
-            result_dict = await mtm_storage.retrieve(memory_id)
-            if result_dict: result_tier = MemoryTier.MTM
-        
+            memory_item = await mtm_storage.retrieve(memory_id)
         elif tier == MemoryTier.LTM:
-            # Try LTM standard storage first
-            result_dict = await ltm_storage.retrieve(memory_id) # Assuming retrieve exists, might need get
-            if result_dict:
-                result_tier = MemoryTier.LTM
-            else:
-                # Try vector storage if not found in standard LTM
-                # Assuming vector_storage.retrieve exists and returns dict or MemoryItem
-                vector_result = await vector_storage.retrieve(memory_id)
-                if vector_result:
-                    # Ensure it's a dict before normalization
-                    result_dict = vector_result if isinstance(vector_result, dict) else vector_result.model_dump()
-                    result_tier = MemoryTier.LTM # Treat vector as part of LTM conceptually
-        
+            # Try standard LTM, then vector
+            memory_item = await ltm_storage.retrieve(memory_id)
+            if not memory_item:
+                memory_item = await vector_storage.retrieve(memory_id)
         else:
-            # Search all tiers if no specific tier is given
-            # Start with fastest tier (STM)
-            result_dict = await stm_storage.retrieve(memory_id)
-            if result_dict:
-                result_tier = MemoryTier.STM
-            else:
-                # Try MTM
-                result_dict = await mtm_storage.retrieve(memory_id)
-                if result_dict:
-                    result_tier = MemoryTier.MTM
-                else:
-                    # Try LTM standard storage
-                    result_dict = await ltm_storage.retrieve(memory_id) # Assuming retrieve exists
-                    if result_dict:
-                        result_tier = MemoryTier.LTM
-                    else:
-                         # Try vector storage as last resort
-                        vector_result = await vector_storage.retrieve(memory_id)
-                        if vector_result:
-                            result_dict = vector_result if isinstance(vector_result, dict) else vector_result.model_dump()
-                            result_tier = MemoryTier.LTM
+            # Search all tiers
+            memory_item = await stm_storage.retrieve(memory_id)
+            if not memory_item:
+                memory_item = await mtm_storage.retrieve(memory_id)
+            if not memory_item:
+                memory_item = await ltm_storage.retrieve(memory_id)
+            if not memory_item:
+                memory_item = await vector_storage.retrieve(memory_id)
 
     except Exception as e:
         logger.error(f"Error retrieving memory {memory_id}: {str(e)}")
-        return None # Return None on error
+        return None
 
-    # If found, normalize and validate into MemoryItem
-    if result_dict and result_tier:
-        try:
-            normalized_dict = normalize_memory_format(result_dict, result_tier)
-            return MemoryItem.model_validate(normalized_dict)
-        except Exception as val_err:
-            logger.error(f"Failed to validate retrieved memory {memory_id} into MemoryItem: {val_err}")
-            return None # Return None if validation fails
+    # Update last accessed time if found (assuming retrieve doesn't do this)
+    # Note: This might be redundant if the backend's retrieve already updates it.
+    # if memory_item:
+    #     memory_item.mark_accessed()
+    #     # Persist the access time update if necessary (depends on backend implementation)
+    #     # Example: await appropriate_storage.update(memory_item.id, memory_item.model_dump())
 
-    return None # Return None if not found in any tier
+    return memory_item
 
 
 async def search_memories(
@@ -247,7 +219,7 @@ async def search_memories(
 ) -> SearchResults: # Changed return type hint
     """
     Search for memories across all tiers.
-    
+
     Args:
         stm_storage: STM storage backend
         mtm_storage: MTM storage backend
@@ -257,129 +229,162 @@ async def search_memories(
         tags: Optional tags to filter by
         limit: Maximum number of results
         min_relevance: Minimum relevance score (0.0 to 1.0)
-            
+
     Returns:
-        SearchResults object containing MemoryItems and metadata
+        SearchResults object containing MemorySearchResult objects and metadata
     """
-    all_result_items: List[MemoryItem] = []
+    # Store tuples of (MemoryItem, MemoryTier)
+    all_result_tuples: List[Tuple[MemoryItem, MemoryTier]] = []
     processed_ids = set() # To avoid duplicates
+
     # Search vector storage if embedding is provided (or if we can generate one)
     if embedding:
-        try:
-            vector_results = await vector_storage.search(
-                query=query,
-                query_embedding=embedding,
-                limit=limit
-            )
-            # Assuming vector_results is already a SearchResults object or similar
-            # Need to adapt based on actual vector_storage.search return type
-            # For now, assume it returns a list of dicts or MemoryItems
-            raw_vector_results = await vector_storage.search(
+        try: # Ensure try is correctly indented
+            # Assuming vector_storage.search returns a list of MemoryItems or dicts
+            raw_vector_results = await vector_storage.search( # Correctly indented call
                 query=query,
                 query_embedding=embedding,
                 limit=limit * 2 # Fetch more initially to allow for merging/filtering
             )
 
-            # Process vector results (assuming list of dicts/MemoryItems)
+            # Process vector results
             for result_data in raw_vector_results: # Adjust iteration based on actual return type
-                 if isinstance(result_data, MemoryItem):
-                     item = result_data
-                 elif isinstance(result_data, dict):
-                     item = MemoryItem.model_validate(normalize_memory_format(result_data, MemoryTier.LTM))
-                 else:
-                     continue # Skip unknown format
+                try: # Added inner try for validation
+                    if isinstance(result_data, MemoryItem):
+                        item = result_data
+                    elif isinstance(result_data, dict):
+                        # Ensure normalization happens before validation if needed
+                        # Assuming vector search returns data compatible with MemoryItem directly or via normalization
+                        item = MemoryItem.model_validate(normalize_memory_format(result_data, MemoryTier.LTM))
+                    else:
+                        continue # Skip unknown format
 
-                 if item.id not in processed_ids:
-                     # Calculate relevance if not provided by backend
-                     relevance = getattr(item, 'relevance', calculate_text_relevance(query, item.model_dump()))
-                     if relevance >= min_relevance:
-                         item.metadata.relevance = relevance # Store relevance if possible
-                         all_result_items.append(item)
-                         processed_ids.add(item.id)
+                    if item.id not in processed_ids:
+                        # Calculate relevance if not provided by backend
+                        relevance = getattr(item.metadata, 'relevance', calculate_text_relevance(query, item.model_dump()))
+                        if relevance >= min_relevance:
+                            item.metadata.relevance = relevance # Store relevance
+                            # Append tuple (item, tier)
+                            all_result_tuples.append((item, MemoryTier.LTM))
+                            processed_ids.add(item.id)
 
-        except Exception as e:
-             logger.error(f"Error in vector search: {str(e)}")
-    
-    # Search STM (simple text match for now)
+                except Exception as val_err_vector: # Ensure except is aligned with inner try
+                    logger.warning(f"Failed to validate vector search result: {val_err_vector}")
+
+        except Exception as e: # Ensure except is aligned with outer try
+            logger.error(f"Error in vector search: {str(e)}")
+
+    # Search STM (simple text match for now) # Ensure this is correctly unindented
     try:
         # Build filter criteria based on query and tags
         filter_criteria = {}
         if tags:
-            filter_criteria["metadata.tags"] = {"$in": tags} # This filter might not work with text_search
-        # Use text_search method on the search component
-        # Assuming 'content.text' and 'summary' are the fields to search
-        stm_results = await stm_storage.search_component.text_search(
+            # Note: InMemorySearch text_search doesn't directly support complex filters like this.
+            # Tag filtering will be applied manually after retrieval for InMemory.
+            pass # filter_criteria["metadata.tags"] = {"$in": tags} # This won't work with text_search
+
+        # Use text_search method on the search attribute (Corrected)
+        stm_results_raw = await stm_storage.search.text_search(
             query=query,
             fields=["content.text", "summary"], # Specify fields for text search
-            limit=limit * 2
+            limit=limit * 2 # Fetch more to allow manual filtering
         )
-        for result_dict in stm_results:
-            # text_search returns items with _id, need to map back to id
-            item_id = result_dict.get('_id')
+
+        # Manually filter by tags if needed for InMemory
+        stm_results_filtered = []
+        if tags:
+            for item_dict in stm_results_raw:
+                # Check if tags match (assuming tags are stored as dict keys in metadata)
+                item_tags = item_dict.get('metadata', {}).get('tags', {})
+                if any(tag in item_tags for tag in tags):
+                    stm_results_filtered.append(item_dict)
+        else:
+            stm_results_filtered = stm_results_raw
+
+        for result_dict in stm_results_filtered:
+            item_id = result_dict.get('_id') # InMemorySearch uses _id
             if item_id and item_id not in processed_ids:
-                 try:
-                     item = MemoryItem.model_validate(normalize_memory_format(result_dict, MemoryTier.STM))
-                     relevance = calculate_text_relevance(query, item.model_dump())
-                     if relevance >= min_relevance:
-                         item.metadata.relevance = relevance
-                         all_result_items.append(item)
-                         processed_ids.add(item.id)
-                 except Exception as val_err:
-                     logger.warning(f"Failed to validate STM search result: {val_err}")
+                try:
+                    # Normalize might not be needed if retrieve returns MemoryItem
+                    # Assuming normalize handles the dict format from InMemorySearch
+                    item = MemoryItem.model_validate(normalize_memory_format(result_dict, MemoryTier.STM))
+                    relevance = calculate_text_relevance(query, item.model_dump())
+                    if relevance >= min_relevance:
+                        item.metadata.relevance = relevance
+                        # Append tuple (item, tier)
+                        all_result_tuples.append((item, MemoryTier.STM))
+                        processed_ids.add(item.id)
+                except Exception as val_err:
+                    logger.warning(f"Failed to validate STM search result for ID {item_id}: {val_err}")
     except Exception as e:
          logger.error(f"Error in STM search: {str(e)}")
 
     # Search MTM
     try:
-        # Use text_search method on the search component
-        mtm_results = await mtm_storage.search_component.text_search(
+        # Use text_search method on the search attribute (Corrected)
+        mtm_results_raw = await mtm_storage.search.text_search(
             query=query,
             fields=["content.text", "summary"], # Specify fields for text search
-            limit=limit * 2
+            limit=limit * 2 # Fetch more for manual filtering
         )
-        # Apply tag filtering manually if needed, as text_search doesn't support complex filters
-        if tags:
-            mtm_results = [item for item in mtm_results if tags and any(tag in item.get('metadata', {}).get('tags', {}) for tag in tags)]
 
-        for result_dict in mtm_results:
-             item_id = result_dict.get('_id')
+        # Manually filter by tags if needed for InMemory
+        mtm_results_filtered = []
+        if tags:
+            for item_dict in mtm_results_raw:
+                item_tags = item_dict.get('metadata', {}).get('tags', {})
+                if any(tag in item_tags for tag in tags):
+                    mtm_results_filtered.append(item_dict)
+        else:
+            mtm_results_filtered = mtm_results_raw
+
+        for result_dict in mtm_results_filtered:
+             item_id = result_dict.get('_id') # InMemorySearch uses _id
              if item_id and item_id not in processed_ids:
                  try:
+                     # Assuming normalize handles the dict format from InMemorySearch
                      item = MemoryItem.model_validate(normalize_memory_format(result_dict, MemoryTier.MTM))
                      relevance = calculate_text_relevance(query, item.model_dump())
                      if relevance >= min_relevance:
                          item.metadata.relevance = relevance
-                         all_result_items.append(item)
+                         # Append tuple (item, tier)
+                         all_result_tuples.append((item, MemoryTier.MTM))
                          processed_ids.add(item.id)
                  except Exception as val_err:
-                     logger.warning(f"Failed to validate MTM search result: {val_err}")
+                     logger.warning(f"Failed to validate MTM search result for ID {item_id}: {val_err}")
     except Exception as e:
          logger.error(f"Error in MTM search: {str(e)}")
 
-    # Sort by relevance (assuming relevance is stored in metadata)
-    all_result_items.sort(key=lambda item: getattr(item.metadata, 'relevance', 0.0), reverse=True)
+    # Sort tuples by relevance stored in the MemoryItem's metadata
+    all_result_tuples.sort(key=lambda item_tuple: getattr(item_tuple[0].metadata, 'relevance', 0.0), reverse=True)
 
-    # Apply limit and construct SearchResults object
-    final_results = []
-    for item in all_result_items[:limit]:
-         # Convert MemoryItem back to MemorySearchResult structure if needed by caller
-         # For now, let's assume the caller expects MemoryItem list in SearchResults
-         final_results.append(item) # Assuming SearchResults expects MemoryItem list
+    # Apply limit and construct MemorySearchResult objects
+    final_results: List[MemorySearchResult] = []
+    rank = 1
+    for item, tier in all_result_tuples[:limit]:
+        search_result = MemorySearchResult(
+            memory=item,
+            relevance=getattr(item.metadata, 'relevance', 0.0),
+            tier=tier.value, # Use the stored tier value
+            rank=rank
+            # similarity/distance could be added here if available from vector search
+        )
+        final_results.append(search_result)
+        rank += 1
 
-    total_found_count = len(all_result_items)
+    total_found_count = len(all_result_tuples) # Total unique items found before limit
 
     search_options = MemorySearchOptions(
         query=query,
         tags=tags,
         limit=limit,
-        offset=0,
+        offset=0, # Offset was handled by slicing the sorted list
         min_relevance=min_relevance
     )
 
-    # Adapt the return structure based on the actual definition of SearchResults
-    # Assuming SearchResults has 'results' field for the list of items
+    # Construct the final SearchResults object
     return SearchResults(
-        results=final_results, # Changed 'items' to 'results' based on model definition
+        results=final_results, # Pass the list of MemorySearchResult objects
         total_count=total_found_count,
         options=search_options,
         query=query
