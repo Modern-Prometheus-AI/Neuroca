@@ -135,6 +135,8 @@ plugins:
 
 # Additional JavaScript and CSS for analytics and custom styling
 extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js
+  - assets/js/mermaid-init.js
   - assets/js/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
@@ -177,6 +179,18 @@ nav:
   - Architecture:
     - Overview: architecture/components.md
     - Data Flow: architecture/data_flow.md
+    - Diagrams:
+      - System Architecture: architecture/diagrams/system-architecture.md
+      - Health System:
+        - Overview: architecture/diagrams/health-system/overview.md
+        - Components: architecture/diagrams/health-system/index.md
+      - Memory System:
+        - Overview: architecture/diagrams/memory-system/overview.md
+        - Tiers: architecture/diagrams/memory-system/tiers.md
+      - Cognitive Control:
+        - Overview: architecture/diagrams/cognitive-control/overview.md
+      - Integration:
+        - LangChain: architecture/diagrams/integration/langchain.md
     - Memory System:
       - Backend Config: architecture/memory_system_backend_configuration.md
       - Interactions: architecture/memory_system_component_interactions.md
