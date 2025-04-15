@@ -76,3 +76,76 @@ This script demonstrates the thread-safe nature of our recently updated memory s
 2. **Test Context Maintenance**: Conduct a complex conversation and see if the agent maintains a coherent understanding.
 3. **Test Memory Consolidation**: Have a long conversation (10+ exchanges) to trigger memory maintenance and see if memories are properly consolidated.
 4. **Test Persistence**: If using the SQLite backend, exit and restart the script to verify that memories persist between sessions.
+
+## Integrating the Memory System
+
+The `ConversationalAgent` class in `test_memory_with_llm.py` provides a template for integrating the Neuroca memory system into your own Python applications. Here are the key steps:
+
+1.  **Import necessary components**:
+    ```python
+    import asyncio
+    from neuroca.memory.manager.core import MemoryManager
+    from neuroca.memory.backends import BackendType
+    # Import other necessary models like MemoryItem, MemorySearchOptions if needed
+    ```
+
+2.  **Initialize the MemoryManager**:
+    Create an instance of `MemoryManager`, providing configuration for memory tiers and specifying the storage backends.
+    ```python
+    # Example configuration (adjust as needed)
+    memory_config = {
+        "stm": {"default_ttl": 3600},
+        "mtm": {"max_capacity": 1000},
+        "ltm": {"maintenance_interval": 86400}
+    }
+
+    # Choose backend types (e.g., MEMORY, SQLITE)
+    mtm_backend = BackendType.MEMORY
+    ltm_backend = BackendType.MEMORY
+    vector_backend = BackendType.MEMORY # Or another vector-supported backend
+
+    memory_manager = MemoryManager(
+        config=memory_config,
+        mtm_storage_type=mtm_backend,
+        ltm_storage_type=ltm_backend,
+        vector_storage_type=vector_backend
+    )
+
+    # Initialize asynchronously
+    await memory_manager.initialize()
+    ```
+
+3.  **Add Memories**:
+    Use `add_memory` to store information. Provide content, summary, importance, tags, metadata, and the initial tier.
+    ```python
+    memory_id = await memory_manager.add_memory(
+        content="User mentioned their favorite color is blue.",
+        summary="User favorite color",
+        importance=0.8,
+        tags=["user_preference", "color"],
+        metadata={"source": "conversation", "timestamp": time.time()},
+        initial_tier="stm"
+    )
+    ```
+
+4.  **Search Memories**:
+    Use `search_memories` to retrieve relevant information based on a query.
+    ```python
+    search_results_obj = await memory_manager.search_memories(
+        query="What is the user's favorite color?",
+        limit=5,
+        min_relevance=0.5
+    )
+
+    if search_results_obj.results:
+        for result in search_results_obj.results:
+            print(f"Found memory: {result.memory.get_text()} (Relevance: {result.relevance:.2f})")
+    ```
+
+5.  **Shutdown Gracefully**:
+    Ensure the memory manager is shut down properly when your application exits.
+    ```python
+    await memory_manager.shutdown()
+    ```
+
+By following these steps, you can incorporate the Neuroca memory system's capabilities into various applications, such as chatbots, agents, or data processing pipelines. Remember to handle the asynchronous nature of the memory operations using `async` and `await`.
