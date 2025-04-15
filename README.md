@@ -344,7 +344,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-For questions, feedback, or collaboration opportunities, please open an issue on this repository or contact Justin Lietz.
+For questions, feedback, or collaboration opportunities, please open an issue on this repository or contact Justin Lietz. jlietz93@gmail.com
 
 ---
 
