@@ -1,0 +1,65 @@
+# Redis Backend Configuration
+# This file defines settings specific to the Redis storage backend
+
+# Backend-specific settings
+redis:
+  # Connection settings
+  connection:
+    host: "localhost"
+    port: 6379
+    database: 0
+    username: ""
+    password: ""
+    use_ssl: false
+    timeout_seconds: 5
+
+  # Key settings
+  keys:
+    prefix: "neuroca:memory:"
+    separator: ":"
+    encoding: "utf-8"
+    expire_ttl_seconds: 0  # 0 means no expiration
+
+  # Performance settings
+  performance:
+    use_connection_pool: true
+    max_connections: 10
+    socket_keepalive: true
+    socket_timeout_seconds: 5
+    retry_on_timeout: true
+    retry_on_error: true
+    max_retries: 3
+    
+  # Data structure settings
+  data_structure:
+    use_hash_for_metadata: true
+    use_sorted_sets_for_indexing: true
+    use_lists_for_ordered_data: true
+    use_sets_for_tags: true
+    
+  # Serialization settings
+  serialization:
+    format: "json"  # Options: json, msgpack, pickle
+    compress: false
+    compression_threshold_bytes: 1024
+    compression_level: 6
+
+  # Pub/Sub settings
+  pubsub:
+    enabled: false
+    channel_prefix: "neuroca:events:"
+    
+  # Lua scripts
+  lua_scripts:
+    enabled: true
+    cache_scripts: true
+    
+  # Sentinel settings (if using Redis Sentinel)
+  sentinel:
+    enabled: false
+    master_name: "mymaster"
+    sentinels:
+      - host: "sentinel-1"
+        port: 26379
+      - host: "sentinel-2"
+        port: 26379

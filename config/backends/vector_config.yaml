@@ -1,0 +1,73 @@
+# Vector Backend Configuration
+# This file defines settings specific to the vector storage backend
+
+# Backend-specific settings
+vector:
+  # Storage settings
+  storage:
+    type: "memory"  # Options: memory, file, hybrid
+    file_path: "data/vector_store.bin"
+    auto_save: true
+    save_interval_seconds: 300  # 5 minutes
+    
+  # Vector settings
+  vector:
+    dimension: 1536  # Default embedding dimension
+    distance_metric: "cosine"  # Options: cosine, l2, dot, jaccard, hamming
+    normalize_vectors: true
+    
+  # Index settings
+  index:
+    type: "hnsw"  # Options: hnsw, flat, ivf_flat, pq, ivf_pq, ivf_sq
+    creation_threshold: 1000  # Create index after this many vectors
+    build_on_creation: true
+    use_gpu: false
+    
+  # HNSW index settings
+  hnsw_index:
+    ef_construction: 200
+    ef_search: 50
+    m: 16  # Number of connections per layer
+    max_elements: 1000000
+    
+  # IVF index settings
+  ivf_index:
+    nlist: 100  # Number of clusters
+    nprobe: 10  # Number of clusters to search
+    
+  # PQ index settings
+  pq_index:
+    code_size: 8  # Number of bytes per vector
+    nbits: 8  # Number of bits per component
+    
+  # Search settings
+  search:
+    default_top_k: 10
+    max_top_k: 1000
+    pre_filter_enabled: true
+    post_filter_enabled: true
+    min_score_threshold: 0.5
+    max_search_time_ms: 50
+    
+  # Clustering settings
+  clustering:
+    enabled: false
+    algorithm: "kmeans"  # Options: kmeans, dbscan, hdbscan
+    min_cluster_size: 5
+    max_clusters: 100
+    
+  # Metadata filtering
+  metadata:
+    enable_filtering: true
+    metadata_fields:
+      - "source"
+      - "timestamp"
+      - "importance"
+      - "tags"
+    
+  # Performance settings
+  performance:
+    use_multithreading: true
+    num_threads: 4
+    batch_size: 100
+    cache_size_mb: 128

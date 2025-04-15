@@ -1,0 +1,73 @@
+# SQL Backend Configuration
+# This file defines settings specific to SQL database storage backends
+
+# Backend-specific settings
+sql:
+  # Connection settings
+  connection:
+    driver: "postgresql"  # Options: postgresql, mysql, mssql, oracle
+    host: "localhost"
+    port: 5432  # Default PostgreSQL port
+    database: "neuroca_memory"
+    username: "neuroca_user"
+    password: ""
+    schema: "public"
+    ssl_mode: "disable"  # Options: disable, allow, prefer, require, verify-ca, verify-full
+    
+  # Connection pool settings
+  pool:
+    min_connections: 2
+    max_connections: 10
+    max_idle_time_seconds: 300
+    max_lifetime_seconds: 3600
+    connection_timeout_seconds: 5
+    
+  # Schema settings
+  schema:
+    table_prefix: "mem_"
+    metadata_table: "memory_metadata"
+    content_table: "memory_content"
+    tags_table: "memory_tags"
+    relations_table: "memory_relations"
+    use_jsonb_for_metadata: true
+    auto_create_tables: true
+    auto_migrate: true
+    migrations_table: "_migrations"
+    
+  # Query settings
+  query:
+    max_query_length: 10000
+    max_parameters: 1000
+    query_timeout_seconds: 30
+    use_prepared_statements: true
+    enable_query_logging: false
+    explain_query_threshold_ms: 100
+    
+  # Transaction settings
+  transaction:
+    isolation_level: "READ COMMITTED"  # Options: READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE
+    auto_commit: false
+    
+  # Performance settings
+  performance:
+    use_batch_inserts: true
+    max_batch_size: 1000
+    use_upsert: true
+    enable_statement_cache: true
+    statement_cache_size: 100
+    
+  # PostgreSQL specific settings
+  postgresql:
+    enable_ssl: false
+    application_name: "neuroca_memory"
+    statement_timeout_ms: 30000
+    use_advisory_locks: true
+    enable_unaccent: true
+    enable_pg_trgm: true
+    
+  # MySQL specific settings
+  mysql:
+    charset: "utf8mb4"
+    collation: "utf8mb4_unicode_ci"
+    enable_local_infile: false
+    sql_mode: "STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"

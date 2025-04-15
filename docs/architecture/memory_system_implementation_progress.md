@@ -181,14 +181,22 @@ This document tracks the progress of the Neuroca memory system refactoring imple
     - [x] Split into modular component-based implementation (AMOS compliant)
     - [x] Components for core, operations, batch, and stats
     - [x] Backward compatibility through import redirection
-  - [ ] Refactor Annealing Module (> 500 lines per file)
+  - [x] Refactor Annealing Module (> 500 lines per file)
     - [x] Refactor scheduler.py into component-based implementation
       - [x] Created modularity with core, types, and scheduler implementations
       - [x] Extracted each scheduler type into separate files
       - [x] Implemented factory and configuration classes
       - [x] Maintained backward compatibility through import redirection
-    - [ ] Refactor optimizer.py into component-based implementation
-    - [ ] Refactor phases.py into component-based implementation
+    - [x] Refactor optimizer.py into component-based implementation
+      - [x] Created components for energy calculation
+      - [x] Created components for state transformations
+      - [x] Simplified core optimizer class
+      - [x] Maintained backward compatibility through import redirection
+    - [x] Refactor phases.py into component-based implementation
+      - [x] Created modular structure with types, config, base, and phase implementations
+      - [x] Separated each phase type into dedicated files
+      - [x] Implemented factory for phase creation
+      - [x] Maintained backward compatibility through import redirection
   - [ ] Add configuration options for all backends
 
 - [ ] **Comprehensive Test Coverage**

@@ -1,0 +1,35 @@
+# In-Memory Backend Configuration
+# This file defines settings specific to the in-memory storage backend
+
+# Backend-specific settings
+in_memory:
+  # Memory allocation settings
+  memory:
+    initial_capacity: 1000
+    auto_expand: true
+    expansion_factor: 2
+    max_capacity: 100000
+
+  # Data structure settings
+  data_structure:
+    index_type: "hashmap"  # Options: hashmap, btree
+    enable_secondary_indices: true
+    
+  # Persistence settings
+  persistence:
+    enabled: false
+    file_path: "data/in_memory_backup.json"
+    auto_save_interval_seconds: 300  # 5 minutes
+    save_on_shutdown: true
+
+  # Pruning settings
+  pruning:
+    enabled: true
+    max_items: 10000
+    strategy: "lru"  # Options: lru, lfu, fifo, lifo, random
+    trigger_threshold: 0.9  # Pruning starts when capacity reaches 90%
+
+  # Performance settings
+  performance:
+    use_concurrent_map: true
+    lock_timeout_ms: 1000

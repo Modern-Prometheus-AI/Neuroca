@@ -1,0 +1,47 @@
+# SQLite Backend Configuration
+# This file defines settings specific to the SQLite storage backend
+
+# Backend-specific settings
+sqlite:
+  # Connection settings
+  connection:
+    database_path: "data/memory_store.db"
+    create_if_missing: true
+    timeout_seconds: 5
+    foreign_keys: true
+
+  # Performance settings
+  performance:
+    page_size: 4096
+    cache_size: 2000  # Pages in memory
+    journal_mode: "WAL"  # Options: DELETE, TRUNCATE, PERSIST, MEMORY, WAL, OFF
+    synchronous: "NORMAL"  # Options: OFF, NORMAL, FULL, EXTRA
+    temp_store: "MEMORY"  # Options: DEFAULT, FILE, MEMORY
+    mmap_size: 0  # 0 to disable
+
+  # Schema settings
+  schema:
+    auto_migrate: true
+    migration_table: "_schema_migrations"
+    enable_triggers: true
+    enable_fts: true  # Full-text search
+
+  # Query settings
+  query:
+    max_query_length: 10000
+    max_parameters: 999
+    enforce_foreign_keys: true
+    explain_query_threshold_ms: 100
+    
+  # Transaction settings
+  transaction:
+    auto_vacuum: "INCREMENTAL"  # Options: NONE, FULL, INCREMENTAL
+    auto_commit: true
+    isolation_level: "IMMEDIATE"  # Options: DEFERRED, IMMEDIATE, EXCLUSIVE
+    
+  # Backup settings
+  backup:
+    enabled: true
+    interval_hours: 24
+    keep_backups: 7
+    backup_path: "data/backups/"

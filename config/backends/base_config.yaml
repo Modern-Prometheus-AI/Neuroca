@@ -1,0 +1,42 @@
+# Base Backend Configuration
+# This file defines common configuration settings for all storage backends
+
+# Common settings
+common:
+  # Cache settings
+  cache:
+    enabled: true
+    max_size: 1000
+    ttl_seconds: 300  # 5 minutes
+
+  # Batch operation settings
+  batch:
+    max_batch_size: 100
+    auto_commit: true
+
+  # Performance settings
+  performance:
+    connection_pool_size: 5
+    connection_timeout_seconds: 10
+    operation_timeout_seconds: 30
+
+  # Logging settings
+  logging:
+    enabled: true
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    log_queries: false
+
+  # Health check settings
+  health_check:
+    enabled: true
+    interval_seconds: 60
+    timeout_seconds: 5
+    max_retries: 3
+
+  # Metrics settings
+  metrics:
+    enabled: true
+    collect_detailed_stats: false
+
+# Default backend to use if not specified
+default_backend: "in_memory"
