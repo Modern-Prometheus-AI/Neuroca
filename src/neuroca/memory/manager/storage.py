@@ -77,11 +77,22 @@ async def add_memory(
     # Store in appropriate tier
     memory_id = None
     if initial_tier == MemoryTier.STM:
-        # Store in STM
-        memory_id = await stm_storage.store(
+        # Create MemoryItem for STM storage
+        memory_item = MemoryItem(
             content=content_dict,
-            metadata=metadata_dict
+            summary=summary,
+            embedding=embedding,
+            metadata=MemoryMetadata(
+                status=MemoryStatus.ACTIVE,
+                tags={tag: True for tag in tags_list}, # Convert list to dict
+                importance=importance,
+                created_at=datetime.now(),
+                # Add any other relevant fields from metadata_dict if needed
+                **{k: v for k, v in metadata_dict.items() if k not in ['importance', 'tags']}
+            )
         )
+        # Store in STM using the MemoryItem object
+        memory_id = await stm_storage.store(memory_item)
         logger.debug(f"Stored memory in STM with ID: {memory_id}")
         
     elif initial_tier == MemoryTier.MTM:
@@ -93,13 +104,23 @@ async def add_memory(
             mtm_priority = MemoryPriority.MEDIUM
         else:
             mtm_priority = MemoryPriority.LOW
-            
-        memory_id = await mtm_storage.store(
+
+        # Create MemoryItem for MTM storage
+        memory_item = MemoryItem(
             content=content_dict,
-            tags=tags_list,
-            priority=mtm_priority,
-            metadata=metadata_dict
+            summary=summary,
+            embedding=embedding,
+            metadata=MemoryMetadata(
+                status=MemoryStatus.ACTIVE,
+                tags={tag: True for tag in tags_list}, # Convert list to dict
+                importance=importance,
+                created_at=datetime.now(),
+                priority=mtm_priority, # Add priority for MTM
+                **{k: v for k, v in metadata_dict.items() if k not in ['importance', 'tags']}
+            )
         )
+        # Store in MTM using the MemoryItem object
+        memory_id = await mtm_storage.store(memory_item)
         logger.debug(f"Stored memory in MTM with ID: {memory_id}")
         
     elif initial_tier == MemoryTier.LTM:
@@ -284,11 +305,18 @@ async def search_memories(
         # Build filter criteria based on query and tags
         filter_criteria = {}
         if tags:
-            filter_criteria["metadata.tags"] = {"$in": tags}
-        # Assuming stm_storage.search exists and returns list of dicts
-        stm_results = await stm_storage.search(query=query, filters=filter_criteria, limit=limit * 2)
+            filter_criteria["metadata.tags"] = {"$in": tags} # This filter might not work with text_search
+        # Use text_search method on the search component
+        # Assuming 'content.text' and 'summary' are the fields to search
+        stm_results = await stm_storage.search_component.text_search(
+            query=query,
+            fields=["content.text", "summary"], # Specify fields for text search
+            limit=limit * 2
+        )
         for result_dict in stm_results:
-            if result_dict and result_dict.get('id') not in processed_ids:
+            # text_search returns items with _id, need to map back to id
+            item_id = result_dict.get('_id')
+            if item_id and item_id not in processed_ids:
                  try:
                      item = MemoryItem.model_validate(normalize_memory_format(result_dict, MemoryTier.STM))
                      relevance = calculate_text_relevance(query, item.model_dump())
@@ -303,10 +331,19 @@ async def search_memories(
 
     # Search MTM
     try:
-        # Assuming mtm_storage.search exists and returns list of dicts
-        mtm_results = await mtm_storage.search(query=query, filters={"tags": tags} if tags else None, limit=limit * 2)
+        # Use text_search method on the search component
+        mtm_results = await mtm_storage.search_component.text_search(
+            query=query,
+            fields=["content.text", "summary"], # Specify fields for text search
+            limit=limit * 2
+        )
+        # Apply tag filtering manually if needed, as text_search doesn't support complex filters
+        if tags:
+            mtm_results = [item for item in mtm_results if tags and any(tag in item.get('metadata', {}).get('tags', {}) for tag in tags)]
+
         for result_dict in mtm_results:
-             if result_dict and result_dict.get('id') not in processed_ids:
+             item_id = result_dict.get('_id')
+             if item_id and item_id not in processed_ids:
                  try:
                      item = MemoryItem.model_validate(normalize_memory_format(result_dict, MemoryTier.MTM))
                      relevance = calculate_text_relevance(query, item.model_dump())
@@ -323,27 +360,28 @@ async def search_memories(
     all_result_items.sort(key=lambda item: getattr(item.metadata, 'relevance', 0.0), reverse=True)
 
     # Apply limit and construct SearchResults object
-    final_items = all_result_items[:limit]
-    
-    # Note: total_count might be inaccurate if limits were applied during backend searches
-    # A more accurate count would require counting in each backend without limit first.
-    # For now, use the count of unique items found before the final limit.
+    final_results = []
+    for item in all_result_items[:limit]:
+         # Convert MemoryItem back to MemorySearchResult structure if needed by caller
+         # For now, let's assume the caller expects MemoryItem list in SearchResults
+         final_results.append(item) # Assuming SearchResults expects MemoryItem list
+
     total_found_count = len(all_result_items)
-    
-    # Create search options object for the results
+
     search_options = MemorySearchOptions(
         query=query,
         tags=tags,
         limit=limit,
-        offset=0, # Using 0 as offset was handled by slicing
+        offset=0,
         min_relevance=min_relevance
     )
 
+    # Adapt the return structure based on the actual definition of SearchResults
+    # Assuming SearchResults has 'results' field for the list of items
     return SearchResults(
-        items=final_items,
-        total_count=total_found_count, # This might not be the true total across all tiers
-        options=search_options, # Add the required options field
-        offset=0, # Offset was handled implicitly by slicing
-        limit=limit,
+        results=final_results, # Changed 'items' to 'results' based on model definition
+        total_count=total_found_count,
+        options=search_options,
         query=query
+        # Removed offset and limit as they are part of options
     )
