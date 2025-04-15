@@ -337,7 +337,8 @@ Now that you're familiar with NCA basics, you can:
 1. Explore the [API Reference](../api/reference.md) for detailed documentation
 2. Check out [Advanced Usage](./advanced-usage.md) for complex scenarios
 3. Learn about [Custom Extensions](./extensions.md) to add your own components
-4. Join our [Community](https://github.com/Neuroca/neuroca/discussions) to share your experiences (coming soon)
+4. Explore the [Architecture Diagrams](../architecture/diagrams/index.md) to understand the system design
+5. Review the [LangChain Integration](../langchain/index.md) for using NCA with LangChain
 
 For any questions or support, please [open an issue](https://github.com/Neuroca/neuroca/issues) on our GitHub repository.
 
