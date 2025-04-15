@@ -13,7 +13,7 @@ from neuroca.memory.backends.vector.components.crud import VectorCRUD
 from neuroca.memory.backends.vector.components.index import VectorIndex
 from neuroca.memory.exceptions import StorageOperationError
 from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import SearchFilter, SearchResults
+from neuroca.memory.models.search import MemorySearchOptions, MemorySearchResults
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +49,10 @@ class VectorSearch:
         self,
         query: str,
         query_embedding: List[float],
-        filter: Optional[SearchFilter] = None,
+        filter: Optional[MemorySearchOptions] = None,
         limit: int = 10,
         offset: int = 0,
-    ) -> SearchResults:
+    ) -> MemorySearchResults:
         """
         Search for memory items in the vector database.
         
@@ -84,9 +84,11 @@ class VectorSearch:
             
             # No results case
             if not search_results:
-                return SearchResults(
+                # Use MemorySearchResults and pass options
+                search_options = filter if filter else MemorySearchOptions(query=query, limit=limit, offset=offset)
+                return MemorySearchResults(
                     query=query,
-                    items=[],
+                    results=[],
                     total_results=0,
                     page=1,
                     page_size=limit,
@@ -116,9 +118,11 @@ class VectorSearch:
             total_pages = (total_count + limit - 1) // limit if limit > 0 else 1
             
             # Create search results
-            results = SearchResults(
+            # Use MemorySearchResults and pass options
+            search_options = filter if filter else MemorySearchOptions(query=query, limit=limit, offset=offset)
+            results = MemorySearchResults(
                 query=query,
-                items=memory_items,
+                results=memory_items,
                 total_results=total_count,
                 page=page,
                 page_size=limit,
@@ -134,7 +138,7 @@ class VectorSearch:
             logger.error(error_msg, exc_info=True)
             raise StorageOperationError(error_msg) from e
     
-    async def count(self, filter: Optional[SearchFilter] = None) -> int:
+    async def count(self, filter: Optional[MemorySearchOptions] = None) -> int:
         """
         Count memory items in the vector database matching the filter.
         
@@ -171,7 +175,7 @@ class VectorSearch:
     
     def _create_filter_function(
         self, 
-        filter: Optional[SearchFilter]
+        filter: Optional[MemorySearchOptions]
     ) -> Optional[Callable[[Dict[str, Any]], bool]]:
         """
         Create a filter function based on provided filters.

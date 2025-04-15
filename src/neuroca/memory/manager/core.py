@@ -11,8 +11,8 @@ import logging
 from typing import Any, Dict, List, Optional, Set
 
 from neuroca.config.settings import get_settings
-from neuroca.core.exceptions import (
-    MemoryNotFoundError,
+from neuroca.memory.exceptions import (
+    ItemNotFoundError as MemoryNotFoundError,
     StorageBackendError,
     StorageInitializationError,
 )
@@ -21,7 +21,8 @@ from neuroca.memory.backends import (
     MemoryTier,
     StorageBackendFactory,
 )
-from neuroca.memory.stm.storage import STMStorage
+# Fixed import path for STMStorage
+from neuroca.memory.tiers.stm.core import ShortTermMemoryTier as STMStorage
 from neuroca.memory.manager.models import RankedMemory
 from neuroca.memory.manager.working_memory import (
     update_working_memory,

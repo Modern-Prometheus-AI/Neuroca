@@ -10,9 +10,15 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from neuroca.memory.backends import MemoryTier
-from neuroca.memory.ltm.storage import MemoryItem, MemoryMetadata, MemoryStatus
-from neuroca.memory.mtm.storage import MemoryPriority
+from neuroca.memory.models.memory_item import MemoryItem, MemoryMetadata, MemoryStatus
+from enum import Enum
 from neuroca.memory.manager.utils import normalize_memory_format, calculate_text_relevance
+
+class MemoryPriority(str, Enum):
+    """Priority levels for MTM memories."""
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 # Configure logger
 logger = logging.getLogger(__name__)

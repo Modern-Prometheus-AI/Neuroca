@@ -48,7 +48,7 @@ class STMLifecycle:
             cleanup_func: Function to call for cleaning up expired memories
             config: Configuration options
         """
-        logger.info(f"Initializing STM tier lifecycle with {len(config.get('ttl_seconds', 3600))} TTL")
+        logger.info(f"Initializing STM tier lifecycle with {config.get('ttl_seconds', 3600)} TTL")
         
         self._backend = backend
         self._cleanup_func = cleanup_func

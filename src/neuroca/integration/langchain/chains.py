@@ -29,13 +29,15 @@ import logging
 import time
 from typing import Any, Optional, TypeVar
 
-from langchain.callbacks.base import BaseCallbackHandler, Callbacks
+from langchain.callbacks.base import BaseCallbackHandler
+from langchain.callbacks.base import Callbacks
 from langchain.chains import LLMChain, SequentialChain
 
 # LangChain imports
-from langchain.chains.base import Chain
-from langchain.prompts import PromptTemplate
-from langchain.schema import BaseLanguageModel, BaseMemory
+from langchain_core.chains import Chain
+from langchain_core.prompts import PromptTemplate
+from langchain_core.language_models import BaseLLM as BaseLanguageModel
+from langchain_core.memory import BaseMemory
 
 from neuroca.core.exceptions import (
     CognitiveOverloadException,

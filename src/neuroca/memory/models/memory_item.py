@@ -99,7 +99,7 @@ class MemoryMetadata(BaseModel):
     access_count: int = Field(default=0, ge=0)
     
     # Categorization
-    tags: List[str] = Field(default_factory=list)
+    tags: Dict[str, Any] = Field(default_factory=dict)
     source: Optional[str] = None
     
     # Tier-specific metadata
@@ -137,15 +137,14 @@ class MemoryMetadata(BaseModel):
         # Strengthen memory slightly on access
         self.strength = min(1.0, self.strength + 0.05)
     
-    def add_tag(self, tag: str) -> None:
-        """Add a tag to the memory if it doesn't already exist."""
-        if tag not in self.tags:
-            self.tags.append(tag)
+    def add_tag(self, tag: str, value: Any = True) -> None:
+        """Add a tag to the memory with an optional value."""
+        self.tags[tag] = value
     
     def remove_tag(self, tag: str) -> bool:
         """Remove a tag from the memory if it exists."""
         if tag in self.tags:
-            self.tags.remove(tag)
+            del self.tags[tag]
             return True
         return False
 
@@ -220,7 +219,7 @@ class MemoryItem(BaseModel):
     def from_text(
         text: str,
         importance: float = 0.5,
-        tags: Optional[List[str]] = None,
+        tags: Optional[Dict[str, Any]] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> "MemoryItem":
         """
@@ -229,7 +228,7 @@ class MemoryItem(BaseModel):
         Args:
             text: The text content
             importance: Importance score (0.0 to 1.0)
-            tags: Optional tags for categorization
+            tags: Optional tags dictionary
             metadata: Optional additional metadata
             
         Returns:
@@ -239,7 +238,7 @@ class MemoryItem(BaseModel):
         
         meta = MemoryMetadata(
             importance=importance,
-            tags=tags or [],
+            tags=tags or {},
             additional_metadata=metadata or {},
         )
         

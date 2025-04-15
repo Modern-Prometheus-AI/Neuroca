@@ -9,18 +9,24 @@ configuration settings and ensures only one instance of each backend is created.
 import logging
 from typing import Any, Dict, Optional, Type
 
+# Set up logger first so we can use it in the try-except blocks below
+logger = logging.getLogger(__name__)
+
 from neuroca.memory.backends.base import BaseStorageBackend
 from neuroca.memory.backends.factory.backend_type import BackendType
 from neuroca.memory.backends.factory.memory_tier import MemoryTier
 from neuroca.memory.backends.in_memory_backend import InMemoryBackend
 from neuroca.memory.backends.sqlite_backend import SQLiteBackend
-from neuroca.memory.backends.redis_backend import RedisBackend
+# Import Redis conditionally as it requires external dependencies
+try:
+    from neuroca.memory.backends.redis_backend import RedisBackend
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+    logger.warning("Redis backend not available. Install aioredis for Redis support.")
 from neuroca.memory.backends.sql_backend import SQLBackend
 from neuroca.memory.backends.vector_backend import VectorBackend
 from neuroca.memory.exceptions import ConfigurationError
-
-
-logger = logging.getLogger(__name__)
 
 
 class StorageBackendFactory:
@@ -37,9 +43,12 @@ class StorageBackendFactory:
         BackendType.MEMORY: InMemoryBackend,
         BackendType.SQL: SQLBackend,
         BackendType.SQLITE: SQLiteBackend,
-        BackendType.REDIS: RedisBackend,
         BackendType.VECTOR: VectorBackend
     }
+    
+    # Add Redis backend only if it's available
+    if REDIS_AVAILABLE:
+        _backend_registry[BackendType.REDIS] = RedisBackend
     
     # Instances of created backends (for reuse)
     _instances: Dict[str, BaseStorageBackend] = {}

@@ -54,11 +54,13 @@ dependencies = [
     "opentelemetry-sdk>=1.18.0",
     "opentelemetry-exporter-otlp>=1.18.0",
     "langchain>=0.0.267",
+    "langchain-core",
     "tiktoken>=0.4.0",
     "faiss-cpu>=1.7.4",
     "pyyaml>=6.0.1",
     "aiohttp>=3.9.0",
     # Add other production dependencies as needed
+    "pydantic-settings (>=2.8.1,<3.0.0)"
 ]
 
 [project.urls]
@@ -89,7 +91,7 @@ dev = [
     "mkdocs>=1.4.3",
     "mkdocs-material>=9.1.16",
     "ipython>=8.14.0",
-    "jupyter>=1.0.0",
+    "jupyter>=1.0.0"
 ]
 test = [
     # Testing specific dependencies
@@ -135,7 +137,7 @@ use_parentheses = true
 ensure_newline_before_comments = true
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

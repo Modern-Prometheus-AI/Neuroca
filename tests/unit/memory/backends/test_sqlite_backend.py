@@ -5,24 +5,29 @@ Unit tests for SQLite storage backend.
 import asyncio
 import os
 import pytest
+import pytest_asyncio
 import tempfile
 import uuid
 from typing import Dict, Any
 
-from neuroca.memory.backends.sqlite_backend import SQLiteBackend
-from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import SearchFilter
+from neuroca.memory.backends.factory.backend_type import BackendType
+from neuroca.memory.backends.factory.storage_factory import StorageBackendFactory
+from neuroca.memory.models.memory_item import MemoryItem, MemoryContent, MemoryMetadata
+from neuroca.memory.models.search import MemorySearchOptions
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sqlite_backend():
     """Create a temporary SQLite backend for testing."""
     # Create a temporary directory for the DB
     temp_dir = tempfile.mkdtemp()
     db_path = os.path.join(temp_dir, "test_memory.db")
     
-    # Create and initialize the backend
-    backend = SQLiteBackend(db_path=db_path)
+    # Create and initialize the backend using factory
+    backend = StorageBackendFactory.create_storage(
+        backend_type=BackendType.SQLITE,
+        config={"db_path": db_path}
+    )
     await backend.initialize()
     
     yield backend
@@ -36,15 +41,16 @@ async def sqlite_backend():
         pass
 
 
+@pytest.mark.asyncio
 async def test_store_and_retrieve(sqlite_backend):
     """Test storing and retrieving a memory item."""
     # Create test memory
     memory_id = str(uuid.uuid4())
     memory = MemoryItem(
         id=memory_id,
-        content="Test content",
+        content=MemoryContent(text="Test content"),
         summary="Test summary",
-        metadata={"importance": 0.8, "tags": ["test", "memory"]}
+        metadata=MemoryMetadata(importance=0.8, tags=["test", "memory"])
     )
     
     # Store memory
@@ -62,24 +68,25 @@ async def test_store_and_retrieve(sqlite_backend):
     assert "memory" in retrieved.metadata.get("tags", [])
 
 
+@pytest.mark.asyncio
 async def test_update(sqlite_backend):
     """Test updating a memory item."""
     # Create and store test memory
     memory_id = str(uuid.uuid4())
     memory = MemoryItem(
         id=memory_id,
-        content="Initial content",
+        content=MemoryContent(text="Initial content"),
         summary="Initial summary",
-        metadata={"importance": 0.5}
+        metadata=MemoryMetadata(importance=0.5)
     )
     await sqlite_backend.store(memory)
     
     # Update memory
     updated_memory = MemoryItem(
         id=memory_id,
-        content="Updated content",
+        content=MemoryContent(text="Updated content"),
         summary="Updated summary",
-        metadata={"importance": 0.7, "tags": ["updated"]}
+        metadata=MemoryMetadata(importance=0.7, tags=["updated"])
     )
     success = await sqlite_backend.update(updated_memory)
     assert success is True
@@ -92,13 +99,14 @@ async def test_update(sqlite_backend):
     assert "updated" in retrieved.metadata.get("tags", [])
 
 
+@pytest.mark.asyncio
 async def test_delete(sqlite_backend):
     """Test deleting a memory item."""
     # Create and store test memory
     memory_id = str(uuid.uuid4())
     memory = MemoryItem(
         id=memory_id,
-        content="Content to delete",
+        content=MemoryContent(text="Content to delete"),
         summary="Summary to delete"
     )
     await sqlite_backend.store(memory)
@@ -116,27 +124,28 @@ async def test_delete(sqlite_backend):
     assert retrieved is None
 
 
+@pytest.mark.asyncio
 async def test_search(sqlite_backend):
     """Test searching for memory items."""
     # Create and store test memories
     memories = [
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Apple is a fruit",
+            content=MemoryContent(text="Apple is a fruit"),
             summary="About apples",
-            metadata={"importance": 0.7, "tags": ["fruit", "apple"]}
+            metadata=MemoryMetadata(importance=0.7, tags=["fruit", "apple"])
         ),
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Banana is yellow",
+            content=MemoryContent(text="Banana is yellow"),
             summary="About bananas",
-            metadata={"importance": 0.5, "tags": ["fruit", "banana"]}
+            metadata=MemoryMetadata(importance=0.5, tags=["fruit", "banana"])
         ),
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Car is a vehicle",
+            content=MemoryContent(text="Car is a vehicle"),
             summary="About cars",
-            metadata={"importance": 0.8, "tags": ["vehicle", "car"]}
+            metadata=MemoryMetadata(importance=0.8, tags=["vehicle", "car"])
         )
     ]
     
@@ -148,7 +157,7 @@ async def test_search(sqlite_backend):
     assert len(results.results) == 2
     
     # Test search with filter
-    filter = SearchFilter(
+    filter = MemorySearchOptions(
         min_importance=0.7,
         tags=["fruit"]
     )
@@ -157,13 +166,14 @@ async def test_search(sqlite_backend):
     assert results.results[0].memory.content == "Apple is a fruit"
 
 
+@pytest.mark.asyncio
 async def test_batch_operations(sqlite_backend):
     """Test batch store and delete operations."""
     # Create test memories
     memories = [
         MemoryItem(
             id=str(uuid.uuid4()),
-            content=f"Batch content {i}",
+            content=MemoryContent(text=f"Batch content {i}"),
             summary=f"Batch summary {i}"
         ) for i in range(5)
     ]
@@ -192,24 +202,25 @@ async def test_batch_operations(sqlite_backend):
         assert retrieved is not None
 
 
+@pytest.mark.asyncio
 async def test_count(sqlite_backend):
     """Test counting memory items."""
     # Create and store test memories
     memories = [
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Count test 1",
-            metadata={"status": "active"}
+            content=MemoryContent(text="Count test 1"),
+            metadata=MemoryMetadata(status="active")
         ),
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Count test 2",
-            metadata={"status": "active"}
+            content=MemoryContent(text="Count test 2"),
+            metadata=MemoryMetadata(status="active")
         ),
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Count test 3",
-            metadata={"status": "archived"}
+            content=MemoryContent(text="Count test 3"),
+            metadata=MemoryMetadata(status="archived")
         )
     ]
     
@@ -221,29 +232,30 @@ async def test_count(sqlite_backend):
     assert count == 3
     
     # Test count with filter
-    filter = SearchFilter(status="active")
+    filter = MemorySearchOptions(status="active")
     count = await sqlite_backend.count(filter)
     assert count == 2
 
 
+@pytest.mark.asyncio
 async def test_get_stats(sqlite_backend):
     """Test getting storage statistics."""
     # Create and store test memories
     memories = [
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Stats test 1",
-            metadata={"status": "active"}
+            content=MemoryContent(text="Stats test 1"),
+            metadata=MemoryMetadata(status="active")
         ),
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Stats test 2",
-            metadata={"status": "active"}
+            content=MemoryContent(text="Stats test 2"),
+            metadata=MemoryMetadata(status="active")
         ),
         MemoryItem(
             id=str(uuid.uuid4()),
-            content="Stats test 3",
-            metadata={"status": "archived"}
+            content=MemoryContent(text="Stats test 3"),
+            metadata=MemoryMetadata(status="archived")
         )
     ]
     

@@ -6,6 +6,7 @@ maintenance, and querying of relationships between memories in the LTM tier.
 """
 
 import logging
+from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from neuroca.memory.models.memory_item import MemoryItem
@@ -14,6 +15,88 @@ from neuroca.memory.exceptions import TierOperationError
 
 
 logger = logging.getLogger(__name__)
+
+
+class RelationshipType(str, Enum):
+    """Types of relationships between concepts in long-term memory."""
+    IS_A = "is_a"  # Taxonomy/inheritance relationship
+    HAS_A = "has_a"  # Composition relationship
+    PART_OF = "part_of"  # Part-whole relationship
+    RELATED_TO = "related_to"  # Generic relationship
+    OPPOSITE_OF = "opposite_of"  # Antonym relationship
+    SIMILAR_TO = "similar_to"  # Synonym/similar relationship
+    CAUSES = "causes"  # Causal relationship
+    PRECEDES = "precedes"  # Temporal relationship
+    LOCATED_IN = "located_in"  # Spatial relationship
+
+
+class Concept:
+    """
+    Represents a semantic concept stored in long-term memory.
+    
+    This class models a concept in a semantic network, which can have
+    properties, relationships to other concepts, and taxonomic classifications.
+    """
+    
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        description: str = "",
+        properties: Optional[Dict[str, Any]] = None
+    ):
+        """
+        Initialize a concept.
+        
+        Args:
+            id: Unique identifier for this concept
+            name: Human-readable name
+            description: Description of the concept
+            properties: Dictionary of properties
+        """
+        self.id = id
+        self.name = name
+        self.description = description
+        self.properties = properties or {}
+    
+    def __str__(self) -> str:
+        return f"Concept(id={self.id}, name={self.name})"
+
+
+class Relationship:
+    """
+    Represents a semantic relationship between two concepts.
+    
+    This class models a directed edge in a semantic network, connecting
+    a source concept to a target concept with a specific relationship type.
+    """
+    
+    def __init__(
+        self,
+        source_id: str,
+        target_id: str,
+        relationship_type: RelationshipType,
+        strength: float = 1.0,
+        metadata: Optional[Dict[str, Any]] = None
+    ):
+        """
+        Initialize a relationship.
+        
+        Args:
+            source_id: ID of the source concept
+            target_id: ID of the target concept
+            relationship_type: Type of relationship
+            strength: Strength of relationship (0.0 to 1.0)
+            metadata: Additional metadata
+        """
+        self.source_id = source_id
+        self.target_id = target_id
+        self.relationship_type = relationship_type
+        self.strength = strength
+        self.metadata = metadata or {}
+    
+    def __str__(self) -> str:
+        return f"Relationship({self.source_id} --{self.relationship_type.value}--> {self.target_id})"
 
 
 class LTMRelationship:

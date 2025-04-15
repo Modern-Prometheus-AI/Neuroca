@@ -207,3 +207,6 @@ benchmark_sandbox/neuroca_benchmarks.py
 benchmark_sandbox/README.md
 benchmark_sandbox/requirements.txt
 benchmark_sandbox/run_benchmarks.py
+reports/dependency-report.html
+reports/plutonium-icon.png
+reports/unified_analysis.html

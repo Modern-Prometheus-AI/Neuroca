@@ -18,7 +18,7 @@ from neuroca.memory.backends.vector.components.storage import VectorStorage
 from neuroca.memory.exceptions import StorageBackendError, StorageInitializationError, StorageOperationError
 from neuroca.memory.interfaces import StorageStats
 from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import SearchFilter, SearchResults
+from neuroca.memory.models.search import MemorySearchOptions, MemorySearchResults
 
 logger = logging.getLogger(__name__)
 
@@ -264,11 +264,11 @@ class VectorBackend(BaseStorageBackend):
     async def search(
         self, 
         query: str, 
-        filter: Optional[SearchFilter] = None,
+        filter: Optional[MemorySearchOptions] = None,
         limit: int = 10,
         offset: int = 0,
         query_embedding: Optional[List[float]] = None,
-    ) -> SearchResults:
+    ) -> MemorySearchResults:
         """
         Search for memory items in the vector database.
         
@@ -303,7 +303,7 @@ class VectorBackend(BaseStorageBackend):
             logger.error(error_msg, exc_info=True)
             raise StorageOperationError(error_msg) from e
     
-    async def count(self, filter: Optional[SearchFilter] = None) -> int:
+    async def count(self, filter: Optional[MemorySearchOptions] = None) -> int:
         """
         Count memory items in the vector database matching the filter.
         

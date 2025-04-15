@@ -29,16 +29,16 @@ from neuroca.memory.config.loader import (
 class TestConfigurationLoader:
     """Tests for the ConfigurationLoader class."""
     
-    def test_init_with_custom_dir(self, temp_config_dir):
+    def test_init_with_custom_dir(self, test_config_dir):
         """Test initialization with a custom configuration directory."""
-        loader = ConfigurationLoader(temp_config_dir)
-        assert loader.config_dir == temp_config_dir
+        loader = ConfigurationLoader(test_config_dir)
+        assert loader.config_dir == test_config_dir
         assert not loader.config
         assert not loader.loaded_files
     
-    def test_load_base_config(self, temp_config_dir):
+    def test_load_base_config(self, test_config_dir):
         """Test loading the base configuration file."""
-        loader = ConfigurationLoader(temp_config_dir)
+        loader = ConfigurationLoader(test_config_dir)
         config = loader.load_base_config()
         
         assert config["common"]["cache"]["enabled"] is True
@@ -47,18 +47,18 @@ class TestConfigurationLoader:
         assert config["default_backend"] == "in_memory"
         assert len(loader.loaded_files) == 1
         
-    def test_load_backend_config(self, temp_config_dir):
+    def test_load_backend_config(self, test_config_dir):
         """Test loading a backend-specific configuration file."""
-        loader = ConfigurationLoader(temp_config_dir)
+        loader = ConfigurationLoader(test_config_dir)
         config = loader.load_backend_config("in_memory")
         
         assert config["in_memory"]["memory"]["initial_capacity"] == 500
         assert config["common"]["cache"]["ttl_seconds"] == 500
         assert len(loader.loaded_files) == 1
     
-    def test_load_config(self, temp_config_dir):
+    def test_load_config(self, test_config_dir):
         """Test loading and merging configurations."""
-        loader = ConfigurationLoader(temp_config_dir)
+        loader = ConfigurationLoader(test_config_dir)
         config = loader.load_config("in_memory")
         
         # Check base config values
@@ -77,9 +77,9 @@ class TestConfigurationLoader:
         assert loader.config == config
         assert len(loader.loaded_files) == 2
     
-    def test_get_config(self, temp_config_dir):
+    def test_get_config(self, test_config_dir):
         """Test retrieving configurations."""
-        loader = ConfigurationLoader(temp_config_dir)
+        loader = ConfigurationLoader(test_config_dir)
         
         # First call should load the config
         config1 = loader.get_config("in_memory")
@@ -94,9 +94,9 @@ class TestConfigurationLoader:
         config3 = loader.get_config("sqlite")
         assert config3 != config1
     
-    def test_get_value(self, temp_config_dir):
+    def test_get_value(self, test_config_dir):
         """Test retrieving configuration values using dot notation."""
-        loader = ConfigurationLoader(temp_config_dir)
+        loader = ConfigurationLoader(test_config_dir)
         loader.load_config("in_memory")
         
         # Test getting existing values
@@ -111,23 +111,23 @@ class TestConfigurationLoader:
         # Test getting non-existent values without default
         assert loader.get_value("common.nonexistent") is None
     
-    def test_file_not_found(self, temp_config_dir):
+    def test_file_not_found(self, test_config_dir):
         """Test error handling for missing config files."""
-        loader = ConfigurationLoader(temp_config_dir)
+        loader = ConfigurationLoader(test_config_dir)
         
         with pytest.raises(ConfigurationError) as excinfo:
             loader.load_config_file("nonexistent_config.yaml")
         
         assert "not found" in str(excinfo.value)
     
-    def test_invalid_yaml(self, temp_config_dir):
+    def test_invalid_yaml(self, test_config_dir):
         """Test error handling for invalid YAML content."""
-        invalid_yaml_path = Path(temp_config_dir) / "invalid_config.yaml"
+        invalid_yaml_path = Path(test_config_dir) / "invalid_config.yaml"
         
         with open(invalid_yaml_path, 'w') as f:
             f.write("invalid: yaml: content:")
         
-        loader = ConfigurationLoader(temp_config_dir)
+        loader = ConfigurationLoader(test_config_dir)
         
         with pytest.raises(ConfigurationError) as excinfo:
             loader.load_config_file("invalid_config.yaml")
@@ -199,14 +199,14 @@ class TestUtilityFunctions:
         assert target["key3"]["nested3"] == "new_value"  # New nested value
         assert target["key4"] == "new_key"  # New top-level key
     
-    def test_get_backend_config(self, temp_config_dir):
+    def test_get_backend_config(self, test_config_dir):
         """Test the get_backend_config utility function."""
         # Mock the global config_loader
         original_loader = config_loader
         
         try:
             from neuroca.memory.config.loader import config_loader as global_loader
-            global_loader.config_dir = temp_config_dir
+            global_loader.config_dir = test_config_dir
             
             config = get_backend_config("in_memory")
             
@@ -220,14 +220,14 @@ class TestUtilityFunctions:
             from neuroca.memory.config import loader
             loader.config_loader = original_loader
     
-    def test_get_config_value(self, temp_config_dir):
+    def test_get_config_value(self, test_config_dir):
         """Test the get_config_value utility function."""
         # Mock the global config_loader
         original_loader = config_loader
         
         try:
             from neuroca.memory.config.loader import config_loader as global_loader
-            global_loader.config_dir = temp_config_dir
+            global_loader.config_dir = test_config_dir
             
             # Test with backend_type
             value1 = get_config_value("common.cache.enabled", "in_memory")

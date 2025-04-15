@@ -40,7 +40,14 @@ from typing import Any, Optional, Union
 
 import dotenv
 import yaml
-from pydantic import AnyHttpUrl, BaseSettings, Field, PostgresDsn, SecretStr, validator
+# Handle Pydantic v1/v2 compatibility
+from pydantic import AnyHttpUrl, Field, PostgresDsn, SecretStr, validator
+try:
+    # Try Pydantic v2 imports
+    from pydantic_settings import BaseSettings
+except ImportError:
+    # Fall back to Pydantic v1
+    from pydantic_settings import BaseSettings
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -79,8 +86,10 @@ class MemorySettings(BaseSettings):
         REFRESH_INTERVAL: int = 60  # Seconds between refresh operations
         PRIORITY_LEVELS: int = 5  # Number of priority levels
         
-        class Config:
-            env_prefix = "NCA_WORKING_MEMORY_"
+        model_config = {
+            "env_prefix": "NCA_WORKING_MEMORY_",
+            "extra": "allow"
+        }
     
     class ShortTermMemorySettings(BaseSettings):
         """Short-term memory tier configuration."""
@@ -89,8 +98,10 @@ class MemorySettings(BaseSettings):
         CONSOLIDATION_THRESHOLD: float = 0.7  # Threshold for consolidation to long-term
         RETRIEVAL_BOOST: float = 0.5  # Boost factor for recently retrieved items
         
-        class Config:
-            env_prefix = "NCA_SHORT_TERM_MEMORY_"
+        model_config = {
+            "env_prefix": "NCA_SHORT_TERM_MEMORY_",
+            "extra": "allow"
+        }
     
     class LongTermMemorySettings(BaseSettings):
         """Long-term memory tier configuration."""
@@ -100,8 +111,10 @@ class MemorySettings(BaseSettings):
         PRUNING_ENABLED: bool = True  # Whether to enable memory pruning
         PRUNING_INTERVAL: int = 86400  # Seconds between pruning operations (1 day)
         
-        class Config:
-            env_prefix = "NCA_LONG_TERM_MEMORY_"
+        model_config = {
+            "env_prefix": "NCA_LONG_TERM_MEMORY_",
+            "extra": "allow"
+        }
     
     # Memory tier configurations
     WORKING_MEMORY: WorkingMemorySettings = Field(default_factory=WorkingMemorySettings)
@@ -113,8 +126,10 @@ class MemorySettings(BaseSettings):
     CONSOLIDATION_INTERVAL: int = 300  # Seconds between consolidation operations (5 min)
     BACKUP_INTERVAL: int = 3600  # Seconds between memory backups (1 hour)
     
-    class Config:
-        env_prefix = "NCA_MEMORY_"
+    model_config = {
+        "env_prefix": "NCA_MEMORY_",
+        "extra": "allow"
+    }
 
 
 class DatabaseSettings(BaseSettings):
@@ -138,8 +153,10 @@ class DatabaseSettings(BaseSettings):
             return None
         return v
     
-    class Config:
-        env_prefix = "NCA_DB_"
+    model_config = {
+        "env_prefix": "NCA_DB_",
+        "extra": "allow"
+    }
 
 
 class LLMIntegrationSettings(BaseSettings):
@@ -171,8 +188,10 @@ class LLMIntegrationSettings(BaseSettings):
             logger.warning(f"API key not provided for {provider}. LLM integration will not function.")
         return v
     
-    class Config:
-        env_prefix = "NCA_LLM_"
+    model_config = {
+        "env_prefix": "NCA_LLM_",
+        "extra": "allow"
+    }
 
 
 class APISettings(BaseSettings):
@@ -206,8 +225,10 @@ class APISettings(BaseSettings):
             return SecretStr(os.urandom(32).hex())
         return v
     
-    class Config:
-        env_prefix = "NCA_API_"
+    model_config = {
+        "env_prefix": "NCA_API_",
+        "extra": "allow"
+    }
 
 
 class LoggingSettings(BaseSettings):
@@ -231,8 +252,10 @@ class LoggingSettings(BaseSettings):
             return "INFO"
         return v.upper()
     
-    class Config:
-        env_prefix = "NCA_LOGGING_"
+    model_config = {
+        "env_prefix": "NCA_LOGGING_",
+        "extra": "allow"
+    }
 
 
 class Settings(BaseSettings):
@@ -271,11 +294,13 @@ class Settings(BaseSettings):
     ENABLE_EMOTION_MODELING: bool = True
     ENABLE_ATTENTION_MECHANISM: bool = True
     
-    class Config:
-        env_prefix = "NCA_"
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = {
+        "env_prefix": "NCA_",
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": True,
+        "extra": "allow",  # Allow extra fields in environment variables
+    }
     
     def __init__(self, env: Optional[str] = None, **kwargs):
         """

@@ -39,12 +39,13 @@ logger = logging.getLogger(__name__)
 try:
     import langchain
     from langchain.callbacks.base import BaseCallbackHandler
-    from langchain.chains.base import Chain
-    from langchain.embeddings.base import Embeddings
-    from langchain.llms.base import BaseLLM
+    from langchain_core.chains import Chain
+    from langchain_core.embeddings import Embeddings
+    from langchain_core.language_models import BaseLLM
     from langchain.memory import ConversationBufferMemory
-    from langchain.schema import BaseMemory, Document
-    from langchain.vectorstores.base import VectorStore
+    from langchain_core.memory import BaseMemory
+    from langchain_core.documents import Document
+    from langchain_core.vectorstores import VectorStore
     
     LANGCHAIN_AVAILABLE = True
     logger.debug("LangChain successfully imported (version: %s)", langchain.__version__)
@@ -56,7 +57,7 @@ except ImportError as e:
 try:
     from neuroca.core.exceptions import ConfigurationError, IntegrationError
     from neuroca.core.models import BaseModel
-    from neuroca.memory.base import BaseMemory as NCABaseMemory
+    from neuroca.memory.interfaces.memory_tier import MemoryTierInterface as NCABaseMemory
 except ImportError as e:
     logger.error("Failed to import required NCA components: %s", str(e))
     raise ImportError(f"NCA core components not available: {str(e)}")

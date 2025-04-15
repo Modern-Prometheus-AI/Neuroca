@@ -10,15 +10,15 @@ from datetime import datetime, timedelta
 import pytest
 
 # Import the concrete implementation instead of the abstract base class
-from neuroca.core.memory.consolidation import StandardMemoryConsolidator
-from neuroca.core.memory.episodic_memory import EpisodicMemory
+from neuroca.memory.manager.consolidation import StandardMemoryConsolidator
+from neuroca.memory.tiers.ltm.core import LongTermMemoryTier as EpisodicMemory
 
-# Re-add imports for Concept, Relationship, RelationshipType (assuming from core)
-from neuroca.core.memory.semantic_memory import Concept, Relationship, RelationshipType
-from neuroca.core.memory.working_memory import WorkingMemory
+# Re-add imports for Concept, Relationship, RelationshipType
+from neuroca.memory.tiers.ltm.components.relationship import Concept, Relationship, RelationshipType
+from neuroca.memory.tiers.stm.core import ShortTermMemoryTier as WorkingMemory
 
 # Import the concrete implementation from the correct location
-from neuroca.memory.semantic_memory import SemanticMemory
+from neuroca.memory.tiers.ltm.core import LongTermMemoryTier as SemanticMemory
 
 
 @pytest.fixture()
