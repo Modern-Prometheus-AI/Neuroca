@@ -143,10 +143,10 @@ class ConversationalAgent:
                 completion = openai.chat.completions.create(
                     model="o3-mini", # Changed model name
                     messages=messages,
-                    temperature=0.7,
-                    max_tokens=500
+                    # temperature=0.7, # Removed unsupported parameter
+                    max_completion_tokens=500 # Corrected parameter name
                 )
-                
+
                 response = completion.choices[0].message.content
                 print(f"Generated response using OpenAI API")
             except Exception as e:
