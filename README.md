@@ -339,7 +339,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Author
 
 - **Justin Lietz** - *Initial work & Lead Developer*
-- Justin's first prototype of the **Autonomous Project Generator** with Claude 3.7 Sonnet (who produced > 70% of the codebase in one prompt
+- Justin's first prototype of the **Autonomous Project Generator** with **Claude 3.7 Sonnet** (who produced > 70% of the codebase in one prompt)
 
 
 ## Contact
