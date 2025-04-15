@@ -13,3 +13,17 @@ numpy>=2.2.4
 psycopg2-binary>=2.9.10
 openai
 python-dotenv
+pymdown-extensions
+
+# Documentation
+# cairosvg (removed due to Cairo library dependency issues on Windows)
+mkdocs-minify-plugin
+mkdocs-git-revision-date-localized-plugin
+mkdocstrings
+mkdocstrings-python
+mkdocs-social-plugin
+mkdocs-redirects
+mkdocs-awesome-pages-plugin
+mkdocs-macros-plugin
+# mkdocs-material[imaging] (removed imaging extra to avoid Cairo dependency)
+mkdocs-material
