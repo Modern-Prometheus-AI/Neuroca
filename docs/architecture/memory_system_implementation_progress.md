@@ -210,6 +210,18 @@ This document tracks the progress of the Neuroca memory system refactoring imple
     - [x] Performance benchmarks for configuration system
   - [ ] Verify coverage meets targets (90%+)
 
+- [x] **Fix Import Issues in Annealing Module**
+  - [x] Update imports in `optimizer/components/energy.py`
+    - [x] Replace `neuroca.memory.base` with `neuroca.memory.models.memory_item`
+    - [x] Replace `similarity_score` with `calculate_similarity` from `neuroca.memory.utils.similarity`
+  - [x] Update imports in `optimizer/components/transformations.py`
+    - [x] Replace `neuroca.memory.base` with `neuroca.memory.models.memory_item`
+  - [x] Fix missing import in `phases/custom.py`
+    - [x] Add import for `PhaseConfig` from `neuroca.memory.annealing.phases.config`
+  - [x] Fix type annotations in `optimizer/core.py`
+    - [x] Replace all `MemoryFragment` types with `MemoryItem`
+    - [x] Define missing `start_time` variable in `_run_annealing_process`
+
 - [x] **Update Architecture Documentation**
   - [x] Add diagrams for the final implementation
   - [x] Document backend configuration options (see [Memory System Backend Configuration](memory_system_backend_configuration.md))

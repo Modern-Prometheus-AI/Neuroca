@@ -9,14 +9,14 @@ import logging
 from typing import Dict, List, Set
 
 from neuroca.memory.annealing.optimizer.types import OptimizationStrategy
-from neuroca.memory.base import MemoryFragment
-from neuroca.memory.utils import similarity_score
+from neuroca.memory.models.memory_item import MemoryItem
+from neuroca.memory.utils.similarity import calculate_similarity
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 
-def calculate_energy(state: List[MemoryFragment], strategy: OptimizationStrategy) -> float:
+def calculate_energy(state: List[MemoryItem], strategy: OptimizationStrategy) -> float:
     """
     Calculate the energy (cost function) of the current state.
     
@@ -53,7 +53,7 @@ def calculate_energy(state: List[MemoryFragment], strategy: OptimizationStrategy
     return total_energy
 
 
-def calculate_redundancy_energy(state: List[MemoryFragment]) -> float:
+def calculate_redundancy_energy(state: List[MemoryItem]) -> float:
     """
     Calculate the redundancy energy component.
     
@@ -68,7 +68,7 @@ def calculate_redundancy_energy(state: List[MemoryFragment]) -> float:
     # Calculate redundancy between memories
     for i, mem1 in enumerate(state):
         for _j, mem2 in enumerate(state[i+1:], i+1):
-            sim = similarity_score(mem1, mem2)
+            sim = calculate_similarity(mem1, mem2)
             redundancy_energy += sim * sim
     
     # Normalize redundancy by number of pairs
@@ -79,7 +79,7 @@ def calculate_redundancy_energy(state: List[MemoryFragment]) -> float:
     return redundancy_energy
 
 
-def calculate_fragmentation_energy(state: List[MemoryFragment]) -> float:
+def calculate_fragmentation_energy(state: List[MemoryItem]) -> float:
     """
     Calculate the fragmentation energy component.
     
@@ -99,7 +99,7 @@ def calculate_fragmentation_energy(state: List[MemoryFragment]) -> float:
     return calculate_fragmentation(connection_graph)
 
 
-def calculate_relevance_energy(state: List[MemoryFragment]) -> float:
+def calculate_relevance_energy(state: List[MemoryItem]) -> float:
     """
     Calculate the relevance energy component.
     
@@ -170,7 +170,7 @@ def get_strategy_weights(
         }
 
 
-def build_connection_graph(state: List[MemoryFragment]) -> Dict[int, Set[int]]:
+def build_connection_graph(state: List[MemoryItem]) -> Dict[int, Set[int]]:
     """
     Build a graph of connections between memory fragments.
     
@@ -186,7 +186,7 @@ def build_connection_graph(state: List[MemoryFragment]) -> Dict[int, Set[int]]:
     similarity_threshold = 0.3
     for i, mem1 in enumerate(state):
         for j, mem2 in enumerate(state):
-            if i != j and similarity_score(mem1, mem2) > similarity_threshold:
+            if i != j and calculate_similarity(mem1, mem2) > similarity_threshold:
                 connection_graph[i].add(j)
                 connection_graph[j].add(i)
     
