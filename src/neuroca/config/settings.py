@@ -47,7 +47,7 @@ try:
     from pydantic_settings import BaseSettings
 except ImportError:
     # Fall back to Pydantic v1
-    from pydantic import BaseSettings
+    from pydantic_settings import BaseSettings
 
 # Configure logging
 logger = logging.getLogger(__name__)

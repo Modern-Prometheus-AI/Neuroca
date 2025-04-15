@@ -175,6 +175,15 @@ function showHelp(command) {
 		console.log("Options:")
 		console.log("  --path=<dir>       Path to project directory (default: current directory)")
 		console.log("  --verbose          Show detailed detection information")
+	} else if (command === "analyze-all" || command === "analyze:all") {
+		console.log("Usage: node plutonium.js analyze-all\n")
+		console.log("Run comprehensive project analysis and generate unified HTML report\n")
+		console.log("This command combines:")
+		console.log("  - Dependency analysis")
+		console.log("  - Project structure analysis")
+		console.log("  - Test coverage reporting")
+		console.log("  - Dependency conflict detection")
+		console.log("  - Generates a unified HTML report with all findings")
 	} else {
 		// General help
 		console.log(`A comprehensive development toolkit that works with any codebase\n`)
@@ -243,6 +252,22 @@ function main() {
 			break
 		case "lang:detect":
 			result = detectLanguages()
+			break
+		case "analyze-all":
+		case "analyze:all":
+			// Import the analyze-all runner and run it with the current project root
+			const path = require("path")
+			const { runAnalyzeAll } = require('./cli_components/analyzeAllRunner')
+			
+			// Get the project root (parent directory of the tool directory)
+			const projectRoot = path.resolve(__dirname, '../..');
+			const toolDirName = path.basename(path.dirname(__dirname)); // e.g. 'Neuroca'
+			const toolSubdirName = path.basename(__dirname); // e.g. 'plutonium_tool'
+			const plutoniumToolPath = path.resolve(__dirname, 'plutonium.js'); // Path to this script
+			
+			// Run the analyze-all command with proper paths
+			const exitCode = runAnalyzeAll(projectRoot, toolDirName, toolSubdirName, plutoniumToolPath);
+			process.exit(exitCode);
 			break
 		case "help":
 			showHelp(args[1])

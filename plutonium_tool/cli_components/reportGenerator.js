@@ -33,6 +33,46 @@ function hasPythonPackage(packages, name) {
 }
 
 /**
+ * Evaluates the status of a package version and returns appropriate status indicators.
+ * @param {string} name - Package name
+ * @param {string} version - Package version
+ * @param {Array} conflicts - List of conflicts
+ * @returns {object} Status object with type, icon, and message
+ */
+function getPackageStatus(name, version, conflicts) {
+    // Check if this package is involved in any conflicts
+    const hasConflict = conflicts.some(conflict => 
+        conflict.toLowerCase().includes(name.toLowerCase())
+    );
+    
+    if (hasConflict) {
+        return {
+            type: 'error',
+            icon: '🛑', // Red stop sign
+            cssClass: 'conflict',
+            message: 'Conflict detected'
+        };
+    }
+    
+    if (!isPinned(version)) {
+        return {
+            type: 'warning',
+            icon: '⚠️', // Yellow warning
+            cssClass: 'unpinned',
+            message: 'Not pinned'
+        };
+    }
+
+    // Default - everything looks good
+    return {
+        type: 'success',
+        icon: '✅', // Green checkmark
+        cssClass: 'ok',
+        message: 'Pinned'
+    };
+}
+
+/**
  * Recursively collects test file paths from a directory, ignoring common cache/config dirs.
  * @param {string} dir - The directory to scan.
  * @param {string} baseDir - The base directory for calculating relative paths.
@@ -357,47 +397,47 @@ function generateUnifiedHtmlReport(data, plutoniumIconBase64 = '') {
         .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; margin-right: 10px; border: 1px solid; line-height: 1; }
         .badge.high { background-color: rgba(207, 102, 121, 0.2); color: var(--error-color); border-color: var(--error-color); }
         .badge.medium { background-color: rgba(255, 183, 77, 0.2); color: var(--warning-color); border-color: var(--warning-color); }
-        .badge.low { background-color: rgba(3, 218, 198, 0.2); color: var(--secondary-color); border-color: var(--secondary-color); }
-        /* Coverage summary section */
-        .coverage-summary { display: flex; align-items: center; margin: 25px 0; flex-wrap: wrap; gap: 20px; }
-        .coverage-percent { font-size: 3.5em; font-weight: 700; margin-right: 20px; line-height: 1; }
-        .coverage-details { flex-grow: 1; min-width: 250px; }
-        /* Tab navigation */
-        .tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
-        .tab { padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; margin-right: 5px; transition: all 0.2s ease; white-space: nowrap; font-weight: 500; }
-        .tab:hover { background-color: rgba(255, 255, 255, 0.05); border-bottom-color: rgba(187, 134, 252, 0.5); }
-        .tab.active { border-bottom-color: var(--primary-color); color: var(--primary-color); font-weight: 600; }
-        /* Tab content display */
-        .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.5s; }
+        /* Coverage classes */
+        .high-coverage { color: var(--success-color); }
+        .medium-coverage { color: var(--secondary-color); }
+        .low-coverage { color: var(--warning-color); }
+        .critical-coverage { color: var(--error-color); }
+        /* Tab styles */
+        .tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .tab { cursor: pointer; padding: 12px 20px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); transition: all 0.2s ease; }
+        .tab:hover { background-color: rgba(187, 134, 252, 0.1); }
+        .tab.active { background-color: rgba(187, 134, 252, 0.2); border-color: var(--primary-color); color: var(--primary-color); font-weight: 600; }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Search box styling */
-        .search-container { margin-bottom: 20px; }
-        .search-box { width: 100%; box-sizing: border-box; padding: 10px 15px; border-radius: 4px; border: 1px solid var(--border-color); background-color: rgba(255, 255, 255, 0.05); color: var(--text-color); font-size: 1em; }
-        .search-box:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 5px rgba(187, 134, 252, 0.3); }
+        /* Coverage iframe */
+        .coverage-iframe-container { width: 100%; height: 600px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 20px; }
+        .coverage-iframe { width: 100%; height: 100%; border: none; }
+        /* Search */
+        .search-container { margin-bottom: 15px; }
+        .search-box { width: 100%; padding: 10px 15px; font-size: 16px; border-radius: 6px; border: 1px solid var(--border-color); background-color: rgba(255, 255, 255, 0.05); color: var(--text-color); transition: all 0.2s ease; }
+        .search-box:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.3); }
         /* Status tags for dependencies */
-        .status-tag { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 0.8em; font-weight: 600; border: 1px solid; line-height: 1; }
-        .status-tag.unpinned { background-color: rgba(255, 183, 77, 0.2); color: var(--warning-color); border-color: var(--warning-color); }
-        .status-tag.ok { background-color: rgba(129, 199, 132, 0.2); color: var(--success-color); border-color: var(--success-color); }
-        .status-tag.conflict { background-color: rgba(207, 102, 121, 0.2); color: var(--error-color); border-color: var(--error-color); }
-        /* Iframe for detailed coverage */
-        .coverage-iframe { width: 100%; height: 600px; border: 1px solid var(--border-color); border-radius: 4px; }
-        /* Link styling */
-        a { color: var(--link-color); text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        /* Coverage percentage colors */
-        .high-coverage { color: var(--success-color); } .medium-coverage { color: var(--secondary-color); }
-        .low-coverage { color: var(--warning-color); } .critical-coverage { color: var(--error-color); }
+        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 600; }
+        .status-tag.ok { background-color: rgba(129, 199, 132, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
+        .status-tag.unpinned { background-color: rgba(255, 183, 77, 0.2); color: var(--warning-color); border: 1px solid var(--warning-color); }
+        .status-tag.conflict { background-color: rgba(207, 102, 121, 0.2); color: var(--error-color); border: 1px solid var(--error-color); }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container { padding: 0 15px; }
+            .summary-stats { grid-template-columns: 1fr; }
+            .tab { padding: 10px; width: calc(50% - 10px); text-align: center; }
+        }
     </style>
 </head>
 <body>
     <header>
-        <div class="container header-content">
-            ${plutoniumIconBase64 ? `<img src="${plutoniumIconBase64}" alt="Plutonium Icon">` : ''}
-            <h1>Unified Project Analysis Report</h1>
-            <p class="timestamp">Generated on ${timestamp}</p>
+        <div class="header-content">
+            ${plutoniumIconBase64 ? `<img src="${plutoniumIconBase64}" alt="Plutonium Logo">` : ''}
+            <h1>Project Analysis Report</h1>
+            <p class="generated-time">Generated: ${timestamp}</p>
         </div>
     </header>
-
     <div class="container">
         <div class="card">
             <h2>Executive Summary</h2>
@@ -481,17 +521,18 @@ function generateUnifiedHtmlReport(data, plutoniumIconBase64 = '') {
                 <table>
                     <thead><tr><th>Package</th><th>Installed Version</th><th>Status</th></tr></thead>
                     <tbody class="searchable-content">
-                        ${Object.entries(depData.installed_packages).sort((a,b) => a[0].localeCompare(b[0])).map(([name, version]) => `
-                        <tr>
-                            <td>${name}</td>
-                            <td>${version}</td>
-                            <td>
-                                ${isPinned(version) ?
-                                    '<span class="status-tag ok">✓ Pinned</span>' :
-                                    '<span class="status-tag unpinned">⚠️ Not pinned</span>'}
-                            </td>
-                        </tr>
-                        `).join('')}
+                        ${Object.entries(depData.installed_packages).sort((a,b) => a[0].localeCompare(b[0])).map(([name, version]) => {
+                            const status = getPackageStatus(name, version, depData.conflicts);
+                            return `
+                            <tr>
+                                <td>${name}</td>
+                                <td>${version}</td>
+                                <td>
+                                    <span class="status-tag ${status.cssClass}">${status.icon} ${status.message}</span>
+                                </td>
+                            </tr>
+                            `;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>

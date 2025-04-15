@@ -10,7 +10,7 @@ import time
 from typing import Dict, List, Any, Generator
 
 from neuroca.memory.interfaces.memory_tier import MemoryTierInterface
-from neuroca.memory.models.memory_item import MemoryItem, MemoryMetadata
+from neuroca.memory.models.memory_item import MemoryItem, MemoryMetadata, MemoryContent
 from neuroca.memory.backends.factory.backend_type import BackendType
 from neuroca.memory.backends.factory.storage_factory import StorageBackendFactory
 from neuroca.memory.tiers.stm.core import ShortTermMemoryTier
@@ -70,7 +70,7 @@ def sample_memories() -> List[MemoryItem]:
     """Create sample memories for testing."""
     return [
         MemoryItem(
-            content="This is a test memory for integration tests",
+            content=MemoryContent(text="This is a test memory for integration tests"),
             metadata=MemoryMetadata(
                 importance=0.8,
                 source="integration_test",
@@ -78,7 +78,7 @@ def sample_memories() -> List[MemoryItem]:
             )
         ),
         MemoryItem(
-            content="Another test memory with different characteristics",
+            content=MemoryContent(text="Another test memory with different characteristics"),
             metadata=MemoryMetadata(
                 importance=0.5,
                 source="integration_test",
@@ -86,7 +86,7 @@ def sample_memories() -> List[MemoryItem]:
             )
         ),
         MemoryItem(
-            content="Low importance memory that might be forgotten",
+            content=MemoryContent(text="Low importance memory that might be forgotten"),
             metadata=MemoryMetadata(
                 importance=0.2,
                 source="integration_test",
