@@ -10,7 +10,8 @@ import tempfile
 import uuid
 from typing import Dict, Any
 
-from neuroca.memory.backends.sqlite_backend import SQLiteBackend
+from neuroca.memory.backends.factory.backend_type import BackendType
+from neuroca.memory.backends.factory.storage_factory import StorageBackendFactory
 from neuroca.memory.models.memory_item import MemoryItem, MemoryContent, MemoryMetadata
 from neuroca.memory.models.search import MemorySearchOptions
 
@@ -22,8 +23,11 @@ async def sqlite_backend():
     temp_dir = tempfile.mkdtemp()
     db_path = os.path.join(temp_dir, "test_memory.db")
     
-    # Create and initialize the backend
-    backend = SQLiteBackend(db_path=db_path)
+    # Create and initialize the backend using factory
+    backend = StorageBackendFactory.create_storage(
+        backend_type=BackendType.SQLITE,
+        config={"db_path": db_path}
+    )
     await backend.initialize()
     
     yield backend

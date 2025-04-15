@@ -74,27 +74,27 @@ def sample_memories() -> List[MemoryItem]:
     return [
         MemoryItem(
             content=MemoryContent(text="This is a test memory for integration tests"),
-            metadata=MemoryMetadata(
-                importance=0.8,
-                source="integration_test",
-                tags=["test", "integration"]
-            )
-        ),
-        MemoryItem(
-            content=MemoryContent(text="Another test memory with different characteristics"),
-            metadata=MemoryMetadata(
-                importance=0.5,
-                source="integration_test",
-                tags=["test", "different"]
-            )
-        ),
-        MemoryItem(
-            content=MemoryContent(text="Low importance memory that might be forgotten"),
-            metadata=MemoryMetadata(
-                importance=0.2,
-                source="integration_test",
-                tags=["test", "low_importance"]
-            )
+                metadata=MemoryMetadata(
+                    importance=0.8,
+                    source="integration_test",
+                    tags={"test": True, "integration": True}
+                )
+            ),
+            MemoryItem(
+                content=MemoryContent(text="Another test memory with different characteristics"),
+                metadata=MemoryMetadata(
+                    importance=0.5,
+                    source="integration_test",
+                    tags={"test": True, "different": True}
+                )
+            ),
+            MemoryItem(
+                content=MemoryContent(text="Low importance memory that might be forgotten"),
+                metadata=MemoryMetadata(
+                    importance=0.2,
+                    source="integration_test",
+                    tags={"test": True, "low_importance": True}
+                )
         )
     ]
 

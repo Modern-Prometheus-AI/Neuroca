@@ -176,17 +176,11 @@ class TestLTMCategory:
         category_manager._backend.retrieve.assert_called_once_with(memory_id)
         
         # Verify update_func was called with updated metadata
-        expected_metadata = {
-            "importance": 0.7,
-            "tags": ["test"],
-            "status": MemoryStatus.ACTIVE.value,
-            "categories": ["new-category"]
-        }
         category_manager._update_func.assert_called_once()
-        call_args = category_manager._update_func.call_args[0]
-        assert call_args[0] == memory_id
-        assert "categories" in call_args[1]
-        assert "new-category" in call_args[1]["categories"]
+        call_args = category_manager._update_func.call_args
+        assert call_args.args[0] == memory_id
+        assert "categories" in call_args.kwargs["metadata"]
+        assert "new-category" in call_args.kwargs["metadata"]["categories"]
         
         # Verify lifecycle was updated
         category_manager._lifecycle.update_category.assert_called_once()
@@ -200,7 +194,7 @@ class TestLTMCategory:
         category = "existing-category"
         
         # Add existing category
-        sample_memory_data["metadata"]["categories"] = ["existing-category"]
+        sample_memory_data["metadata"]["tags"]["categories"] = ["existing-category"]
         
         # Configure backend to return the memory
         category_manager._backend.retrieve.return_value = sample_memory_data
