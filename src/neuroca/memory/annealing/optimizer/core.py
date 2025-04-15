@@ -24,7 +24,8 @@ from neuroca.memory.annealing.optimizer.components.energy import calculate_energ
 from neuroca.memory.annealing.optimizer.components.transformations import (
     clone_memories, generate_neighbor, post_process
 )
-from neuroca.memory.base import MemoryFragment, MemoryStore
+from neuroca.memory.models.memory_item import MemoryItem
+from neuroca.memory.interfaces.memory_store import MemoryStore
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -95,9 +96,9 @@ class AnnealingOptimizer:
         
     def optimize(
         self,
-        memories: Union[List[MemoryFragment], MemoryStore],
+        memories: Union[List[MemoryItem], MemoryStore],
         callbacks: Optional[List[Callable[[Dict[str, Any]], None]]] = None
-    ) -> Tuple[Union[List[MemoryFragment], MemoryStore], OptimizationStats]:
+    ) -> Tuple[Union[List[MemoryItem], MemoryStore], OptimizationStats]:
         """
         Optimize memory fragments using simulated annealing.
         
@@ -161,9 +162,9 @@ class AnnealingOptimizer:
     
     def _run_annealing_process(
         self,
-        memory_fragments: List[MemoryFragment],
+        memory_fragments: List[MemoryItem],
         callbacks: Optional[List[Callable[[Dict[str, Any]], None]]] = None
-    ) -> Tuple[List[MemoryFragment], OptimizationStats]:
+    ) -> Tuple[List[MemoryItem], OptimizationStats]:
         """
         Run the simulated annealing optimization process.
         
@@ -176,6 +177,9 @@ class AnnealingOptimizer:
         """
         # Create working copy of memories
         current_state = clone_memories(memory_fragments)
+        
+        # Start timing
+        start_time = time.time()
         
         # Calculate initial energy
         current_energy = calculate_energy(current_state, self.strategy)
@@ -331,7 +335,7 @@ class AnnealingOptimizer:
         best_energy: float,
         accepted: bool,
         accepted_moves: int,
-        current_state: List[MemoryFragment]
+        current_state: List[MemoryItem]
     ) -> None:
         """
         Execute callback functions.

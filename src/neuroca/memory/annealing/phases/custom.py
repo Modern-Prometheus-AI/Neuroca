@@ -8,6 +8,7 @@ import logging
 import math
 from neuroca.core.exceptions import ConfigurationError
 from neuroca.memory.annealing.phases.base import AnnealingPhase
+from neuroca.memory.annealing.phases.config import PhaseConfig
 from neuroca.memory.models import MemoryItem
 
 # Configure logger
