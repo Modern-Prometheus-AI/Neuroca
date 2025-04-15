@@ -24,14 +24,14 @@ class SQLiteSearch:
     based on content, tags, metadata, and other criteria.
     """
     
-    def __init__(self, connection: sqlite3.Connection):
+    def __init__(self, connection_manager):
         """
         Initialize the search operations handler.
         
         Args:
-            connection: SQLite database connection
+            connection_manager: SQLiteConnection instance to manage database connections
         """
-        self.conn = connection
+        self.connection_manager = connection_manager
     
     def search(
         self,
@@ -52,15 +52,18 @@ class SQLiteSearch:
         Returns:
             SearchResults: Search results containing memory items and metadata
         """
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
         # Build the query
         sql_query, params = self._build_search_query(query, filter, limit, offset)
         
         # Execute the query
-        rows = self.conn.execute(sql_query, params).fetchall()
+        rows = conn.execute(sql_query, params).fetchall()
         
         # Count total results (without pagination)
         count_query, count_params = self._build_count_query(query, filter)
-        total_count = self.conn.execute(count_query, count_params).fetchone()[0]
+        total_count = conn.execute(count_query, count_params).fetchone()[0]
         
         # Convert rows to memory items
         results = self._convert_rows_to_results(rows)
@@ -88,11 +91,14 @@ class SQLiteSearch:
         Returns:
             int: Count of matching memory items
         """
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
         # Build the count query
         count_query, count_params = self._build_count_query("", filter)
         
         # Execute the query
-        count = self.conn.execute(count_query, count_params).fetchone()[0]
+        count = conn.execute(count_query, count_params).fetchone()[0]
         
         logger.debug(f"Count returned {count} memories")
         return count
@@ -291,3 +297,70 @@ class SQLiteSearch:
             results.append(SearchResult(memory=memory_item, score=score))
         
         return results
+        
+    def filter_items(
+        self,
+        filters: Optional[dict] = None,
+        sort_by: Optional[str] = None,
+        ascending: bool = True,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> List[dict]:
+        """
+        Filter memory items based on specified criteria.
+        
+        Args:
+            filters: Dict of field-value pairs to filter by
+            sort_by: Field to sort results by
+            ascending: Sort order
+            limit: Maximum number of results
+            offset: Number of results to skip
+            
+        Returns:
+            List of items matching the filter criteria
+        """
+        # Convert the generic filters to SearchFilter if provided
+        search_filter = None
+        if filters:
+            filter_args = {}
+            
+            # Map common filter fields
+            if "importance" in filters:
+                filter_args["min_importance"] = filters["importance"]
+                
+            if "status" in filters:
+                filter_args["status"] = filters["status"]
+                
+            if "tags" in filters:
+                filter_args["tags"] = filters["tags"] if isinstance(filters["tags"], list) else [filters["tags"]]
+                
+            # Add time-based filters if present
+            if "created_after" in filters:
+                filter_args["created_after"] = filters["created_after"]
+                
+            if "created_before" in filters:
+                filter_args["created_before"] = filters["created_before"]
+                
+            # Create SearchFilter object
+            search_filter = SearchFilter(**filter_args)
+        
+        # Perform search with empty query string (just filtering)
+        results = self.search(
+            query="",
+            filter=search_filter,
+            limit=limit or 100,  # Default limit
+            offset=offset or 0
+        )
+        
+        # Convert results to dict format
+        items = []
+        for result in results.results:
+            # Create dict with id
+            item_dict = {"_id": result.memory.id}
+            
+            # Add basic memory item fields
+            item_dict.update(result.memory.model_dump())
+            
+            items.append(item_dict)
+            
+        return items

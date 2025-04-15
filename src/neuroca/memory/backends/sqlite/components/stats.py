@@ -8,7 +8,8 @@ such as memory counts, database size, and access/modification times.
 import logging
 import os
 import sqlite3
-from typing import Optional
+from datetime import datetime
+from typing import Any, Dict, Optional, Union
 
 from neuroca.memory.interfaces import StorageStats
 
@@ -23,16 +24,55 @@ class SQLiteStats:
     in the SQLite database, such as counts, sizes, and timestamps.
     """
     
-    def __init__(self, connection: sqlite3.Connection, db_path: str):
+    def __init__(self, connection_manager, db_path: str):
         """
         Initialize the statistics handler.
         
         Args:
-            connection: SQLite database connection
+            connection_manager: SQLiteConnection instance to manage database connections
             db_path: Path to the SQLite database file
         """
-        self.conn = connection
+        self.connection_manager = connection_manager
         self.db_path = db_path
+        # Initialize stats dictionary
+        self._stats = {
+            "create_count": 0,
+            "read_count": 0,
+            "update_count": 0,
+            "delete_count": 0,
+            "query_count": 0,
+            "items_count": 0,
+            "last_access_time": datetime.now(),
+            "last_write_time": datetime.now()
+        }
+    
+    def update_stat(self, stat_name: str, value: Any = 1) -> None:
+        """
+        Update a statistics value.
+        
+        Args:
+            stat_name: Name of the statistic to update
+            value: Value to add to the statistic (default is 1)
+        """
+        if stat_name in self._stats:
+            if isinstance(self._stats[stat_name], (int, float)):
+                self._stats[stat_name] += value
+            else:
+                self._stats[stat_name] = value
+        else:
+            self._stats[stat_name] = value
+            
+        # Update timestamps for certain operations
+        if stat_name == "read_count":
+            self._stats["last_access_time"] = datetime.now()
+        elif stat_name in ["create_count", "update_count", "delete_count"]:
+            self._stats["last_write_time"] = datetime.now()
+            
+        # Update items count for certain operations
+        if stat_name == "create_count":
+            self._stats["items_count"] += 1
+        elif stat_name == "delete_count":
+            self._stats["items_count"] = max(0, self._stats["items_count"] - 1)
     
     def get_stats(self) -> StorageStats:
         """
@@ -52,8 +92,8 @@ class SQLiteStats:
         db_size = self._get_database_size()
         
         # Get last access and write times
-        last_access_time = self._get_last_access_time()
-        last_write_time = self._get_last_write_time()
+        last_access_time = self._stats.get("last_access_time") or self._get_last_access_time()
+        last_write_time = self._stats.get("last_write_time") or self._get_last_write_time()
         
         # Create stats object
         stats = StorageStats(
@@ -62,7 +102,13 @@ class SQLiteStats:
             archived_memories=archived_memories,
             total_size_bytes=db_size,
             last_access_time=last_access_time,
-            last_write_time=last_write_time
+            last_write_time=last_write_time,
+            # Include operation counts
+            create_count=self._stats.get("create_count", 0),
+            read_count=self._stats.get("read_count", 0),
+            update_count=self._stats.get("update_count", 0),
+            delete_count=self._stats.get("delete_count", 0),
+            query_count=self._stats.get("query_count", 0)
         )
         
         logger.debug(f"Retrieved storage stats: {stats.total_memories} memories")
@@ -75,7 +121,10 @@ class SQLiteStats:
         Returns:
             int: Total count of memory items
         """
-        result = self.conn.execute(
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        result = conn.execute(
             "SELECT COUNT(*) FROM memory_items"
         ).fetchone()
         
@@ -88,7 +137,10 @@ class SQLiteStats:
         Returns:
             int: Count of active memory items
         """
-        result = self.conn.execute(
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        result = conn.execute(
             """
             SELECT COUNT(*)
             FROM memory_items m
@@ -106,7 +158,10 @@ class SQLiteStats:
         Returns:
             int: Count of archived memory items
         """
-        result = self.conn.execute(
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        result = conn.execute(
             """
             SELECT COUNT(*)
             FROM memory_items m
@@ -124,16 +179,23 @@ class SQLiteStats:
         Returns:
             int: Size of the database file in bytes
         """
+        # For in-memory databases, return 0
+        if self.db_path == ":memory:":
+            return 0
+            
         return os.path.getsize(self.db_path) if os.path.exists(self.db_path) else 0
     
-    def _get_last_access_time(self) -> Optional[float]:
+    def _get_last_access_time(self) -> Optional[Union[float, datetime]]:
         """
         Get the timestamp of the last accessed memory item.
         
         Returns:
-            Optional[float]: Timestamp of last access or None if no access
+            Optional[Union[float, datetime]]: Timestamp of last access or None if no access
         """
-        result = self.conn.execute(
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        result = conn.execute(
             """
             SELECT MAX(last_accessed)
             FROM memory_items
@@ -143,14 +205,17 @@ class SQLiteStats:
         
         return result[0] if result and result[0] else None
     
-    def _get_last_write_time(self) -> Optional[float]:
+    def _get_last_write_time(self) -> Optional[Union[float, datetime]]:
         """
         Get the timestamp of the last modified memory item.
         
         Returns:
-            Optional[float]: Timestamp of last modification or None if no modification
+            Optional[Union[float, datetime]]: Timestamp of last modification or None if no modification
         """
-        result = self.conn.execute(
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        result = conn.execute(
             """
             SELECT MAX(last_modified)
             FROM memory_items
@@ -167,7 +232,10 @@ class SQLiteStats:
         Returns:
             dict: Distribution of memory items by type
         """
-        results = self.conn.execute(
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        results = conn.execute(
             """
             SELECT json_extract(mm.metadata_json, '$.type') as type, COUNT(*) as count
             FROM memory_items m
@@ -190,7 +258,10 @@ class SQLiteStats:
         Returns:
             dict: Distribution of tags
         """
-        results = self.conn.execute(
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        results = conn.execute(
             """
             SELECT tag, COUNT(*) as count
             FROM memory_tags

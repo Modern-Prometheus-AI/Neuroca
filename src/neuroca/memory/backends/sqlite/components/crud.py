@@ -25,14 +25,14 @@ class SQLiteCRUD:
     deleting memory items in the SQLite database.
     """
     
-    def __init__(self, connection: sqlite3.Connection):
+    def __init__(self, connection_manager):
         """
         Initialize the CRUD operations handler.
         
         Args:
-            connection: SQLite database connection
+            connection_manager: SQLiteConnection instance to manage database connections
         """
-        self.conn = connection
+        self.connection_manager = connection_manager
     
     def store(self, memory_item: MemoryItem) -> str:
         """
@@ -50,22 +50,25 @@ class SQLiteCRUD:
         if not memory_item.id:
             memory_item.id = memory_id
         
-        with self.conn:
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        with conn:
             # Begin transaction
-            self.conn.execute("BEGIN")
+            conn.execute("BEGIN")
             
             try:
                 # Store the memory item using the helper method
                 self._store_memory_without_transaction(memory_item)
                 
                 # Commit the transaction
-                self.conn.execute("COMMIT")
+                conn.execute("COMMIT")
                 
                 logger.debug(f"Stored memory with ID: {memory_id}")
                 return memory_id
             except Exception as e:
                 # Rollback the transaction on error
-                self.conn.execute("ROLLBACK")
+                conn.execute("ROLLBACK")
                 logger.error(f"Failed to store memory: {str(e)}")
                 raise
     
@@ -84,8 +87,11 @@ class SQLiteCRUD:
         """
         memory_id = memory_item.id
         
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
         # Store the memory item
-        self.conn.execute(
+        conn.execute(
             """
             INSERT INTO memory_items (id, content, summary, created_at)
             VALUES (?, ?, ?, ?)
@@ -114,8 +120,11 @@ class SQLiteCRUD:
         Returns:
             Optional[MemoryItem]: The memory item if found, None otherwise
         """
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
         # Get the memory item
-        memory_row = self.conn.execute(
+        memory_row = conn.execute(
             """
             SELECT id, content, summary, created_at, last_accessed, last_modified
             FROM memory_items
@@ -129,7 +138,7 @@ class SQLiteCRUD:
             return None
         
         # Update access time
-        self.conn.execute(
+        conn.execute(
             """
             UPDATE memory_items
             SET last_accessed = ?
@@ -168,19 +177,22 @@ class SQLiteCRUD:
             logger.error("Cannot update memory without ID")
             return False
         
-        with self.conn:
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        with conn:
             # Begin transaction
-            self.conn.execute("BEGIN")
+            conn.execute("BEGIN")
             
             try:
                 # Check if memory exists
-                exists = self.conn.execute(
+                exists = conn.execute(
                     "SELECT 1 FROM memory_items WHERE id = ?",
                     (memory_id,)
                 ).fetchone()
                 
                 if not exists:
-                    self.conn.execute("ROLLBACK")
+                    conn.execute("ROLLBACK")
                     logger.warning(f"Memory with ID {memory_id} not found for update")
                     return False
                 
@@ -188,13 +200,13 @@ class SQLiteCRUD:
                 success = self._update_memory_without_transaction(memory_item)
                 
                 # Commit the transaction
-                self.conn.execute("COMMIT")
+                conn.execute("COMMIT")
                 
                 logger.debug(f"Updated memory with ID: {memory_id}")
                 return success
             except Exception as e:
                 # Rollback the transaction on error
-                self.conn.execute("ROLLBACK")
+                conn.execute("ROLLBACK")
                 logger.error(f"Failed to update memory {memory_id}: {str(e)}")
                 raise
     
@@ -213,8 +225,11 @@ class SQLiteCRUD:
         """
         memory_id = memory_item.id
         
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
         # Update the memory item
-        self.conn.execute(
+        conn.execute(
             """
             UPDATE memory_items
             SET content = ?, summary = ?, last_modified = ?
@@ -244,9 +259,12 @@ class SQLiteCRUD:
         Returns:
             bool: True if deletion was successful, False if memory not found
         """
-        with self.conn:
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        with conn:
             # Check if memory exists
-            exists = self.conn.execute(
+            exists = conn.execute(
                 "SELECT 1 FROM memory_items WHERE id = ?",
                 (memory_id,)
             ).fetchone()
@@ -257,7 +275,7 @@ class SQLiteCRUD:
             
             # Delete the memory item
             # Foreign key constraints will handle related deletions
-            self.conn.execute(
+            conn.execute(
                 "DELETE FROM memory_items WHERE id = ?",
                 (memory_id,)
             )
@@ -273,9 +291,12 @@ class SQLiteCRUD:
             memory_id: ID of the memory item
             metadata: Metadata to store
         """
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
         metadata_json = json.dumps(metadata)
         
-        self.conn.execute(
+        conn.execute(
             """
             INSERT INTO memory_metadata (memory_id, metadata_json)
             VALUES (?, ?)
@@ -286,7 +307,7 @@ class SQLiteCRUD:
         # Store tags if they exist
         if metadata.get("tags"):
             for tag in metadata["tags"]:
-                self.conn.execute(
+                conn.execute(
                     """
                     INSERT OR IGNORE INTO memory_tags (memory_id, tag)
                     VALUES (?, ?)
@@ -302,16 +323,19 @@ class SQLiteCRUD:
             memory_id: ID of the memory item
             metadata: Updated metadata
         """
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
         metadata_json = json.dumps(metadata)
         
         # Check if metadata exists
-        metadata_exists = self.conn.execute(
+        metadata_exists = conn.execute(
             "SELECT 1 FROM memory_metadata WHERE memory_id = ?",
             (memory_id,)
         ).fetchone()
         
         if metadata_exists:
-            self.conn.execute(
+            conn.execute(
                 """
                 UPDATE memory_metadata
                 SET metadata_json = ?
@@ -320,7 +344,7 @@ class SQLiteCRUD:
                 (metadata_json, memory_id)
             )
         else:
-            self.conn.execute(
+            conn.execute(
                 """
                 INSERT INTO memory_metadata (memory_id, metadata_json)
                 VALUES (?, ?)
@@ -331,14 +355,14 @@ class SQLiteCRUD:
         # Update tags
         if metadata.get("tags"):
             # Delete existing tags
-            self.conn.execute(
+            conn.execute(
                 "DELETE FROM memory_tags WHERE memory_id = ?",
                 (memory_id,)
             )
             
             # Add new tags
             for tag in metadata["tags"]:
-                self.conn.execute(
+                conn.execute(
                     """
                     INSERT OR IGNORE INTO memory_tags (memory_id, tag)
                     VALUES (?, ?)
@@ -356,7 +380,10 @@ class SQLiteCRUD:
         Returns:
             Dict: Memory metadata or empty dict if not found
         """
-        metadata_row = self.conn.execute(
+        # Get a connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        metadata_row = conn.execute(
             """
             SELECT metadata_json
             FROM memory_metadata
