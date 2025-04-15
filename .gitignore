@@ -79,7 +79,7 @@ pythonenv*
 *.onnx
 *.tflite
 *.pb
-models/
+C:\git\Neuro-Cognitive-Agent\Neuroca\src\neuroca\models
 !models/.gitkeep
 
 # Large data files

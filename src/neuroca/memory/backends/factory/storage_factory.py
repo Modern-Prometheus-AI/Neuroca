@@ -13,6 +13,7 @@ from neuroca.memory.backends.base import BaseStorageBackend
 from neuroca.memory.backends.factory.backend_type import BackendType
 from neuroca.memory.backends.factory.memory_tier import MemoryTier
 from neuroca.memory.backends.in_memory_backend import InMemoryBackend
+from neuroca.memory.backends.sqlite_backend import SQLiteBackend
 from neuroca.memory.exceptions import ConfigurationError
 
 
@@ -31,6 +32,7 @@ class StorageBackendFactory:
     # Registry of backend implementations
     _backend_registry: Dict[BackendType, Type[BaseStorageBackend]] = {
         BackendType.MEMORY: InMemoryBackend,
+        BackendType.SQL: SQLiteBackend,
         # Other backends will be added when implemented
     }
     
@@ -187,6 +189,13 @@ class StorageBackendFactory:
         elif tier == MemoryTier.MTM:
             return BackendType.MEMORY  # In-memory for MTM (would be REDIS in production)
         elif tier == MemoryTier.LTM:
-            return BackendType.MEMORY  # In-memory for LTM (would be SQL or VECTOR in production)
+            # Use SQL backend for LTM in production
+            # For development or testing, this can be overridden with an explicit backend_type
+            import os
+            env = os.environ.get("NEUROCA_ENV", "development")
+            if env in ("production", "staging"):
+                return BackendType.SQL  # SQLite for LTM in production
+            else:
+                return BackendType.MEMORY  # In-memory for development/testing
         else:
             return BackendType.MEMORY  # Default to in-memory
