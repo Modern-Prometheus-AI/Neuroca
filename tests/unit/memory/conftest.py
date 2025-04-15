@@ -11,14 +11,14 @@ import pytest
 
 # Import the concrete implementation instead of the abstract base class
 from neuroca.memory.manager.consolidation import StandardMemoryConsolidator
-from neuroca.memory.tiers.ltm.core import LongTermMemory as EpisodicMemory
+from neuroca.memory.tiers.ltm.core import LongTermMemoryTier as EpisodicMemory
 
 # Re-add imports for Concept, Relationship, RelationshipType
 from neuroca.memory.tiers.ltm.components.relationship import Concept, Relationship, RelationshipType
-from neuroca.memory.tiers.stm.core import ShortTermMemory as WorkingMemory
+from neuroca.memory.tiers.stm.core import ShortTermMemoryTier as WorkingMemory
 
 # Import the concrete implementation from the correct location
-from neuroca.memory.tiers.ltm.core import LongTermMemory as SemanticMemory
+from neuroca.memory.tiers.ltm.core import LongTermMemoryTier as SemanticMemory
 
 
 @pytest.fixture()

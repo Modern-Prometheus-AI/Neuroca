@@ -13,7 +13,7 @@ from neuroca.memory.backends.sql.components.crud import SQLCRUD
 from neuroca.memory.backends.sql.components.schema import SQLSchema
 from neuroca.memory.exceptions import StorageOperationError
 from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import SearchFilter, SearchResults
+from neuroca.memory.models.search import MemorySearchOptions, MemorySearchResults
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +47,10 @@ class SQLSearch:
     async def search(
         self, 
         query: str, 
-        filter: Optional[SearchFilter] = None,
+        filter: Optional[MemorySearchOptions] = None,
         limit: int = 10,
         offset: int = 0
-    ) -> SearchResults:
+    ) -> MemorySearchResults:
         """
         Search for memory items in the database.
         
@@ -61,7 +61,7 @@ class SQLSearch:
             offset: Number of results to skip (for pagination)
             
         Returns:
-            SearchResults: Search results containing memory items and metadata
+            MemorySearchResults: Search results containing memory items and metadata
             
         Raises:
             StorageOperationError: If the search operation fails
@@ -80,13 +80,13 @@ class SQLSearch:
             total_pages = (total_count + limit - 1) // limit if limit > 0 else 1
             
             # Create search results
-            results = SearchResults(
+            # Pass the original filter options back in the results object
+            search_options = filter if filter else MemorySearchOptions(query=query, limit=limit, offset=offset)
+            results = MemorySearchResults(
                 query=query,
-                items=memory_items,
-                total_results=total_count,
-                page=page,
-                page_size=limit,
-                total_pages=total_pages
+                results=memory_items, 
+                total_count=total_count,
+                options=search_options 
             )
             
             logger.debug(f"Search for '{query}' returned {len(memory_items)} results out of {total_count} total")
@@ -97,7 +97,7 @@ class SQLSearch:
             logger.error(error_msg, exc_info=True)
             raise StorageOperationError(error_msg) from e
     
-    async def count(self, filter: Optional[SearchFilter] = None) -> int:
+    async def count(self, filter: Optional[MemorySearchOptions] = None) -> int:
         """
         Count memory items in the database matching the filter.
         
@@ -123,7 +123,7 @@ class SQLSearch:
     async def _search_and_filter(
         self,
         query: str,
-        filter: Optional[SearchFilter] = None,
+        filter: Optional[MemorySearchOptions] = None,
         limit: int = 10,
         offset: int = 0
     ) -> Tuple[List[MemoryItem], int]:
@@ -165,7 +165,7 @@ class SQLSearch:
     def _build_search_query(
         self,
         query: str,
-        filter: Optional[SearchFilter] = None,
+        filter: Optional[MemorySearchOptions] = None,
         limit: int = 10,
         offset: int = 0
     ) -> Tuple[str, str, List[Any]]:
@@ -265,7 +265,7 @@ class SQLSearch:
         
         return search_query, count_query, params
     
-    def _build_count_query(self, filter: Optional[SearchFilter] = None) -> Tuple[str, List[Any]]:
+    def _build_count_query(self, filter: Optional[MemorySearchOptions] = None) -> Tuple[str, List[Any]]:
         """
         Build SQL count query with filters.
         

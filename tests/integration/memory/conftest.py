@@ -9,19 +9,19 @@ import time
 import pytest
 
 # Direct imports from the new memory system structure
-from neuroca.memory.tiers.ltm.core import LongTermMemory as EpisodicMemory
-from neuroca.memory.manager.memory_manager import MemoryManager
+from neuroca.memory.tiers.ltm.core import LongTermMemoryTier as EpisodicMemory
+from neuroca.memory.manager.core import MemoryManager
 from neuroca.memory.manager.consolidation import StandardMemoryConsolidator
 
 # Import from LTM relationship component for concept models
 from neuroca.memory.tiers.ltm.components.relationship import Concept, Relationship, RelationshipType
 
-# Import working memory from the models
-from neuroca.memory.models.working_memory import WorkingMemoryItem, WorkingMemoryBuffer
-from neuroca.memory.tiers.stm.core import ShortTermMemory as WorkingMemory
+# Import working memory from models and STM tier
+from neuroca.memory.models.memory_item import MemoryItem
+from neuroca.memory.tiers.stm.core import ShortTermMemoryTier as WorkingMemory
 
 # Use LTM with appropriate configuration as semantic memory
-from neuroca.memory.tiers.ltm.core import LongTermMemory as SemanticMemory
+from neuroca.memory.tiers.ltm.core import LongTermMemoryTier as SemanticMemory
 
 
 @pytest.fixture()

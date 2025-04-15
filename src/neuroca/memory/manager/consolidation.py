@@ -10,11 +10,75 @@ from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 from neuroca.memory.backends import MemoryTier
-from neuroca.memory.ltm.storage import MemoryItem, MemoryMetadata, MemoryStatus
-from neuroca.memory.mtm.storage import MemoryPriority, MemoryStatus as MTMStatus
+from neuroca.memory.models.memory_item import MemoryItem, MemoryMetadata, MemoryStatus
+# Define priority enum for MTM memories since no longer imported from mtm.storage
+from enum import Enum
+
+class MemoryPriority(str, Enum):
+    """Priority levels for MTM memories."""
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+# Use the same MemoryStatus for MTM
+MTMStatus = MemoryStatus
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
+
+class StandardMemoryConsolidator:
+    """
+    Standard implementation of memory consolidation.
+    
+    This class handles the consolidation of memories between different tiers
+    (STM -> MTM -> LTM) based on importance, access patterns, and age.
+    """
+    
+    def __init__(self):
+        """Initialize the memory consolidator."""
+        self.config = {}
+    
+    async def consolidate_stm_to_mtm(self, stm_storage, mtm_storage):
+        """
+        Consolidate important memories from STM to MTM.
+        
+        Args:
+            stm_storage: STM storage backend
+            mtm_storage: MTM storage backend
+        """
+        await consolidate_stm_to_mtm(stm_storage, mtm_storage, self.config)
+    
+    async def consolidate_mtm_to_ltm(self, mtm_storage, ltm_storage):
+        """
+        Consolidate important memories from MTM to LTM.
+        
+        Args:
+            mtm_storage: MTM storage backend
+            ltm_storage: LTM storage backend
+        """
+        await consolidate_mtm_to_ltm(mtm_storage, ltm_storage, self.config)
+    
+    def configure(self, config):
+        """
+        Configure the consolidator.
+        
+        Args:
+            config: Configuration dictionary
+        """
+        self.config = config or {}
+    
+    async def consolidate(self, stm_storage, mtm_storage, ltm_storage):
+        """
+        Perform full consolidation across all tiers.
+        
+        Args:
+            stm_storage: STM storage backend
+            mtm_storage: MTM storage backend
+            ltm_storage: LTM storage backend
+        """
+        await self.consolidate_stm_to_mtm(stm_storage, mtm_storage)
+        await self.consolidate_mtm_to_ltm(mtm_storage, ltm_storage)
 
 
 async def consolidate_stm_to_mtm(

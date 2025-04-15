@@ -11,7 +11,7 @@ from typing import Dict, Any
 
 from neuroca.memory.backends.sqlite_backend import SQLiteBackend
 from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import SearchFilter
+from neuroca.memory.models.search import MemorySearchOptions
 
 
 @pytest.fixture
@@ -148,7 +148,7 @@ async def test_search(sqlite_backend):
     assert len(results.results) == 2
     
     # Test search with filter
-    filter = SearchFilter(
+    filter = MemorySearchOptions(
         min_importance=0.7,
         tags=["fruit"]
     )
@@ -221,7 +221,7 @@ async def test_count(sqlite_backend):
     assert count == 3
     
     # Test count with filter
-    filter = SearchFilter(status="active")
+    filter = MemorySearchOptions(status="active")
     count = await sqlite_backend.count(filter)
     assert count == 2
 

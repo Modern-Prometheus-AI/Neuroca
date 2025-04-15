@@ -21,7 +21,8 @@ from neuroca.memory.backends import (
     MemoryTier,
     StorageBackendFactory,
 )
-from neuroca.memory.stm.storage import STMStorage
+# Fixed import path for STMStorage
+from neuroca.memory.tiers.stm.core import ShortTermMemoryTier as STMStorage
 from neuroca.memory.manager.models import RankedMemory
 from neuroca.memory.manager.working_memory import (
     update_working_memory,

@@ -13,23 +13,23 @@ from neuroca.memory.interfaces.memory_tier import MemoryTierInterface
 from neuroca.memory.models.memory_item import MemoryItem, MemoryMetadata
 from neuroca.memory.backends.factory.backend_type import BackendType
 from neuroca.memory.backends.factory.storage_factory import StorageBackendFactory
-from neuroca.memory.tiers.stm.core import ShortTermMemory
-from neuroca.memory.tiers.mtm.core import MediumTermMemory
-from neuroca.memory.tiers.ltm.core import LongTermMemory
-from neuroca.memory.manager.memory_manager import MemoryManager
+from neuroca.memory.tiers.stm.core import ShortTermMemoryTier
+from neuroca.memory.tiers.mtm.core import MediumTermMemoryTier
+from neuroca.memory.tiers.ltm.core import LongTermMemoryTier
+from neuroca.memory.manager.core import MemoryManager
 
 
 @pytest.fixture
 def memory_tiers() -> Dict[str, MemoryTierInterface]:
     """Setup memory tiers with in-memory backends for testing."""
     # Initialize tiers with in-memory backends for testing
-    stm = ShortTermMemory(
+    stm = ShortTermMemoryTier(
         backend=StorageBackendFactory.create_backend(BackendType.MEMORY)
     )
-    mtm = MediumTermMemory(
+    mtm = MediumTermMemoryTier(
         backend=StorageBackendFactory.create_backend(BackendType.MEMORY)
     )
-    ltm = LongTermMemory(
+    ltm = LongTermMemoryTier(
         backend=StorageBackendFactory.create_backend(BackendType.MEMORY)
     )
     
@@ -271,7 +271,7 @@ class TestBackendIntegration:
             pytest.skip(f"Backend {backend_type} not available: {str(e)}")
         
         # Create memory tier with this backend
-        stm = ShortTermMemory(backend=backend)
+        stm = ShortTermMemoryTier(backend=backend)
         stm.initialize()
         
         try:

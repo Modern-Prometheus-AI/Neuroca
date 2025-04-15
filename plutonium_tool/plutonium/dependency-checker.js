@@ -15,6 +15,7 @@ const MAIN_PACKAGE_JSON = path.join(ROOT_DIR, "package.json")
 const WEBVIEW_PACKAGE_JSON = path.join(ROOT_DIR, "webview-ui", "package.json")
 // Corrected path to point to the root requirements.txt
 const PYTHON_REQUIREMENTS = path.join(ROOT_DIR, "requirements.txt")
+const PYPROJECT_TOML = path.join(ROOT_DIR, "pyproject.toml")
 const REPORTS_DIR = path.join(ROOT_DIR, "reports")
 const PLUTONIUM_ICON = path.join(__dirname, "assets", "plutonium-icon.png")
 
@@ -67,6 +68,120 @@ function getHigherVersion(v1, v2) {
 	const prefix = semver.gt(parsedV1, parsedV2) ? prefix1 : prefix2 || "^"
 
 	return prefix + (semver.gt(parsedV1, parsedV2) ? parsedV1 : parsedV2)
+}
+
+/**
+ * Find Python requirements files in a directory
+ * 
+ * @param {string} dir Directory to search
+ * @param {number} depth Maximum depth to search
+ * @returns {string[]} Array of requirements files paths
+ */
+function findRequirementsFiles(dir, depth = 3) {
+	if (depth === 0) return [];
+	
+	let results = [];
+	
+	try {
+		const entries = fs.readdirSync(dir, { withFileTypes: true });
+		
+		// Check for requirements files in this directory
+		const reqFiles = entries
+			.filter(entry => !entry.isDirectory() && 
+				(entry.name === 'requirements.txt' || 
+				 entry.name === 'pyproject.toml' ||
+				 entry.name === 'Pipfile' ||
+				 entry.name === 'setup.py'))
+			.map(entry => path.join(dir, entry.name));
+		
+		results = results.concat(reqFiles);
+		
+		// Recursively search subdirectories (but skip common large directories)
+		const subDirs = entries
+			.filter(entry => entry.isDirectory() && 
+				entry.name !== 'node_modules' && 
+				entry.name !== '.git' &&
+				entry.name !== 'venv' &&
+				entry.name !== 'env' &&
+				entry.name !== '__pycache__' &&
+				!entry.name.startsWith('.'))
+			.map(entry => path.join(dir, entry.name));
+		
+		for (const subDir of subDirs) {
+			results = results.concat(findRequirementsFiles(subDir, depth - 1));
+		}
+	} catch (err) {
+		// Skip directories we can't read
+	}
+	
+	return results;
+}
+
+/**
+ * Read and parse Python requirements from a file
+ * 
+ * @param {string} filePath Path to requirements file
+ * @returns {Object} Parsed requirements
+ */
+function parsePythonRequirements(filePath) {
+	const results = {
+		packages: [],
+		unpinned: []
+	};
+	
+	try {
+		if (path.basename(filePath) === 'requirements.txt') {
+			const content = fs.readFileSync(filePath, 'utf8');
+			const lines = content.split('\n');
+			
+			for (const line of lines) {
+				const trimmedLine = line.trim();
+				// Skip comments and empty lines
+				if (!trimmedLine || trimmedLine.startsWith("#")) {
+					continue;
+				}
+				
+				// Extract package name and version
+				let packageName = trimmedLine.split("#")[0].trim();
+				let packageVersion = null;
+				
+				if (packageName.includes("==")) {
+					[packageName, packageVersion] = packageName.split("==");
+					packageVersion = '==' + packageVersion;
+				} else if (packageName.includes(">=")) {
+					[packageName, packageVersion] = packageName.split(">=");
+					packageVersion = ">=" + packageVersion;
+				} else if (packageName.includes("<=")) {
+					[packageName, packageVersion] = packageName.split("<=");
+					packageVersion = "<=" + packageVersion;
+				} else if (packageName.includes(">")) {
+					[packageName, packageVersion] = packageName.split(">");
+					packageVersion = ">" + packageVersion;
+				} else if (packageName.includes("<")) {
+					[packageName, packageVersion] = packageName.split("<");
+					packageVersion = "<" + packageVersion;
+				} else if (packageName.includes("~=")) {
+					[packageName, packageVersion] = packageName.split("~=");
+					packageVersion = "~=" + packageVersion;
+				} else {
+					results.unpinned.push(packageName);
+				}
+				
+				packageName = packageName.trim();
+				
+				results.packages.push({
+					name: packageName,
+					version: packageVersion ? packageVersion.trim() : null,
+					file: path.basename(filePath)
+				});
+			}
+		}
+		// TODO: Add support for pyproject.toml, Pipfile, and setup.py parsing
+	} catch (err) {
+		console.error(`Error parsing ${filePath}: ${err.message}`);
+	}
+	
+	return results;
 }
 
 /**
@@ -534,157 +649,175 @@ function checkDependencies(options, utils) {
 	log("🔍 Dependency Analyzer (Plutonium Development Preview)")
 	log(`Running on Node.js ${process.version} | ${process.platform}-${process.arch} | ${new Date().toISOString()}`)
 
-	// Check if required files exist
-	if (!fs.existsSync(MAIN_PACKAGE_JSON)) {
-		log("Main package.json not found", "error")
-		process.exit(1)
-	}
-
-	// Read package.json files
-	const mainPkg = JSON.parse(fs.readFileSync(MAIN_PACKAGE_JSON, "utf8"))
-	let webviewPkg = {}
-	let webviewPackages = []
-
-	if (fs.existsSync(WEBVIEW_PACKAGE_JSON)) {
-		webviewPkg = JSON.parse(fs.readFileSync(WEBVIEW_PACKAGE_JSON, "utf8"))
+	// Variables to hold dependency data
+	let mainPkg = {};
+	let webviewPkg = {};
+	let mainPackages = [];
+	let webviewPackages = [];
+	let mainDeps = {};
+	let webviewDeps = {};
+	let sharedPackages = [];
+	let npmInconsistencies = [];
+	let pythonPackages = [];
+	let unpinnedPythonDeps = [];
+	let crossLanguageIssues = [];
+	let analysisMode = "full";
+	
+	if (options.language === "python") {
+		// Python-only mode
+		analysisMode = "python-only";
+		log("Running in Python-only mode - focusing on Python dependencies", "info");
 	} else {
-		log("Webview package.json not found, skipping webview dependency analysis.", "warning")
+		// Check for JS dependencies
+		if (fs.existsSync(MAIN_PACKAGE_JSON)) {
+			// Read package.json files
+			mainPkg = JSON.parse(fs.readFileSync(MAIN_PACKAGE_JSON, "utf8"))
+			
+			if (fs.existsSync(WEBVIEW_PACKAGE_JSON)) {
+				webviewPkg = JSON.parse(fs.readFileSync(WEBVIEW_PACKAGE_JSON, "utf8"))
+			} else {
+				log("Webview package.json not found, skipping webview dependency analysis.", "warning")
+			}
+			
+			// Extract npm dependencies
+			mainDeps = {
+				...(mainPkg.dependencies || {}),
+				...(mainPkg.devDependencies || {}),
+			}
+			
+			mainPackages = Object.entries(mainDeps).map(([name, version]) => ({
+				name,
+				version,
+				type: mainPkg.dependencies && name in mainPkg.dependencies ? "dependency" : "devDependency",
+			}))
+			
+			// Process webview dependencies only if webviewPkg was loaded
+			webviewDeps = webviewPkg.dependencies || webviewPkg.devDependencies ? {
+				...(webviewPkg.dependencies || {}),
+				...(webviewPkg.devDependencies || {}),
+			} : {}
+			
+			if (Object.keys(webviewDeps).length > 0) {
+				webviewPackages = Object.entries(webviewDeps).map(([name, version]) => ({
+					name,
+					version,
+					type: webviewPkg.dependencies && name in webviewPkg.dependencies ? "dependency" : "devDependency",
+				}))
+			}
+			
+			// Find shared dependencies
+			sharedPackages = Object.keys(mainDeps).filter((dep) => dep in webviewDeps)
+			
+			// Check for version inconsistencies
+			sharedPackages.forEach((pkg) => {
+				const mainVersion = mainDeps[pkg]
+				const webviewVersion = webviewDeps[pkg]
+				
+				if (mainVersion !== webviewVersion) {
+					const recommended = getHigherVersion(mainVersion, webviewVersion)
+					npmInconsistencies.push({
+						name: pkg,
+						mainVersion,
+						webviewVersion,
+						recommended,
+					})
+				}
+			})
+		} else if (options.language !== "python") {
+			log("No package.json found in the project root.", "warning")
+			analysisMode = "python-only";
+		}
 	}
-
 
 	log("\nAnalyzing dependencies...")
 
-	// Extract npm dependencies
-	const mainDeps = {
-		...(mainPkg.dependencies || {}),
-		...(mainPkg.devDependencies || {}),
-	}
-
-	const mainPackages = Object.entries(mainDeps).map(([name, version]) => ({
-		name,
-		version,
-		type: mainPkg.dependencies && name in mainPkg.dependencies ? "dependency" : "devDependency",
-	}))
-
-	// Process webview dependencies only if webviewPkg was loaded
-	const webviewDeps = webviewPkg.dependencies || webviewPkg.devDependencies ? {
-		...(webviewPkg.dependencies || {}),
-		...(webviewPkg.devDependencies || {}),
-	} : {}
-
-	if (Object.keys(webviewDeps).length > 0) {
-		webviewPackages = Object.entries(webviewDeps).map(([name, version]) => ({
-			name,
-			version,
-			type: webviewPkg.dependencies && name in webviewPkg.dependencies ? "dependency" : "devDependency",
-		}))
-	}
-
-
-	// Find shared dependencies
-	const sharedPackages = Object.keys(mainDeps).filter((dep) => dep in webviewDeps)
-
-	// Check for version inconsistencies
-	const npmInconsistencies = []
-	sharedPackages.forEach((pkg) => {
-		const mainVersion = mainDeps[pkg]
-		const webviewVersion = webviewDeps[pkg]
-
-		if (mainVersion !== webviewVersion) {
-			const recommended = getHigherVersion(mainVersion, webviewVersion)
-			npmInconsistencies.push({
-				name: pkg,
-				mainVersion,
-				webviewVersion,
-				recommended,
-			})
-		}
-	})
-
-	// Get Python dependencies
-	const pythonPackages = []
-	const unpinnedPythonDeps = []
-	const crossLanguageIssues = []
-
+	// Get Python dependencies - look for requirements files
+	let requirementsFiles = [PYTHON_REQUIREMENTS]; // Default
 	if (fs.existsSync(PYTHON_REQUIREMENTS)) {
-		const requirements = fs.readFileSync(PYTHON_REQUIREMENTS, "utf8")
-		const lines = requirements.split("\n")
-
-		for (const line of lines) {
-			const trimmedLine = line.trim()
-			// Skip comments and empty lines
-			if (!trimmedLine || trimmedLine.startsWith("#")) {
-				continue
+		log(`Found root requirements.txt`, "info");
+	} else {
+		// Search for requirements files throughout the project
+		requirementsFiles = findRequirementsFiles(ROOT_DIR);
+		if (requirementsFiles.length > 0) {
+			log(`Found ${requirementsFiles.length} Python requirements files in the project:`, "info");
+			requirementsFiles.forEach(file => {
+				log(`  - ${path.relative(ROOT_DIR, file)}`, "info");
+			});
+		} else {
+			log("No Python requirements files found.", "warning");
+		}
+	}
+	
+	// Process all requirements files
+	let totalPythonPackages = 0;
+	let totalUnpinnedDeps = 0;
+	
+	requirementsFiles.forEach(reqFile => {
+		if (fs.existsSync(reqFile)) {
+			const reqData = parsePythonRequirements(reqFile);
+			pythonPackages = pythonPackages.concat(reqData.packages);
+			unpinnedPythonDeps = unpinnedPythonDeps.concat(reqData.unpinned);
+			
+			if (reqData.packages.length > 0) {
+				log(`Parsed ${reqData.packages.length} packages from ${path.relative(ROOT_DIR, reqFile)}`, "info");
+				totalPythonPackages += reqData.packages.length;
+				totalUnpinnedDeps += reqData.unpinned.length;
 			}
+		}
+	});
 
-			// Extract package name and version
-			let packageName = trimmedLine.split("#")[0].trim()
-			let packageVersion = null
-
-			if (packageName.includes("==")) {
-				;[packageName, packageVersion] = packageName.split("==")
-			} else if (packageName.includes(">=")) {
-				;[packageName, packageVersion] = packageName.split(">=")
-				packageVersion = `>=${packageVersion}`
-			} else {
-				unpinnedPythonDeps.push(packageName)
-			}
-
-			pythonPackages.push({
-				name: packageName,
-				version: packageVersion,
-			})
-
-			// Check for cross-language conflicts
-			// Common packages that exist in both ecosystems
-			const crossLanguageMapping = {
-				openai: "openai",
-				anthropic: "@anthropic-ai/sdk",
-				"google-genai": "@google/generative-ai",
-				"azure-openai": "@azure/openai",
-				tiktoken: "tiktoken",
-			}
-
-			if (crossLanguageMapping[packageName] && mainDeps[crossLanguageMapping[packageName]]) {
+	// Check for cross-language conflicts
+	if (analysisMode === "full" && pythonPackages.length > 0 && Object.keys(mainDeps).length > 0) {
+		// Common packages that exist in both ecosystems
+		const crossLanguageMapping = {
+			openai: "openai",
+			anthropic: "@anthropic-ai/sdk",
+			"google-genai": "@google/generative-ai",
+			"azure-openai": "@azure/openai",
+			tiktoken: "tiktoken",
+		}
+		
+		pythonPackages.forEach(pkg => {
+			if (crossLanguageMapping[pkg.name] && mainDeps[crossLanguageMapping[pkg.name]]) {
 				crossLanguageIssues.push({
-					name: packageName,
-					pythonVersion: `${packageName}@${packageVersion || "unpinned"}`,
-					jsVersion: `${crossLanguageMapping[packageName]}@${mainDeps[crossLanguageMapping[packageName]]}`,
+					name: pkg.name,
+					pythonVersion: `${pkg.name}@${pkg.version || "unpinned"}`,
+					jsVersion: `${crossLanguageMapping[pkg.name]}@${mainDeps[crossLanguageMapping[pkg.name]]}`,
 				})
 			}
-		}
-	} else {
-		log("Python requirements.txt not found, skipping Python dependency analysis.", "warning")
+		});
 	}
-
 
 	// Print summary
 	log(`Found ${pythonPackages.length} Python packages`, "info")
-	log(`Found ${mainPackages.length} main npm packages`, "info")
-	log(`Found ${webviewPackages.length} webview npm packages`, "info")
-
-	heading("Checking npm dependency consistency")
-	log(`Found ${sharedPackages.length} shared npm packages between main and webview`)
-
-	if (npmInconsistencies.length > 0) {
-		log("\n⚠️ Version inconsistencies found between npm environments:", "warning")
-		npmInconsistencies.forEach((item) => {
-			log(`  - ${item.name}: main(${item.mainVersion}) vs webview(${item.webviewVersion})`, "warning")
-		})
-	} else {
-		log("✅ All shared npm packages have consistent versions", "success")
-	}
-
-	heading("Checking cross-language dependencies")
-
-	if (crossLanguageIssues.length > 0) {
-		log("\n⚠️ Potential cross-language dependency conflicts:", "warning")
-		crossLanguageIssues.forEach((item) => {
-			log(`  - Python: ${item.pythonVersion} / npm(main): ${item.jsVersion}`, "warning")
-		})
-		log("\n   ⓘ Review these packages to ensure version compatibility between languages")
-	} else {
-		log("✅ No cross-language dependency conflicts found", "success")
+	
+	if (analysisMode === "full") {
+		log(`Found ${mainPackages.length} main npm packages`, "info")
+		log(`Found ${webviewPackages.length} webview npm packages`, "info")
+		
+		heading("Checking npm dependency consistency")
+		log(`Found ${sharedPackages.length} shared npm packages between main and webview`)
+		
+		if (npmInconsistencies.length > 0) {
+			log("\n⚠️ Version inconsistencies found between npm environments:", "warning")
+			npmInconsistencies.forEach((item) => {
+				log(`  - ${item.name}: main(${item.mainVersion}) vs webview(${item.webviewVersion})`, "warning")
+			})
+		} else if (sharedPackages.length > 0) {
+			log("✅ All shared npm packages have consistent versions", "success")
+		}
+		
+		heading("Checking cross-language dependencies")
+		
+		if (crossLanguageIssues.length > 0) {
+			log("\n⚠️ Potential cross-language dependency conflicts:", "warning")
+			crossLanguageIssues.forEach((item) => {
+				log(`  - Python: ${item.pythonVersion} / npm(main): ${item.jsVersion}`, "warning")
+			})
+			log("\n   ⓘ Review these packages to ensure version compatibility between languages")
+		} else {
+			log("✅ No cross-language dependency conflicts found", "success")
+		}
 	}
 
 	heading("Checking for unpinned Python dependencies")
@@ -692,8 +825,31 @@ function checkDependencies(options, utils) {
 	if (unpinnedPythonDeps.length > 0) {
 		log("\n⚠️ Found unpinned Python dependencies:", "warning")
 		unpinnedPythonDeps.forEach((dep) => log(`  - ${dep}`, "warning"))
-	} else {
+	} else if (pythonPackages.length > 0) {
 		log("✅ All Python dependencies are properly pinned!", "success")
+	}
+	
+	// Find testing-related dependencies
+	const testDeps = pythonPackages.filter(pkg => 
+		pkg.name.includes('test') || 
+		pkg.name.includes('pytest') || 
+		pkg.name === 'coverage' ||
+		pkg.name === 'nose' ||
+		pkg.name === 'mock' ||
+		pkg.name === 'hypothesis' ||
+		pkg.name === 'tox' ||
+		pkg.name === 'unittest2'
+	);
+	
+	if (testDeps.length > 0) {
+		heading("Testing-related dependencies");
+		log(`Found ${testDeps.length} testing-related Python packages:`, "info");
+		testDeps.forEach(pkg => {
+			log(`  - ${pkg.name}${pkg.version ? ' (' + pkg.version + ')' : ''}`, "info");
+		});
+	} else if (pythonPackages.length > 0) {
+		heading("Testing-related dependencies");
+		log("⚠️ No testing-related Python packages found. Consider adding pytest or similar testing libraries.", "warning");
 	}
 
 	// Build report data
@@ -705,6 +861,7 @@ function checkDependencies(options, utils) {
 		npmInconsistencies,
 		crossLanguageIssues,
 		unpinnedPythonDeps,
+		testingDependencies: testDeps
 	}
 
 	// Generate HTML report
@@ -713,8 +870,15 @@ function checkDependencies(options, utils) {
 
 	// Print analysis summary
 	heading("Analysis Summary")
-	log(`${npmInconsistencies.length} npm version inconsistencies`)
-	log(`${crossLanguageIssues.length} potential cross-language issues`)
+	
+	if (analysisMode === "full") {
+		log(`${npmInconsistencies.length} npm version inconsistencies`)
+		log(`${crossLanguageIssues.length} potential cross-language issues`)
+	}
+	
+	log(`${unpinnedPythonDeps.length} unpinned Python dependencies`)
+	log(`${testDeps.length} testing-related dependencies`)
+	
 	log(`\nTo view the full report: xdg-open ${reportPath}`)
 
 	return {
@@ -723,6 +887,7 @@ function checkDependencies(options, utils) {
 			npmInconsistencies: npmInconsistencies.length,
 			crossLanguageIssues: crossLanguageIssues.length,
 			unpinnedPythonDeps: unpinnedPythonDeps.length,
+			testingDependencies: testDeps.length
 		},
 	}
 }
@@ -732,4 +897,6 @@ module.exports = {
 	checkDependencies,
 	parseVersion,
 	getHigherVersion,
+	findRequirementsFiles,
+	parsePythonRequirements
 }
