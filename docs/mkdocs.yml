@@ -9,11 +9,12 @@ site_description: A biological-inspired cognitive architecture for large languag
 site_author: Justin Lietz - Modern Prometheus AI
 site_url: https://github.com/Modern-Prometheus-AI/Neuroca
 repo_url: https://github.com/Modern-Prometheus-AI/Neuroca
-repo_name: Modern-Prometheus-AI/Neuroca
+repo_name: Neuroca
 edit_uri: edit/main/docs/
 
 # Copyright information
-copyright: Copyright &copy; 2023 NeuroCognitive Architecture Team
+copyright: Copyright &copy; 2025 Modern Prometheus AI
+copyright_year: 2025
 
 
 docs_dir: pages
@@ -21,20 +22,21 @@ docs_dir: pages
 # Theme configuration
 theme:
   name: material
+  custom_dir: pages/overrides
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: dark-blue
+      accent: cyan
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to dark mode
     # Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: light-gray
+      accent: blue
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
@@ -149,11 +151,11 @@ extra:
     property: G-XXXXXXXXXX
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/neuroca/neuroca
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/neuroca
+      link: https://github.com/Modern-Prometheus-AI/Neuroca
+    # - icon: fontawesome/brands/twitter
+    #   link: https://github.com/Modern-Prometheus-AI/Neuroca
     - icon: fontawesome/brands/linkedin
-      link: https://linkedin.com/company/neuroca
+      link: https://www.linkedin.com/in/justinlietz1993/
   version:
     provider: mike
   consent:
@@ -205,4 +207,4 @@ nav:
       - Backup & Restore: operations/runbooks/backup-restore.md
       - Incident Response: operations/runbooks/incident-response.md
       - Scaling: operations/runbooks/scaling.md
-  - Project README: README.md # Link to the docs README
+  - Docs Build Info: docs-build-info.md

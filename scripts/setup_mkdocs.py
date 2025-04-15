@@ -35,11 +35,11 @@ IMAGES_DEST_DIR = ASSETS_DIR / "images" # Specific destination for images
 
 # Source locations relative to project root
 LOGO_SRC_PATH = PROJECT_ROOT / "src" / "neuroca" / "assets" / "images" / "Neuroca-logo.png"
-FAVICON_SRC_PATH = PROJECT_ROOT / "src" / "neuroca" / "assets" / "images" / "Neuroca-badge.PNG"
+FAVICON_SRC_PATH = PROJECT_ROOT / "src" / "neuroca" / "assets" / "images" / "favicon.PNG"
+BADGE_SRC_PATH = PROJECT_ROOT / "src" / "neuroca" / "assets" / "images" / "Neuroca-badge.png"
 DIAGRAMS_SRC_DIR = DOCS_DIR / "architecture" / "diagrams"
 
 # Directory mapping: source (relative to DOCS_DIR) -> destination (relative to PAGES_DIR)
-# Ensure these source keys match subdirectories within PROJECT_ROOT/docs
 DIR_MAPPING = {
     "user": "user",
     "api": "api",
@@ -49,15 +49,18 @@ DIR_MAPPING = {
     "development": "development",
     "operations": "operations",
     "operations/runbooks": "operations/runbooks",
-    "health_system": "health_system", # Assuming this is in PROJECT_ROOT/docs/health_system
-    "langchain": "langchain",         # Assuming this is in PROJECT_ROOT/docs/langchain
+    "health_system": "health_system",
+    "langchain": "langchain",
 }
 
 # Files to copy from DOCS_DIR to the root of PAGES_DIR
 ROOT_FILES = [
     "index.md",
-    "README.md", # Assuming this is PROJECT_ROOT/docs/README.md
+    # "README.md",  # Do not copy as README.md to avoid nav conflict
 ]
+
+DOCS_README_SRC = DOCS_DIR / "README.md"
+DOCS_README_DEST = PAGES_DIR / "docs-build-info.md"
 
 def create_directory_structure():
     """Create the necessary directory structure in the pages folder."""
@@ -77,7 +80,6 @@ def create_directory_structure():
     for dest_subdir in DIR_MAPPING.values():
         dir_path = PAGES_DIR / dest_subdir
         dir_path.mkdir(parents=True, exist_ok=True)
-        # print(f"Ensured directory exists: {dir_path}") # Optional: less verbose
 
 def copy_markdown_files():
     """Copy markdown files from original locations to the pages directory."""
@@ -101,6 +103,19 @@ def copy_markdown_files():
             print(f"Warning: Source file not found, skipping: {src_path}", file=sys.stderr)
             skipped_count += 1
 
+    # Copy docs README.md as docs-build-info.md
+    if DOCS_README_SRC.exists():
+        try:
+            shutil.copy2(DOCS_README_SRC, DOCS_README_DEST)
+            print(f"Copied {DOCS_README_SRC.relative_to(PROJECT_ROOT)} to {DOCS_README_DEST.relative_to(PROJECT_ROOT)}")
+            copied_count += 1
+        except Exception as e:
+            print(f"Error copying {DOCS_README_SRC} to {DOCS_README_DEST}: {e}", file=sys.stderr)
+            skipped_count += 1
+    else:
+        print(f"Warning: Source file not found, skipping: {DOCS_README_SRC}", file=sys.stderr)
+        skipped_count += 1
+
     # Copy files from mapped directories
     for src_rel_dir, dest_rel_dir in DIR_MAPPING.items():
         src_abs_dir = DOCS_DIR / src_rel_dir
@@ -112,22 +127,15 @@ def copy_markdown_files():
                 dest_file = dest_abs_dir / file.name
                 try:
                     shutil.copy2(file, dest_file)
-                    # print(f"  Copied {file.name} to {dest_abs_dir.relative_to(PROJECT_ROOT)}") # Optional: less verbose
                     copied_count += 1
                 except Exception as e:
                     print(f"Error copying {file} to {dest_file}: {e}", file=sys.stderr)
                     skipped_count += 1
-
-            # Handle subdirectories that aren't explicitly mapped (optional, based on original script)
-            # Note: This simple version only copies .md files from the immediate mapped directory.
-            # If you need recursive copying or handling of non-mapped subdirs, adjust here.
-
         elif not src_abs_dir.exists():
             print(f"Warning: Source directory not found, skipping: {src_abs_dir}", file=sys.stderr)
             skipped_count += 1
 
     print(f"Finished copying markdown files. Copied: {copied_count}, Skipped/Errors: {skipped_count}")
-
 
 def create_placeholder_files():
     """Create placeholder JS and CSS files if they don't exist."""
@@ -140,7 +148,7 @@ def create_placeholder_files():
         file_path = ASSETS_DIR / "js" / js_file
         if not file_path.exists():
             try:
-                file_path.parent.mkdir(parents=True, exist_ok=True) # Ensure parent dir exists
+                file_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(file_path, "w") as f:
                     f.write(f"// Placeholder for {js_file}\n")
                 print(f"Created placeholder {file_path.relative_to(PROJECT_ROOT)}")
@@ -152,7 +160,7 @@ def create_placeholder_files():
         file_path = ASSETS_DIR / "css" / css_file
         if not file_path.exists():
              try:
-                file_path.parent.mkdir(parents=True, exist_ok=True) # Ensure parent dir exists
+                file_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(file_path, "w") as f:
                     f.write(f"/* Placeholder for {css_file} */\n")
                 print(f"Created placeholder {file_path.relative_to(PROJECT_ROOT)}")
@@ -163,10 +171,9 @@ def create_placeholder_files():
     if created_count == 0:
         print("No placeholder files needed to be created.")
 
-
 def copy_assets():
-    """Copy essential assets like logo and favicon."""
-    print("\nCopying assets (logo, favicon)...")
+    """Copy essential assets like logo, favicon, and badge."""
+    print("\nCopying assets (logo, favicon, badge)...")
     copied_count = 0
     skipped_count = 0
 
@@ -190,8 +197,7 @@ def copy_assets():
     # Copy favicon
     if FAVICON_SRC_PATH.exists():
          try:
-            # Use lowercase '.png' for consistency in docs assets
-            dest_path = IMAGES_DEST_DIR / FAVICON_SRC_PATH.with_suffix('.png').name.lower()
+            dest_path = IMAGES_DEST_DIR / FAVICON_SRC_PATH.name
             shutil.copy2(FAVICON_SRC_PATH, dest_path)
             print(f"Copied favicon to {dest_path.relative_to(PROJECT_ROOT)}")
             copied_count += 1
@@ -202,24 +208,35 @@ def copy_assets():
         print(f"Warning: Source favicon file not found, skipping: {FAVICON_SRC_PATH}", file=sys.stderr)
         skipped_count += 1
 
+    # Copy badge
+    if BADGE_SRC_PATH.exists():
+         try:
+            dest_path = IMAGES_DEST_DIR / BADGE_SRC_PATH.name
+            shutil.copy2(BADGE_SRC_PATH, dest_path)
+            print(f"Copied badge to {dest_path.relative_to(PROJECT_ROOT)}")
+            copied_count += 1
+         except Exception as e:
+            print(f"Error copying badge from {BADGE_SRC_PATH}: {e}", file=sys.stderr)
+            skipped_count += 1
+    else:
+        print(f"Warning: Source badge file not found, skipping: {BADGE_SRC_PATH}", file=sys.stderr)
+        skipped_count += 1
+
     # Copy diagrams
     diagrams_dest_dir = PAGES_DIR / "architecture" / "diagrams"
     if DIAGRAMS_SRC_DIR.exists() and DIAGRAMS_SRC_DIR.is_dir():
         try:
-            # Parent directory must exist before copytree
             diagrams_dest_dir.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(DIAGRAMS_SRC_DIR, diagrams_dest_dir, dirs_exist_ok=True)
             print(f"Copied diagrams to {diagrams_dest_dir.relative_to(PROJECT_ROOT)}")
-            copied_count += 1 # Count the whole dir as one copy operation
+            copied_count += 1
         except Exception as e:
             print(f"Error copying diagrams from {DIAGRAMS_SRC_DIR}: {e}", file=sys.stderr)
             skipped_count += 1
     else:
         print(f"Warning: Source diagrams directory not found, skipping: {DIAGRAMS_SRC_DIR}", file=sys.stderr)
-        # Don't count as skipped if it's optional
 
     print(f"Finished copying assets. Copied: {copied_count}, Skipped/Errors: {skipped_count}")
-
 
 def main():
     """Main function to set up MkDocs."""
@@ -235,12 +252,10 @@ def main():
     print("MkDocs setup script complete!")
     print("-----------------------------")
     print("\nTo preview the documentation site, navigate to the project root and run:")
-    # Common practice to run from project root
-    print(f"cd \"{PROJECT_ROOT}\"") # Navigate to project root if not already there
+    print(f"cd \"{PROJECT_ROOT}\"")
     print("mkdocs serve")
     print("\nOr, to build the static site:")
     print("mkdocs build")
-
 
 if __name__ == "__main__":
     main()
