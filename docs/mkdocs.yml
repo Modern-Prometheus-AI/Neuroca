@@ -9,11 +9,12 @@ site_description: A biological-inspired cognitive architecture for large languag
 site_author: Justin Lietz - Modern Prometheus AI
 site_url: https://github.com/Modern-Prometheus-AI/Neuroca
 repo_url: https://github.com/Modern-Prometheus-AI/Neuroca
-repo_name: Modern-Prometheus-AI/Neuroca
+repo_name: Neuroca
 edit_uri: edit/main/docs/
 
 # Copyright information
-copyright: Copyright &copy; 2023 NeuroCognitive Architecture Team
+copyright: Copyright &copy; 2025 Modern Prometheus AI
+copyright_year: 2025
 
 
 docs_dir: pages
@@ -21,20 +22,21 @@ docs_dir: pages
 # Theme configuration
 theme:
   name: material
+  custom_dir: pages/overrides
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: dark-blue
+      accent: cyan
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to dark mode
     # Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: light-gray
+      accent: blue
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
@@ -133,6 +135,8 @@ plugins:
 
 # Additional JavaScript and CSS for analytics and custom styling
 extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js
+  - assets/js/mermaid-init.js
   - assets/js/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
@@ -149,11 +153,11 @@ extra:
     property: G-XXXXXXXXXX
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/neuroca/neuroca
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/neuroca
+      link: https://github.com/Modern-Prometheus-AI/Neuroca
+    # - icon: fontawesome/brands/twitter
+    #   link: https://github.com/Modern-Prometheus-AI/Neuroca
     - icon: fontawesome/brands/linkedin
-      link: https://linkedin.com/company/neuroca
+      link: https://www.linkedin.com/in/justinlietz1993/
   version:
     provider: mike
   consent:
@@ -175,6 +179,18 @@ nav:
   - Architecture:
     - Overview: architecture/components.md
     - Data Flow: architecture/data_flow.md
+    - Diagrams:
+      - System Architecture: architecture/diagrams/system-architecture.md
+      - Health System:
+        - Overview: architecture/diagrams/health-system/overview.md
+        - Components: architecture/diagrams/health-system/index.md
+      - Memory System:
+        - Overview: architecture/diagrams/memory-system/overview.md
+        - Tiers: architecture/diagrams/memory-system/tiers.md
+      - Cognitive Control:
+        - Overview: architecture/diagrams/cognitive-control/overview.md
+      - Integration:
+        - LangChain: architecture/diagrams/integration/langchain.md
     - Memory System:
       - Backend Config: architecture/memory_system_backend_configuration.md
       - Interactions: architecture/memory_system_component_interactions.md
@@ -205,4 +221,4 @@ nav:
       - Backup & Restore: operations/runbooks/backup-restore.md
       - Incident Response: operations/runbooks/incident-response.md
       - Scaling: operations/runbooks/scaling.md
-  - Project README: README.md # Link to the docs README
+  - Docs Build Info: docs-build-info.md
