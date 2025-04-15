@@ -11,8 +11,8 @@ import logging
 from typing import Any, Dict, List, Optional, Set
 
 from neuroca.config.settings import get_settings
-from neuroca.core.exceptions import (
-    MemoryNotFoundError,
+from neuroca.memory.exceptions import (
+    ItemNotFoundError as MemoryNotFoundError,
     StorageBackendError,
     StorageInitializationError,
 )

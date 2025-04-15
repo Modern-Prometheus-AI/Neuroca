@@ -40,7 +40,14 @@ from typing import Any, Optional, Union
 
 import dotenv
 import yaml
-from pydantic import AnyHttpUrl, BaseSettings, Field, PostgresDsn, SecretStr, validator
+# Handle Pydantic v1/v2 compatibility
+from pydantic import AnyHttpUrl, Field, PostgresDsn, SecretStr, validator
+try:
+    # Try Pydantic v2 imports
+    from pydantic_settings import BaseSettings
+except ImportError:
+    # Fall back to Pydantic v1
+    from pydantic import BaseSettings
 
 # Configure logging
 logger = logging.getLogger(__name__)

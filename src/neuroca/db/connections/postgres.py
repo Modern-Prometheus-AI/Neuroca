@@ -33,7 +33,15 @@ from enum import Enum
 from typing import Any, Optional, Union
 from urllib.parse import quote_plus
 
-import asyncpg
+# Configure module logger
+logger = logging.getLogger(__name__)
+
+try:
+    import asyncpg
+    ASYNCPG_AVAILABLE = True
+except ImportError:
+    ASYNCPG_AVAILABLE = False
+    logger.warning("PostgreSQL connections unavailable. Install asyncpg for PostgreSQL support.")
 
 # Third-party imports
 import psycopg2
@@ -45,9 +53,6 @@ from psycopg2.errors import InterfaceError, OperationalError
 # Project imports
 from neuroca.config.settings import get_settings
 from neuroca.core.exceptions import ConnectionError, DatabaseError, QueryError
-
-# Configure module logger
-logger = logging.getLogger(__name__)
 
 
 class PostgresConnectionMode(str, Enum):

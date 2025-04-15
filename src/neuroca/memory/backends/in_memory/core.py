@@ -18,7 +18,7 @@ from neuroca.memory.backends.in_memory.components.storage import InMemoryStorage
 from neuroca.memory.exceptions import StorageBackendError, StorageInitializationError, StorageOperationError
 from neuroca.memory.interfaces import StorageStats
 from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import SearchFilter, SearchResults
+from neuroca.memory.models.search import MemorySearchOptions as SearchFilter, MemorySearchResults as SearchResults
 
 logger = logging.getLogger(__name__)
 

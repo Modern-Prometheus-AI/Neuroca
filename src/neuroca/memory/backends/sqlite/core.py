@@ -18,14 +18,14 @@ from neuroca.memory.backends.sqlite.components.schema import SQLiteSchema
 from neuroca.memory.backends.sqlite.components.search import SQLiteSearch
 from neuroca.memory.backends.sqlite.components.stats import SQLiteStats
 from neuroca.memory.exceptions import (
-    MemoryNotFoundError,
+    ItemNotFoundError,
     StorageBackendError,
     StorageInitializationError,
     StorageOperationError,
 )
 from neuroca.memory.interfaces import StorageStats
 from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import SearchFilter, SearchResults
+from neuroca.memory.models.search import MemorySearchOptions as SearchFilter, MemorySearchResults as SearchResults
 
 logger = logging.getLogger(__name__)
 

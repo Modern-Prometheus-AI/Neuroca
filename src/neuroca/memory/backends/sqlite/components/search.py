@@ -11,7 +11,7 @@ import sqlite3
 from typing import List, Optional, Tuple
 
 from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import SearchFilter, SearchResult, SearchResults
+from neuroca.memory.models.search import MemorySearchOptions as SearchFilter, MemorySearchResult as SearchResult, MemorySearchResults as SearchResults
 
 logger = logging.getLogger(__name__)
 
