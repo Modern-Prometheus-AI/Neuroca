@@ -7,14 +7,13 @@
 site_name: NeuroCognitive Architecture (NCA)
 site_description: A biological-inspired cognitive architecture for large language models
 site_author: Justin Lietz - Modern Prometheus AI
-site_url: https://github.com/Modern-Prometheus-AI/Neuroca
+site_url: https://docs.neuroca.dev
 repo_url: https://github.com/Modern-Prometheus-AI/Neuroca
 repo_name: Neuroca
 edit_uri: edit/main/docs/
 
 # Copyright information
 copyright: Copyright &copy; 2025 Modern Prometheus AI
-copyright_year: 2025
 
 
 docs_dir: pages
