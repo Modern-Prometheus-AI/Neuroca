@@ -7,7 +7,7 @@ focusing on cross-tier operations and proper integration of components.
 
 import pytest
 import time
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Generator
 
 from neuroca.memory.interfaces.memory_tier import MemoryTierInterface
 from neuroca.memory.models.memory_item import MemoryItem, MemoryMetadata
@@ -20,17 +20,17 @@ from neuroca.memory.manager.core import MemoryManager
 
 
 @pytest.fixture
-def memory_tiers() -> Dict[str, MemoryTierInterface]:
+def memory_tiers() -> Generator[Dict[str, MemoryTierInterface], None, None]: # Or Iterator[...]
     """Setup memory tiers with in-memory backends for testing."""
     # Initialize tiers with in-memory backends for testing
     stm = ShortTermMemoryTier(
-        backend=StorageBackendFactory.create_backend(BackendType.MEMORY)
+        backend=StorageBackendFactory.create_storage(backend_type=BackendType.MEMORY)
     )
     mtm = MediumTermMemoryTier(
-        backend=StorageBackendFactory.create_backend(BackendType.MEMORY)
+        backend=StorageBackendFactory.create_storage(backend_type=BackendType.MEMORY)
     )
     ltm = LongTermMemoryTier(
-        backend=StorageBackendFactory.create_backend(BackendType.MEMORY)
+        backend=StorageBackendFactory.create_storage(backend_type=BackendType.MEMORY)
     )
     
     # Initialize tiers
@@ -51,7 +51,7 @@ def memory_tiers() -> Dict[str, MemoryTierInterface]:
 
 
 @pytest.fixture
-def memory_manager(memory_tiers) -> MemoryManager:
+def memory_manager(memory_tiers) -> Generator[MemoryManager, None, None]: # Or Iterator[...]
     """Setup memory manager with test tiers."""
     manager = MemoryManager(
         stm=memory_tiers["stm"],
@@ -266,7 +266,7 @@ class TestBackendIntegration:
         
         # Create backend
         try:
-            backend = StorageBackendFactory.create_backend(backend_type)
+            backend = StorageBackendFactory.create_storage(backend_type=backend_type)
         except Exception as e:
             pytest.skip(f"Backend {backend_type} not available: {str(e)}")
         

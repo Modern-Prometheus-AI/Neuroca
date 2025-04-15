@@ -106,6 +106,12 @@ class MockStorageBackendFactory(StorageBackendFactory):
     def reset(cls):
         """Reset the factory's instance cache."""
         cls._instances = {}
+        
+    @classmethod
+    def create_backend(cls, backend_type, config=None, use_existing=True, instance_name=None):
+        """Legacy method that forwards to create_storage for compatibility."""
+        return cls.create_storage(backend_type=backend_type, config=config, 
+                                  use_existing=use_existing, instance_name=instance_name)
 
 
 @pytest.fixture
@@ -192,14 +198,14 @@ class TestBackendConfiguration:
         # Check that different backend types return different instances
         assert backend1 is not backend3
     
-    def test_backend_initialization_with_config(self, test_config_files, monkeypatch):
+    def test_backend_initialization_with_config(self, test_config_files, mock_factory, monkeypatch):
         """Test that backends can be manually initialized with config."""
         # Set the config loader to use our test files
         loader = ConfigurationLoader(test_config_files)
         in_memory_config = loader.load_config("in_memory")
         
-        # Create a backend directly
-        backend = InMemoryBackend(config=in_memory_config)
+        # Create a backend using the factory with explicit config
+        backend = mock_factory.create_storage(backend_type=BackendType.MEMORY, config=in_memory_config)
         
         # Verify configuration was applied
         assert backend.config["cache"]["enabled"] is True

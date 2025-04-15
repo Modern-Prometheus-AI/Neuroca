@@ -36,6 +36,7 @@ async def sqlite_backend():
         pass
 
 
+@pytest.mark.asyncio
 async def test_store_and_retrieve(sqlite_backend):
     """Test storing and retrieving a memory item."""
     # Create test memory
@@ -62,6 +63,7 @@ async def test_store_and_retrieve(sqlite_backend):
     assert "memory" in retrieved.metadata.get("tags", [])
 
 
+@pytest.mark.asyncio
 async def test_update(sqlite_backend):
     """Test updating a memory item."""
     # Create and store test memory
@@ -92,6 +94,7 @@ async def test_update(sqlite_backend):
     assert "updated" in retrieved.metadata.get("tags", [])
 
 
+@pytest.mark.asyncio
 async def test_delete(sqlite_backend):
     """Test deleting a memory item."""
     # Create and store test memory
@@ -116,6 +119,7 @@ async def test_delete(sqlite_backend):
     assert retrieved is None
 
 
+@pytest.mark.asyncio
 async def test_search(sqlite_backend):
     """Test searching for memory items."""
     # Create and store test memories
@@ -157,6 +161,7 @@ async def test_search(sqlite_backend):
     assert results.results[0].memory.content == "Apple is a fruit"
 
 
+@pytest.mark.asyncio
 async def test_batch_operations(sqlite_backend):
     """Test batch store and delete operations."""
     # Create test memories
@@ -192,6 +197,7 @@ async def test_batch_operations(sqlite_backend):
         assert retrieved is not None
 
 
+@pytest.mark.asyncio
 async def test_count(sqlite_backend):
     """Test counting memory items."""
     # Create and store test memories
@@ -226,6 +232,7 @@ async def test_count(sqlite_backend):
     assert count == 2
 
 
+@pytest.mark.asyncio
 async def test_get_stats(sqlite_backend):
     """Test getting storage statistics."""
     # Create and store test memories

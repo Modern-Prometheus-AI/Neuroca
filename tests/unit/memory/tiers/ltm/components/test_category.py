@@ -54,7 +54,7 @@ class TestLTMCategory:
             ),
             metadata=MemoryMetadata(
                 importance=0.7,
-                tags={"test": True}
+                tags=["test"]
             )
         )
     
@@ -71,7 +71,7 @@ class TestLTMCategory:
             },
             "metadata": {
                 "importance": 0.7,
-                "tags": {"test": True},
+                "tags": ["test"],
                 "status": MemoryStatus.ACTIVE.value
             }
         }
@@ -178,7 +178,7 @@ class TestLTMCategory:
         # Verify update_func was called with updated metadata
         expected_metadata = {
             "importance": 0.7,
-            "tags": {"test": True},
+            "tags": ["test"],
             "status": MemoryStatus.ACTIVE.value,
             "categories": ["new-category"]
         }
