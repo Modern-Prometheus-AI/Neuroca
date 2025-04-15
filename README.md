@@ -1,4 +1,4 @@
-<div style="text-align: center;">  <img src="src/neuroca/assets/images/Neuroca-logo.png" alt="Neuroca Logo" width="200"/>
+<div style="text-align: center;">  <img src="src/neuroca/assets/images/Neuroca-logo.png" alt="Neuroca Logo" width="200"/></div>
   <br/><br/>
 
   <h1>NeuroCognitive Architecture (NCA) for LLMs</h1>
@@ -13,8 +13,6 @@
     NeuroCognitive Architecture (NCA) is an advanced framework that enhances Large Language Models (LLMs) with biologically-inspired cognitive capabilities. By implementing a three-tiered memory system, health dynamics, and neurological processes, NCA enables LLMs to exhibit more human-like reasoning, contextual understanding, and adaptive behavior.
   </p>
 
-</div> 
- 
 
 ## Key Features
 
