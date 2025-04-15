@@ -32,7 +32,7 @@
 - **Dynamically Managed Backends**: The system automatically selects and manages the optimal storage backend (e.g., high-speed In-Memory for STM, persistent SQLite/Vector DBs for MTM/LTM) for each memory tier based on configuration. This happens transparently, ensuring the best balance of speed, persistence, and scalability for different types of memory without manual intervention. The architecture is designed for easy extension with new backend types.
 - **Advanced Search Capabilities**: Goes beyond simple vector similarity to allow filtering and searching based on metadata, time, importance, and tags across different memory tiers.
 - **Thread-Safe Design**: Engineered for robust performance in asynchronous applications with thread-local connection management for database backends.
-- **Organic Learning & Context**: Facilitates true learning and adaptation by allowing the LLM's effective context to grow organically and potentially indefinitely. Unlike RAG's manual retrieval, NCA's automatic background processes (consolidation, decay, relevance-based retrieval) provide context seamlessly, enabling the LLM to evolve its understanding over time based on its "experiences" without explicit tool intervention.
+- **Organic Learning & Context**: Facilitates true learning and adaptation by allowing the LLM's effective context to grow organically and potentially indefinitely. Unlike RAG's manual retrieval, NCA's automatic background processes provide context seamlessly. This enables the LLM to evolve its understanding over time based on its "experiences"—remembering not just facts, but also past interactions, mistakes made, recent documentation changes, version updates, and other crucial context—without explicit tool intervention.
 
 ## NCA vs. Standard RAG: A Deeper Dive
 
@@ -48,6 +48,18 @@ While standard Retrieval-Augmented Generation (RAG) enhances LLMs by fetching ex
 | **Integration**     | Often requires separate tool calls for retrieval. | Memory management (incl. backend selection) is integrated; context provided seamlessly. | LLM interacts more naturally with NCA, as memory (across dynamically managed backends) feels intrinsic. |
 
 In essence, where standard RAG bolts on an external database, NCA integrates a dynamic, self-maintaining cognitive memory system, enabling LLMs to develop a more persistent, adaptive, and nuanced understanding of context over time.
+
+## Example Use Cases
+
+NCA's advanced memory capabilities unlock potential for applications beyond the scope of simpler RAG systems:
+
+- **Truly Stateful Conversational Agents**: Build chatbots and virtual assistants that maintain coherent, long-term memory of user preferences, past interactions, and evolving goals across multiple sessions.
+- **Personalized Adaptive Learning**: Create educational tools that track a student's knowledge progression, remembering areas of difficulty and tailoring content accordingly.
+- **Complex Task Automation & Planning**: Develop agents that can perform multi-step tasks, remembering previous actions, outcomes, and environmental state changes to inform future decisions.
+- **Creative Writing Assistants**: Aid writers by maintaining consistent character details, plot points, and world-building elements across long narratives.
+- **Cognitive Science Research**: Provide a platform for simulating and experimenting with different memory models and cognitive architectures.
+
+*(For a visual overview of the system's structure, see the [Component Diagram](docs/architecture/diagrams/component.png)).*
 
 - **Health Dynamics (Planned)**:
   - Energy management and resource allocation
@@ -66,24 +78,25 @@ In essence, where standard RAG bolts on an external database, NCA integrates a d
 
 ## Architecture
 
-The NCA system is structured around modular components that work together to create a cohesive cognitive framework:
+The NCA system is structured around modular components. The main source code resides in `src/neuroca`:
 
 ```
-neuroca/
+src/neuroca/
 ├── api/                  # API layer and endpoints
+├── assets/               # Static assets (images, templates)
 ├── cli/                  # Command-line interface tools
 ├── config/               # Configuration files and settings
 ├── core/                 # Core domain logic and models
-├── db/                   # Database migrations and schemas
-├── docs/                 # Documentation
-├── infrastructure/       # Infrastructure as code
-├── integration/          # LLM integration components
-├── memory/               # Memory tier implementations
-├── monitoring/           # Monitoring and observability
-├── scripts/              # Utility scripts
-├── tests/                # Test suite
-├── tools/                # Development and operational tools
+├── db/                   # Database interaction layer (schemas, migrations if any)
+├── infrastructure/       # Infrastructure setup (e.g., Docker config specific to app)
+├── integration/          # LLM and external service integration components
+├── memory/               # Memory tier implementations (STM, MTM, LTM, backends)
+├── monitoring/           # Monitoring and observability hooks/integrations
+├── scripts/              # Standalone utility scripts related to neuroca
+├── tools/                # Internal development/operational tools
+├── utils/                # Shared utility functions
 ```
+*Note: Top-level directories like `docs/`, `tests/`, `scripts/` (project-level), etc., exist at the project root (`Neuroca/`).*
 
 ## Installation
 
