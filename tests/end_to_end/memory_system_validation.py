@@ -850,4 +850,290 @@ class MemorySystemValidator:
         ]
         
         # Calculate average importance of consolidated memories
-        avg_importance
+        avg_importance = sum(importance_values) / len(importance_values) if importance_values else 0
+        
+        # Check if high importance memories were prioritized in consolidation
+        # (average importance should be higher than 0.5)
+        prioritization_threshold = 0.5
+        prioritization_observed = avg_importance > prioritization_threshold
+        
+        # Check consolidation metrics
+        consolidated_count = consolidated_counts["mtm"] - initial_counts["mtm"]
+        total_high_importance = len(high_importance)
+        
+        # There should be more high importance than low importance memories
+        high_importance_count = sum(1 for val in importance_values if val >= 0.7)
+        low_importance_count = sum(1 for val in importance_values if val <= 0.3)
+        proper_ratio = high_importance_count > low_importance_count
+        
+        passed = prioritization_observed and proper_ratio
+        details = (
+            f"Prioritization observed: {prioritization_observed}, "
+            f"High vs low importance ratio: {high_importance_count}:{low_importance_count}, "
+            f"Average importance: {avg_importance:.2f}"
+        )
+        
+        return ValidationResult(
+            requirement_id="REQ-9",
+            requirement_description=REQUIREMENTS["REQ-9"],
+            passed=passed,
+            details=details,
+            metrics={
+                "initial_counts": initial_counts,
+                "consolidated_counts": consolidated_counts,
+                "average_importance": avg_importance,
+                "high_importance_count": high_importance_count,
+                "low_importance_count": low_importance_count,
+                "importance_values": importance_values
+            }
+        )
+
+    def validate_memory_usage(self) -> ValidationResult:
+        """
+        Validate that the system maintains reasonable memory usage.
+        
+        Returns:
+            ValidationResult with test details
+        """
+        logger.info("Validating memory usage (REQ-10)")
+        
+        if not self.memory_usage_samples:
+            # If no samples, run scaling test to gather some
+            self.validate_scaling()
+        
+        if not self.memory_usage_samples:
+            logger.warning("No memory usage samples available")
+            return ValidationResult(
+                requirement_id="REQ-10",
+                requirement_description=REQUIREMENTS["REQ-10"],
+                passed=False,
+                details="No memory usage samples available",
+                metrics={}
+            )
+        
+        # Analyze memory usage samples
+        rss_values = [sample["rss"] for sample in self.memory_usage_samples]
+        
+        # Calculate statistics
+        max_rss = max(rss_values)
+        min_rss = min(rss_values)
+        avg_rss = sum(rss_values) / len(rss_values)
+        
+        # Check if peak memory usage is reasonable
+        # For this test, assuming <1GB is reasonable (adjust as needed)
+        peak_threshold_mb = 1024  # 1GB
+        passed = max_rss < peak_threshold_mb
+        
+        # Check if there are any memory leaks (crude check if memory
+        # keeps increasing significantly across samples)
+        potential_leak = False
+        if len(rss_values) >= 3:
+            # Check if memory steadily increases (at least 20% per sample)
+            increases = 0
+            for i in range(1, len(rss_values)):
+                if rss_values[i] > rss_values[i-1] * 1.2:
+                    increases += 1
+            
+            potential_leak = increases >= len(rss_values) // 2
+        
+        if potential_leak:
+            details = (
+                f"Peak memory usage: {max_rss:.1f}MB, "
+                f"Potential memory leak detected (memory steadily increasing)"
+            )
+            passed = False
+        else:
+            details = (
+                f"Peak memory usage: {max_rss:.1f}MB, "
+                f"Min: {min_rss:.1f}MB, Avg: {avg_rss:.1f}MB"
+            )
+        
+        return ValidationResult(
+            requirement_id="REQ-10",
+            requirement_description=REQUIREMENTS["REQ-10"],
+            passed=passed,
+            details=details,
+            metrics={
+                "max_rss_mb": max_rss,
+                "min_rss_mb": min_rss,
+                "avg_rss_mb": avg_rss,
+                "potential_leak": potential_leak,
+                "sample_count": len(self.memory_usage_samples)
+            }
+        )
+
+    def run_all_validations(self) -> List[ValidationResult]:
+        """Run all validation tests and return the results."""
+        logger.info("Running all memory system validations")
+        
+        # Set up system
+        self.setup()
+        
+        # Run validations
+        try:
+            results = []
+            
+            # Core structure validations
+            results.append(self.validate_tier_structure())
+            results.append(self.validate_backend_configuration())
+            
+            # Basic functionality validations
+            results.append(self.validate_consolidation())
+            results.append(self.validate_vector_search())
+            
+            # Advanced functionality validations
+            results.append(self.validate_prioritization())
+            results.append(self.validate_memory_decay())
+            results.append(self.validate_context_sensitivity())
+            results.append(self.validate_consolidation_priority())
+            
+            # Performance validations
+            results.append(self.validate_scaling())
+            results.append(self.validate_memory_usage())
+            
+            self.results = results
+            
+            return results
+        
+        finally:
+            # Clean up
+            self.teardown()
+
+    def generate_report(self) -> str:
+        """Generate a report of the validation results."""
+        if not self.results:
+            return "No validation results available. Run validations first."
+        
+        report = []
+        report.append("# Memory System Validation Report")
+        report.append(f"Date: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        report.append(f"Backend: {self.backend_type.name}")
+        report.append("\n## Summary")
+        
+        # Calculate pass rate
+        passed = sum(1 for result in self.results if result.passed)
+        total = len(self.results)
+        pass_rate = 100 * passed / total if total > 0 else 0
+        
+        report.append(f"Pass rate: {pass_rate:.1f}% ({passed}/{total} requirements passed)")
+        
+        # Overall status
+        if pass_rate == 100:
+            report.append("\n**OVERALL STATUS: PASS ✅**")
+        elif pass_rate >= 80:
+            report.append("\n**OVERALL STATUS: PARTIAL PASS ⚠️**")
+        else:
+            report.append("\n**OVERALL STATUS: FAIL ❌**")
+        
+        # Results table
+        report.append("\n## Requirement Results")
+        report.append("| Requirement | Result | Details |")
+        report.append("|------------|--------|---------|")
+        
+        for result in self.results:
+            status = "✅ PASS" if result.passed else "❌ FAIL"
+            report.append(f"| **{result.requirement_id}**: {result.requirement_description} | {status} | {result.details} |")
+        
+        # Detailed results
+        report.append("\n## Detailed Results")
+        
+        for result in self.results:
+            report.append(f"\n### {result.requirement_id}: {result.requirement_description}")
+            report.append(f"**Result:** {'PASS' if result.passed else 'FAIL'}")
+            report.append(f"**Details:** {result.details}")
+            
+            if result.metrics:
+                report.append("\n**Metrics:**")
+                for key, value in result.metrics.items():
+                    # Skip large arrays
+                    if isinstance(value, list) and len(value) > 5:
+                        report.append(f"- {key}: [{value[:3]}... and {len(value)-3} more]")
+                    elif isinstance(value, dict) and len(value) > 5:
+                        report.append(f"- {key}: {{{list(value.keys())[:3]}... and {len(value)-3} more}}")
+                    else:
+                        report.append(f"- {key}: {value}")
+        
+        # Generate and save plots if any
+        if len(self.memory_usage_samples) > 1:
+            self._generate_memory_usage_plot()
+            report.append("\n## Memory Usage")
+            report.append("![Memory Usage](memory_usage.png)")
+        
+        return "\n".join(report)
+
+    def _generate_memory_usage_plot(self):
+        """Generate memory usage plot."""
+        if not self.memory_usage_samples:
+            return
+        
+        plt.figure(figsize=(10, 6))
+        
+        # Prepare data
+        timestamps = [(sample["timestamp"] - self.memory_usage_samples[0]["timestamp"]) / 60 
+                    for sample in self.memory_usage_samples]  # Convert to minutes
+        rss_values = [sample["rss"] for sample in self.memory_usage_samples]
+        
+        plt.plot(timestamps, rss_values, marker='o', linestyle='-', linewidth=2, markersize=8)
+        plt.xlabel("Time (minutes)")
+        plt.ylabel("Memory Usage (MB)")
+        plt.title("Memory Usage During Validation")
+        plt.grid(True)
+        plt.tight_layout()
+        
+        plot_path = Path(OUTPUT_DIR) / "memory_usage.png"
+        plt.savefig(plot_path)
+        plt.close()
+
+    def save_report(self, filename: str = "validation_report.md") -> str:
+        """
+        Generate and save a validation report.
+        
+        Args:
+            filename: Output filename
+            
+        Returns:
+            Path to the saved report
+        """
+        report = self.generate_report()
+        
+        output_path = Path(OUTPUT_DIR) / filename
+        with open(output_path, 'w') as f:
+            f.write(report)
+        
+        logger.info(f"Validation report saved to {output_path}")
+        return str(output_path)
+
+
+    def main():
+        """Run validation and save report."""
+        parser = argparse.ArgumentParser(description="Validate memory system against requirements")
+        parser.add_argument(
+            "--backend",
+            choices=[b.name for b in BackendType],
+            default=BackendType.MEMORY.name,
+            help="Backend type to test with"
+        )
+        parser.add_argument(
+            "--output",
+            default="validation_report.md",
+            help="Output report filename"
+        )
+        
+        args = parser.parse_args()
+        
+        # Get backend type
+        backend_type = BackendType[args.backend]
+        
+        # Run validation
+        validator = MemorySystemValidator(backend_type=backend_type)
+        validator.run_all_validations()
+        
+        # Save report
+        report_path = validator.save_report(args.output)
+        
+        print(f"Validation complete. Report saved to {report_path}")
+
+
+    if __name__ == "__main__":
+        import argparse
+        main()
