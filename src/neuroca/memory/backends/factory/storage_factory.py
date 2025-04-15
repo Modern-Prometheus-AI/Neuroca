@@ -43,7 +43,7 @@ class StorageBackendFactory:
         BackendType.MEMORY: InMemoryBackend,
         BackendType.SQL: SQLBackend,
         BackendType.SQLITE: SQLiteBackend,
-        BackendType.VECTOR: VectorBackend
+        # BackendType.VECTOR: VectorBackend # Temporarily commented out - Incomplete implementation
     }
     
     # Add Redis backend only if it's available

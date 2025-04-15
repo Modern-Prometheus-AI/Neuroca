@@ -20,6 +20,8 @@ from neuroca.memory.exceptions import (
 )
 from neuroca.memory.interfaces.memory_tier import MemoryTierInterface
 from neuroca.memory.models.memory_item import MemoryItem
+# Import SearchResults and MemorySearchOptions
+from neuroca.memory.models.search import MemorySearchOptions, MemorySearchResults
 
 from neuroca.memory.tiers.base.helpers import MemoryIdGenerator, MemoryItemCreator
 from neuroca.memory.tiers.base.search import TierSearcher
@@ -166,7 +168,7 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
     
     async def store(
         self, 
-        content: Dict[str, Any],
+        content: Union[Dict[str, Any], MemoryItem],
         metadata: Optional[Dict[str, Any]] = None,
         memory_id: Optional[str] = None,
     ) -> str:
@@ -174,8 +176,8 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
         Store a memory in this tier.
         
         Args:
-            content: Memory content to store
-            metadata: Optional metadata for the memory
+            content: Memory content to store or MemoryItem object
+            metadata: Optional metadata for the memory (only used if content is a Dict)
             memory_id: Optional explicit ID (if not provided, one will be generated)
             
         Returns:
@@ -188,12 +190,17 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
         TierStatsManager.update_operation_stats(self._stats, "store_count")
         
         try:
-            # Generate memory ID if not provided
-            if memory_id is None:
-                memory_id = self._id_generator.generate(content)
-            
-            # Create memory item
-            memory_item = self._item_creator.create(memory_id, content, metadata)
+            # Handle case where content is actually a MemoryItem
+            if isinstance(content, MemoryItem):
+                memory_item = content
+                memory_id = memory_item.id
+            else:
+                # Generate memory ID if not provided
+                if memory_id is None:
+                    memory_id = self._id_generator.generate(content)
+                
+                # Create memory item from content and metadata
+                memory_item = self._item_creator.create(memory_id, content, metadata)
             
             # Apply tier-specific behavior before storage
             await self._pre_store(memory_item)
@@ -218,7 +225,83 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
                 message=f"Failed to store memory: {str(e)}"
             ) from e
     
-    async def retrieve(self, memory_id: str) -> Optional[Dict[str, Any]]:
+    async def batch_store(
+        self,
+        memories: List[Union[Dict[str, Any], MemoryItem]],
+        memory_ids: Optional[List[str]] = None,
+    ) -> List[str]:
+        """
+        Store multiple memories in this tier.
+        
+        Args:
+            memories: List of memory contents or MemoryItem objects to store
+            memory_ids: Optional explicit IDs (if not provided, they will be generated)
+            
+        Returns:
+            List of memory IDs in the same order as the input memories
+            
+        Raises:
+            TierOperationError: If the store operation fails
+        """
+        self._ensure_initialized()
+        TierStatsManager.update_operation_stats(self._stats, "batch_store_count")
+        
+        # Generate memory IDs if not provided
+        if memory_ids is None:
+            memory_ids = [None] * len(memories)
+        elif len(memory_ids) != len(memories):
+            raise ValueError("Number of memory_ids must match number of memories")
+        
+        # Store each memory and collect IDs
+        result_ids = []
+        try:
+            for i, memory in enumerate(memories):
+                memory_id = await self._backend.exists(memory_ids[i]) if memory_ids[i] else False
+                
+                # If memory already exists with this ID, skip
+                if memory_id:
+                    result_ids.append(memory_ids[i])
+                    continue
+                
+                # Create memory item if not a MemoryItem already
+                if not isinstance(memory, MemoryItem):
+                    # Generate memory ID if not provided
+                    if memory_ids[i] is None:
+                        memory_ids[i] = self._id_generator.generate(memory)
+                    
+                    # Create memory item
+                    memory_item = self._item_creator.create(memory_ids[i], memory)
+                else:
+                    memory_item = memory
+                    if memory_ids[i]:
+                        memory_item.id = memory_ids[i]
+                
+                # Apply tier-specific behavior before storage
+                await self._pre_store(memory_item)
+                
+                # Store in backend
+                data = memory_item.model_dump()
+                await self._backend.create(memory_item.id, data)
+                
+                # Apply tier-specific behavior after storage
+                await self._post_store(memory_item)
+                
+                # Update stats
+                self._stats["items_count"] += 1
+                
+                # Add ID to result list
+                result_ids.append(memory_item.id)
+            
+            return result_ids
+        except Exception as e:
+            logger.exception(f"Failed to batch store memories in {self._tier_name} tier")
+            raise TierOperationError(
+                operation="batch_store",
+                tier_name=self._tier_name,
+                message=f"Failed to batch store memories: {str(e)}"
+            ) from e
+    
+    async def retrieve(self, memory_id: str) -> Optional[MemoryItem]: # Changed return type hint
         """
         Retrieve a memory by its ID.
         
@@ -226,7 +309,7 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
             memory_id: The ID of the memory to retrieve
             
         Returns:
-            The memory data if found, None otherwise
+            The MemoryItem object if found, None otherwise # Changed docstring
             
         Raises:
             TierOperationError: If the retrieve operation fails
@@ -244,7 +327,8 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
             memory_item = MemoryItem.model_validate(data)
             await self._on_retrieve(memory_item)
             
-            return data
+            # Return the MemoryItem object, not the raw dict
+            return memory_item 
         except Exception as e:
             logger.exception(f"Failed to retrieve memory {memory_id} from {self._tier_name} tier")
             raise TierOperationError(
@@ -388,11 +472,11 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
     async def search(
         self,
         query: Optional[str] = None,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[Dict[str, Any]] = None, # Keep filters as dict for now
         embedding: Optional[List[float]] = None,
         limit: int = 10,
         offset: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> MemorySearchResults: # Changed return type hint
         """
         Search for memories in this tier.
         
@@ -404,7 +488,7 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
             offset: Number of results to skip
             
         Returns:
-            List of memories matching the search criteria
+            SearchResults object containing MemoryItems and metadata # Changed docstring
             
         Raises:
             TierOperationError: If the search operation fails
@@ -424,10 +508,25 @@ class BaseMemoryTier(MemoryTierInterface, abc.ABC):
                 self._backend, backend_query, combined_filters, limit, offset
             )
             
-            # Apply tier-specific post-processing
-            processed_results = await self._searcher.post_search(results)
+            # Apply tier-specific post-processing (assuming it returns list of dicts)
+            processed_results_dicts = await self._searcher.post_search(results)
+
+            # Convert dicts to MemoryItem objects
+            memory_items = [MemoryItem.model_validate(item_dict) for item_dict in processed_results_dicts]
+
+            # Construct and return SearchResults object
+            # Note: total_count might be inaccurate if backend applied limit/offset
+            total_count = len(memory_items) # Placeholder, ideally get from backend if possible
             
-            return processed_results
+            # Reconstruct MemorySearchOptions if needed, or pass None/defaults
+            search_options = MemorySearchOptions(query=query, filters=filters, limit=limit, offset=offset)
+
+            return MemorySearchResults(
+                items=memory_items,
+                total_count=total_count,
+                options=search_options,
+                query=query # Keep original query string
+            )
         except Exception as e:
             logger.exception(f"Failed to search memories in {self._tier_name} tier")
             raise TierOperationError(

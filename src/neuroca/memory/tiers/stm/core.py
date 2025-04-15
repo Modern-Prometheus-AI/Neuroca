@@ -145,6 +145,15 @@ class ShortTermMemoryTier(BaseMemoryTier):
         Args:
             memory_item: The memory item to be stored
         """
+        # Preserve the original content text if present
+        if hasattr(memory_item, 'content') and hasattr(memory_item.content, 'text') and memory_item.content.text:
+            # Make sure the text field is saved in the dictionary representation
+            if not hasattr(memory_item.metadata, 'tags'):
+                memory_item.metadata.tags = {}
+                
+            # Store the original text in a special tag to ensure it's preserved
+            memory_item.metadata.tags['content_text'] = memory_item.content.text
+        
         # Delegate to operations component
         self._operations.process_pre_store(memory_item)
         
@@ -181,6 +190,22 @@ class ShortTermMemoryTier(BaseMemoryTier):
         Args:
             memory_item: The retrieved memory item
         """
+        # Restore content text from tags if it was preserved
+        if hasattr(memory_item, 'metadata') and hasattr(memory_item.metadata, 'tags'):
+            content_text = memory_item.metadata.tags.get('content_text')
+            
+            # If we have stored text in tags but content field is empty, restore it
+            if content_text and hasattr(memory_item, 'content'):
+                if not memory_item.content or not memory_item.content.text:
+                    # Ensure content object exists and has text attribute
+                    if memory_item.content is None:
+                        # Import necessary model to create content
+                        from neuroca.memory.models.memory_item import MemoryContent
+                        memory_item.content = MemoryContent(text=content_text)
+                    else:
+                        # Just set the text field
+                        memory_item.content.text = content_text
+        
         # Delegate to operations component
         self._operations.process_on_retrieve(memory_item)
         
@@ -392,3 +417,18 @@ class ShortTermMemoryTier(BaseMemoryTier):
             Count of expired memories
         """
         return await self._cleanup.get_expired_count()
+        
+    async def retrieve_all(self) -> List[Dict[str, Any]]:
+        """
+        Retrieve all memories from this tier.
+        
+        Returns:
+            List of memory items as dictionaries
+            
+        Raises:
+            TierOperationError: If the operation fails
+        """
+        self._ensure_initialized()
+        
+        # Query backend with empty filter to get all items
+        return await self._backend.query({})
