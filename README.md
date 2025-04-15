@@ -29,7 +29,6 @@
 - [NCA vs. Standard RAG: A Deeper Dive](#nca-vs-standard-rag-a-deeper-dive)
 - [Example Use Cases](#example-use-cases)
 - [Architecture](#architecture)
-  - [Source Directory READMEs](#source-directory-readmes)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
