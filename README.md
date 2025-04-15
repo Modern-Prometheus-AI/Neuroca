@@ -304,4 +304,4 @@ For questions, feedback, or collaboration opportunities, please open an issue on
 
 ---
 
-**Note**: NeuroCognitive Architecture is a research project and is continuously evolving. Features and interfaces may change as the project develops.
+**Note**: NeuroCognitive Architecture is currently in **ALPHA**. Features and interfaces may change significantly as the project develops. We warmly welcome **ANY and ALL feedback, bug reports, and feature requests** via GitHub Issues. Your input is invaluable as we work towards integrating NCA into the [Apex-CodeGenesis VSCode Extension](https://github.com/justinlietz93/Apex-CodeGenesis).
