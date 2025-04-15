@@ -10,7 +10,30 @@
   &nbsp; <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12%2B-blue" alt="Python Version: 3.9+"/></a>
 </p>
 
-<br/> 
+<br/>
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [NCA vs. Standard RAG: A Deeper Dive](#nca-vs-standard-rag-a-deeper-dive)
+- [Example Use Cases](#example-use-cases)
+- [Architecture](#architecture)
+  - [Source Directory READMEs](#source-directory-readmes)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Development](#development)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Roadmap](#roadmap)
+- [Future Directions & Integrations](#future-directions--integrations)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Author](#author)
+- [Contact](#contact)
+
+---
 
 <h2 align="center">Overview</h2>
 
@@ -97,6 +120,19 @@ src/neuroca/
 ├── utils/                # Shared utility functions
 ```
 *Note: Top-level directories like `docs/`, `tests/`, `scripts/` (project-level), etc., exist at the project root (`Neuroca/`).*
+
+### Source Directory READMEs
+
+For more detailed information on specific source code directories, see their respective README files:
+
+- [`src/neuroca/api/README.md`](src/neuroca/api/README.md)
+- [`src/neuroca/assets/README.md`](src/neuroca/assets/README.md)
+- [`src/neuroca/config/README.md`](src/neuroca/config/README.md)
+- [`src/neuroca/core/README.md`](src/neuroca/core/README.md)
+- [`src/neuroca/integration/README.md`](src/neuroca/integration/README.md)
+- [`src/neuroca/memory/README.md`](src/neuroca/memory/README.md)
+- [`tests/README.md`](tests/README.md)
+- [`scripts/README.md`](scripts/README.md)
 
 ## Installation
 
@@ -317,4 +353,4 @@ For questions, feedback, or collaboration opportunities, please open an issue on
 
 ---
 
-**Note**: NeuroCognitive Architecture is currently in **ALPHA**. Features and interfaces may change significantly as the project develops. We warmly welcome **ANY and ALL feedback, bug reports, and feature requests** via GitHub Issues. Your input is invaluable as we work towards integrating NCA into the [Apex-CodeGenesis VSCode Extension](https://github.com/justinlietz93/Apex-CodeGenesis).
+**Note**: NeuroCognitive Architecture is currently in **ALPHA**. Features and interfaces may change significantly as the project develops. We warmly welcome **ANY and ALL feedback, bug reports, and feature requests** via GitHub Issues. Your input is invaluable as we work towards integrating NCA into the [Apex-CodeGenesis VSCode Extension](https://github.com/justinlietz93/Apex-CodeGenesis) and replacing the existing Agno memory system within the [Cogito platform](https://github.com/justinlietz93/Cogito).
