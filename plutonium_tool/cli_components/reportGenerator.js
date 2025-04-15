@@ -556,6 +556,21 @@ function generateUnifiedHtmlReport(data, plutoniumIconBase64 = '') {
         <div class="tab-content" id="tab-detailed-coverage">
              <div class="card">
                  <h2>Detailed Coverage Report</h2>
+                 <div class="coverage-guide-card">
+                    <h3>📊 How to Read Coverage Reports</h3>
+                    <p>Coverage reports show which parts of your code are executed during tests:</p>
+                    <ul>
+                        <li><strong style="color: var(--success-color);">Green lines</strong>: Code that was executed by tests</li>
+                        <li><strong style="color: var(--error-color);">Red lines</strong>: Code that was never executed during tests</li>
+                        <li><strong style="color: var(--warning-color);">Yellow lines</strong> (if any): Branch coverage - a conditional that was only partially tested</li>
+                    </ul>
+                    <p>Higher percentages mean more code is being tested. When viewing the detailed report:</p>
+                    <ol>
+                        <li>Click on module/file names to drill down into specific code files</li>
+                        <li>Look for red sections to identify untested code</li>
+                        <li>Focus on testing critical functions with low coverage</li>
+                    </ol>
+                 </div>
                  <p>The full HTML coverage report provides line-by-line details. It may take a moment to load below.</p>
                  <p><a href="coverage/html/index.html" target="_blank">Open full HTML coverage report in new tab</a></p>
                  <div class="coverage-iframe-container">

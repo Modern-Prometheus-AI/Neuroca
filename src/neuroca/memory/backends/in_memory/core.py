@@ -89,6 +89,43 @@ class InMemoryBackend(BaseStorageBackend):
         # Convert StorageStats to a dictionary
         return stats_obj.model_dump() if hasattr(stats_obj, "model_dump") else {"items_count": self.storage.count()}
     
+    # Additional required abstract methods
+    async def _create_item(self, item_id: str, data: Dict[str, Any]) -> bool:
+        """Create a new item in storage."""
+        return await self.crud.create_item(item_id, data)
+    
+    async def _read_item(self, item_id: str) -> Optional[Dict[str, Any]]:
+        """Read an item from storage."""
+        return await self.crud.read_item(item_id)
+    
+    async def _update_item(self, item_id: str, data: Dict[str, Any]) -> bool:
+        """Update an item in storage."""
+        return await self.crud.update_item(item_id, data)
+    
+    async def _delete_item(self, item_id: str) -> bool:
+        """Delete an item from storage."""
+        return await self.crud.delete_item(item_id)
+    
+    async def _item_exists(self, item_id: str) -> bool:
+        """Check if an item exists in storage."""
+        return await self.crud.item_exists(item_id)
+    
+    async def _query_items(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Query items in storage."""
+        return await self.search.filter_items(filters=query)
+    
+    async def _count_items(self, query: Optional[Dict[str, Any]] = None) -> int:
+        """Count items in storage."""
+        if query:
+            return await self.search.count_items(filters=query)
+        else:
+            return self.storage.count()
+    
+    async def _clear_all_items(self) -> bool:
+        """Clear all items from storage."""
+        self.storage.clear_all_items()
+        return True
+    
     # Core CRUD operations implementation
     async def create(self, item_id: str, data: Dict[str, Any]) -> bool:
         """
