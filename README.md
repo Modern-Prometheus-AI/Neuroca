@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="src/neuroca/assets/images/Neuroca-logo.png" alt="Neuroca Logo" width="200"/>
+  <img src="src/neuroca/assets/images/Neuroca-logo.png" alt="Neuroca Logo" width="400"/>
 </p>
 
 <h1 align="center">NeuroCognitive Architecture (NCA) for LLMs</h1>

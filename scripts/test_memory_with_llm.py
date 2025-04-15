@@ -16,7 +16,7 @@ import uuid
 from neuroca.memory.backends import BackendType
 from neuroca.memory.manager.core import MemoryManager
 from neuroca.memory.models.memory_item import MemoryItem
-from neuroca.memory.models.search import MemorySearchOptions
+from neuroca.memory.models.search import MemorySearchOptions, MemorySearchResult # Import MemorySearchResult
 
 # Uncomment to use OpenAI API. Add your API key to .env first.
 try:
@@ -85,22 +85,23 @@ class ConversationalAgent:
         
         print(f"Added memory with ID: {memory_id}")
         return memory_id
-    
-    async def retrieve_relevant_memories(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+
+    # Corrected indentation for this method
+    async def retrieve_relevant_memories(self, query: str, limit: int = 5) -> List[MemorySearchResult]: # Return MemorySearchResult objects
         """Retrieve memories relevant to the current conversation."""
-        try:
-            memories = await self.memory_manager.search_memories(
+        try: # Ensure try is correctly indented
+            search_results_obj = await self.memory_manager.search_memories( # Ensure this call is correctly indented
                 query=query,
                 limit=limit,
-                min_relevance=0.3
+                min_relevance=0.3 # Only retrieve somewhat relevant memories
             )
-            
-            print(f"Retrieved {len(memories)} relevant memories")
-            return memories
-        except Exception as e:
+
+            print(f"Retrieved {len(search_results_obj.results)} relevant memories")
+            return search_results_obj.results # Return the list of MemorySearchResult objects
+        except Exception as e: # Ensure except is aligned with try
             print(f"Error during memory retrieval: {e}")
-            return []  # Return empty list on error
-    
+            return [] # Return empty list on error
+
     async def process_message(self, user_message: str) -> str:
         """Process a user message and generate a response."""
         # Store the user's message in memory
@@ -114,12 +115,15 @@ class ConversationalAgent:
         
         # Format memories for context
         memory_context = ""
-        if relevant_memories:
+        if relevant_memories: # relevant_memories is now List[MemorySearchResult]
             memory_context = "Relevant previous information:\n"
-            for i, memory in enumerate(relevant_memories):
-                memory_content = memory["content"]["text"] if "text" in memory["content"] else str(memory["content"])
-                memory_context += f"{i+1}. {memory_content}\n"
-        
+            # Sort by relevance before formatting (highest first)
+            relevant_memories.sort(key=lambda r: r.relevance, reverse=True)
+            for i, search_result in enumerate(relevant_memories):
+                # Access text via search_result.memory.get_text()
+                memory_content = search_result.memory.get_text()
+                memory_context += f"{i+1}. (Relevance: {search_result.relevance:.2f}) {memory_content}\n"
+
         # Generate response using OpenAI if available
         response = ""
         if OPENAI_AVAILABLE and openai.api_key:
@@ -135,9 +139,9 @@ class ConversationalAgent:
                     {"role": "system", "content": system_message},
                     *self.conversation_history
                 ]
-                
+
                 completion = openai.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="o3-mini", # Changed model name
                     messages=messages,
                     temperature=0.7,
                     max_tokens=500
