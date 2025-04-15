@@ -10,13 +10,38 @@
   &nbsp; <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12%2B-blue" alt="Python Version: 3.9+"/></a>
 </p>
 
-<br/> 
+<br/>
+
+**➡️ View the full [Table of Contents](TABLE_OF_CONTENTS.md) for easy navigation.**
+
+---
 
 <h2 align="center">Overview</h2>
 
 <p align="center">
   NeuroCognitive Architecture (NCA) is an advanced framework designed to imbue Large Language Models (LLMs) with more sophisticated, human-like cognitive capabilities. It transcends standard Retrieval-Augmented Generation (RAG) by replacing fixed context windows and explicit retrieval calls with a <strong>dynamic, multi-tiered memory system</strong> inspired by biological cognition. This organic system allows the LLM's effective context to grow and adapt indefinitely, fostering accurate, stable, and long-term conversational understanding. Memory management—including consolidation, decay, and relevance scoring—operates automatically in the background. This enables the LLM to genuinely <strong>learn and evolve</strong> from interactions, "experiencing" its memories organically rather than relying on external tools to fetch isolated data points.
 </p>
+
+## Index for this README
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [NCA vs. Standard RAG: A Deeper Dive](#nca-vs-standard-rag-a-deeper-dive)
+- [Example Use Cases](#example-use-cases)
+- [Architecture](#architecture)
+  - [Source Directory READMEs](#source-directory-readmes)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Development](#development)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Roadmap](#roadmap)
+- [Future Directions & Integrations](#future-directions--integrations)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Author](#author)
+- [Contact](#contact)
 
 ## Key Features
 
@@ -255,14 +280,18 @@ mypy neuroca
 
 ## Documentation
 
-Comprehensive documentation is available in the `docs/` directory and can be built using Sphinx:
+Comprehensive documentation is available in the `docs/` directory and can be built and served locally using MkDocs:
 
 ```bash
-cd docs
-make html
+# Navigate to the docs directory within the Neuroca project
+cd Neuroca/docs
+
+# Build and serve the documentation site (requires mkdocs installed - use `poetry install --with dev` if using Poetry)
+mkdocs serve
 ```
 
-The built documentation will be available at `docs/_build/html/index.html`.
+The documentation site will typically be available at `http://127.0.0.1:8000`. 
+**Note:** The `mkdocs.yml` configuration file may currently be out of sync with the actual documentation file structure and require updates to build correctly. Refer to the `mkdocs.yml` file for configuration details.
 
 ## Contributing
 
@@ -317,4 +346,8 @@ For questions, feedback, or collaboration opportunities, please open an issue on
 
 ---
 
-**Note**: NeuroCognitive Architecture is currently in **ALPHA**. Features and interfaces may change significantly as the project develops. We warmly welcome **ANY and ALL feedback, bug reports, and feature requests** via GitHub Issues. Your input is invaluable as we work towards integrating NCA into the [Apex-CodeGenesis VSCode Extension](https://github.com/justinlietz93/Apex-CodeGenesis).
+**Note**: NeuroCognitive Architecture is currently in **ALPHA**. Features and interfaces may change significantly as the project develops. We warmly welcome **ANY and ALL feedback, bug reports, and feature requests** via GitHub Issues. Your input is invaluable as we work towards integrating NCA into the [Apex-CodeGenesis VSCode Extension](https://github.com/justinlietz93/Apex-CodeGenesis) and replacing the existing Agno memory system within the [Cogito platform](https://github.com/justinlietz93/Cogito).
+
+---
+
+<p align="center"><em>Updated as of 4/15/2025</em></p>

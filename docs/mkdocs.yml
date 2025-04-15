@@ -6,17 +6,17 @@
 
 site_name: NeuroCognitive Architecture (NCA)
 site_description: A biological-inspired cognitive architecture for large language models
-site_author: Justin Lietz - NCA Team
-site_url: https://neuroca.ai/docs/
-repo_url: https://github.com/neuroca/neuroca
-repo_name: neuroca/neuroca
+site_author: Justin Lietz - Modern Prometheus AI
+site_url: https://github.com/Modern-Prometheus-AI/Neuroca
+repo_url: https://github.com/Modern-Prometheus-AI/Neuroca
+repo_name: Modern-Prometheus-AI/Neuroca
 edit_uri: edit/main/docs/
 
 # Copyright information
 copyright: Copyright &copy; 2023 NeuroCognitive Architecture Team
 
-# Documentation source directory
-docs_dir: src
+# Documentation source directory (relative to this mkdocs.yml file)
+docs_dir: .
 
 # Theme configuration
 theme:
@@ -52,8 +52,8 @@ theme:
     - content.tabs.link
   icon:
     repo: fontawesome/brands/github
-  logo: assets/images/logo.png
-  favicon: assets/images/favicon.png
+  logo: ../src/neuroca/assets/images/Neuroca-logo.png
+  favicon: ../src/neuroca/assets/images/favicon.PNG
   language: en
 
 # Extensions
@@ -162,45 +162,45 @@ extra:
       find what they're searching for. With your consent, you're helping us to
       make our documentation better.
 
-# Navigation structure
+# Navigation structure (Updated to match actual files)
 nav:
   - Home: index.md
-  - Getting Started:
-    - Installation: getting-started/installation.md
-    - Quick Start: getting-started/quick-start.md
-    - Configuration: getting-started/configuration.md
-    - Examples: getting-started/examples.md
-  - Core Concepts:
-    - Overview: concepts/overview.md
-    - Cognitive Architecture: concepts/cognitive-architecture.md
-    - Memory System: concepts/memory-system.md
-    - Health Dynamics: concepts/health-dynamics.md
-    - Biological Components: concepts/biological-components.md
-  - Components:
-    - API: components/api.md
-    - Memory Tiers:
-      - Working Memory: components/memory/working-memory.md
-      - Episodic Memory: components/memory/episodic-memory.md
-      - Semantic Memory: components/memory/semantic-memory.md
-    - Health System: components/health-system.md
-    - LLM Integration: components/llm-integration.md
-  - Tutorials:
-    - Basic Usage: tutorials/basic-usage.md
-    - Advanced Configuration: tutorials/advanced-configuration.md
-    - Custom Extensions: tutorials/custom-extensions.md
+  - User Guide:
+    - Getting Started: user/getting-started.md
+    - Configuration: user/configuration.md
+    - Usage Examples: user/examples.md
+    - Integration: user/integration.md
+  - Architecture:
+    - Overview: architecture/components.md
+    - Data Flow: architecture/data_flow.md
+    - Memory System:
+      - Backend Config: architecture/memory_system_backend_configuration.md
+      - Interactions: architecture/memory_system_component_interactions.md
+      - Refactoring: architecture/memory_system_refactoring.md
+      - Thread Safety: architecture/memory_system_thread_safety_fixes.md
+    - Deployment Guide: architecture/memory_system_deployment_guide.md
+    - Directory Structure: architecture/memory_system_directory_structure.md
+    - Test Plan: architecture/memory_system_test_plan.md
+    - Decisions:
+      - Overview: architecture/architecture_decisions.md
+      - ADR-001 Memory Tiers: architecture/decisions/adr-001-memory-tiers.md
+      - ADR-002 Health System: architecture/decisions/adr-002-health-system.md
+      - ADR-003 Integration Approach: architecture/decisions/adr-003-integration-approach.md
   - API Reference:
-    - Core: api-reference/core.md
-    - Memory: api-reference/memory.md
-    - Health: api-reference/health.md
-    - Integration: api-reference/integration.md
+    - Endpoints: api/endpoints.md
+    - Schemas: api/schemas.md
+    - Examples: api/examples.md
   - Development:
     - Contributing: development/contributing.md
-    - Code Style: development/code-style.md
-    - Testing: development/testing.md
-    - Documentation: development/documentation.md
-  - About:
-    - Roadmap: about/roadmap.md
-    - Changelog: about/changelog.md
-    - License: about/license.md
-    - Team: about/team.md
-  - FAQ: faq.md
+    - Environment Setup: development/environment.md
+    - Standards: development/standards.md
+    - Workflow: development/workflow.md
+  - Operations:
+    - Deployment: operations/deployment.md
+    - Monitoring: operations/monitoring.md
+    - Troubleshooting: operations/troubleshooting.md
+    - Runbooks:
+      - Backup & Restore: operations/runbooks/backup-restore.md
+      - Incident Response: operations/runbooks/incident-response.md
+      - Scaling: operations/runbooks/scaling.md
+  - Project README: README.md # Link to the docs README
