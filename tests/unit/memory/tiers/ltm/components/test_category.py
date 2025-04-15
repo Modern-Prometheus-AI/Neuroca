@@ -54,7 +54,7 @@ class TestLTMCategory:
             ),
             metadata=MemoryMetadata(
                 importance=0.7,
-                tags=["test"]
+                tags={"test": True}
             )
         )
     
@@ -71,7 +71,7 @@ class TestLTMCategory:
             },
             "metadata": {
                 "importance": 0.7,
-                "tags": ["test"],
+                "tags": {"test": True},
                 "status": MemoryStatus.ACTIVE.value
             }
         }
