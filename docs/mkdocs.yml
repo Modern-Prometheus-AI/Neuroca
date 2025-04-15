@@ -15,8 +15,8 @@ edit_uri: edit/main/docs/
 # Copyright information
 copyright: Copyright &copy; 2023 NeuroCognitive Architecture Team
 
-# Documentation source directory (relative to this mkdocs.yml file)
-docs_dir: .
+
+docs_dir: pages
 
 # Theme configuration
 theme:
@@ -52,8 +52,9 @@ theme:
     - content.tabs.link
   icon:
     repo: fontawesome/brands/github
-  logo: ../src/neuroca/assets/images/Neuroca-logo.png
-  favicon: ../src/neuroca/assets/images/favicon.PNG
+  logo: assets/images/Neuroca-badge.PNG
+  favicon: assets/images/Neuroca-badge.PNG
+
   language: en
 
 # Extensions
@@ -72,8 +73,8 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.details
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -111,16 +112,17 @@ plugins:
       type: date
       fallback_to_build_date: true
       enable_creation_date: true
-  - mkdocstrings:
-      default_handler: python
-      handlers:
-        python:
-          selection:
-            docstring_style: google
-          rendering:
-            show_source: true
-            show_root_heading: true
-  - social
+  # Commented out until mkdocstrings_handlers can be properly installed
+  # - mkdocstrings:
+  #     default_handler: python
+  #     handlers:
+  #       python:
+  #         selection:
+  #           docstring_style: google
+  #         rendering:
+  #           show_source: true
+  #           show_root_heading: true
+  # - social (disabled due to Cairo library dependency issues)
   - tags
   - redirects:
       redirect_maps:

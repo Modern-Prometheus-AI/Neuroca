@@ -20,7 +20,7 @@ This document outlines the development workflow for the NeuroCognitive Architect
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.12+
 - Docker and Docker Compose
 - Git
 - Poetry (for dependency management)
