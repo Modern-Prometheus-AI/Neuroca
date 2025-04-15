@@ -10,9 +10,9 @@ This directory contains diagrams of the NeuroCognitive Architecture (NCA) cognit
 
 ## Component-Level Diagrams
 
-- [Goal Management](./goals.md) - Goal representation, prioritization, and management
-- [Inhibition System](./inhibition.md) - Cognitive inhibition mechanisms
-- [Metacognition](./metacognition.md) - Self-monitoring and reflection capabilities
-- [Planning System](./planning.md) - Planning and sequencing capabilities
+- [Goal Management](./components/goals.md) - Goal representation, prioritization, and management
+- [Inhibition System](./components/inhibition.md) - Cognitive inhibition mechanisms
+- [Metacognition](./components/metacognition.md) - Self-monitoring and reflection capabilities
+- [Planning System](./components/planning.md) - Planning and sequencing capabilities
 
 The cognitive control system is a core component of the NeuroCognitive Architecture, providing mechanisms for attention, reasoning, decision-making, and executive function that are inspired by human cognition.
