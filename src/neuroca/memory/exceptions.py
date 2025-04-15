@@ -33,6 +33,15 @@ class MemoryException(Exception):
         super().__init__(self.message, *args, **kwargs)
 
 
+class StorageBackendError(MemoryException):
+    """Base exception for all storage backend errors."""
+    
+    def __init__(self, backend_type: str = None, message: str = None, *args, **kwargs):
+        backend_str = f" ({backend_type})" if backend_type else ""
+        self.message = message or f"Storage backend error{backend_str}"
+        super().__init__(self.message, *args, **kwargs)
+
+
 #-----------------------------------------------------------------------
 # Initialization Errors
 #-----------------------------------------------------------------------
