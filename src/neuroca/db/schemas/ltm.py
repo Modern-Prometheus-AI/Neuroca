@@ -40,7 +40,7 @@ import logging
 import uuid
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -56,14 +56,12 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+
+from neuroca.db import Base
 
 # Configure module logger
 logger = logging.getLogger(__name__)
-
-# Base class for SQLAlchemy models
-Base = declarative_base()
 
 class MemoryType(str, enum.Enum):
     """Types of long-term memories in the cognitive architecture."""
@@ -295,14 +293,14 @@ class LTMEntryCreate(BaseModel):
     tags: Optional[list[str]] = None
     is_core_memory: bool = False
     
-    @validator('content')
+    @field_validator('content')
     def content_not_empty(cls, v):
         """Validate that content is not empty."""
         if not v or not v.strip():
             raise ValueError("Memory content cannot be empty")
         return v.strip()
     
-    @validator('embedding')
+    @field_validator('embedding')
     def validate_embedding(cls, v):
         """Validate embedding vector if provided."""
         if v is not None:
@@ -326,7 +324,7 @@ class LTMEntryUpdate(BaseModel):
     decay_rate: Optional[float] = Field(None, ge=0.0, le=1.0)
     reinforcement_factor: Optional[float] = Field(None, ge=0.0)
     
-    @validator('content')
+    @field_validator('content')
     def content_not_empty(cls, v):
         """Validate that content is not empty if provided."""
         if v is not None and not v.strip():
@@ -343,12 +341,12 @@ class LTMRelationshipCreate(BaseModel):
     bidirectional: bool = False
     metadata: Optional[dict[str, Any]] = None
     
-    @root_validator
-    def validate_not_self_relationship(cls, values):
+    @model_validator(mode='after')
+    def validate_not_self_relationship(self) -> 'LTMRelationshipCreate':
         """Validate that a memory cannot have a relationship with itself."""
-        if values.get('source_id') == values.get('target_id'):
+        if self.source_id == self.target_id:
             raise ValueError("A memory cannot have a relationship with itself")
-        return values
+        return self
 
 
 class LTMRelationshipUpdate(BaseModel):
@@ -364,7 +362,7 @@ class TagCreate(BaseModel):
     name: str
     description: Optional[str] = None
     
-    @validator('name')
+    @field_validator('name')
     def validate_tag_name(cls, v):
         """Validate tag name format."""
         if not v or not v.strip():

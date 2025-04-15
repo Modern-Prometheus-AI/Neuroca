@@ -19,14 +19,14 @@ class SQLiteSchema:
     schema, including tables, indices, and constraints.
     """
     
-    def __init__(self, connection: sqlite3.Connection):
+    def __init__(self, connection_manager):
         """
         Initialize the schema manager.
         
         Args:
-            connection: SQLite database connection
+            connection_manager: SQLiteConnection instance to manage database connections
         """
-        self.conn = connection
+        self.connection_manager = connection_manager
     
     def initialize_schema(self) -> None:
         """
@@ -37,12 +37,15 @@ class SQLiteSchema:
         - memory_metadata: Store associated metadata
         - memory_tags: Store tags for efficient searching
         """
-        with self.conn:
+        # Get the connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        with conn:
             # Enable foreign keys
-            self.conn.execute("PRAGMA foreign_keys = ON")
+            conn.execute("PRAGMA foreign_keys = ON")
             
             # Create the memory_items table
-            self.conn.execute("""
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS memory_items (
                     id TEXT PRIMARY KEY,
                     content TEXT NOT NULL,
@@ -55,7 +58,7 @@ class SQLiteSchema:
             """)
             
             # Create the memory_metadata table
-            self.conn.execute("""
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS memory_metadata (
                     memory_id TEXT PRIMARY KEY,
                     metadata_json TEXT NOT NULL,
@@ -64,7 +67,7 @@ class SQLiteSchema:
             """)
             
             # Create the memory_tags table
-            self.conn.execute("""
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS memory_tags (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     memory_id TEXT NOT NULL,
@@ -83,29 +86,32 @@ class SQLiteSchema:
         """
         Create indices for improved query performance.
         """
-        with self.conn:
+        # Get the connection for the current thread
+        conn = self.connection_manager.get_connection()
+        
+        with conn:
             # Index on content for full-text search
-            self.conn.execute(
+            conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_memory_content ON memory_items(content)"
             )
             
             # Index on summary for search
-            self.conn.execute(
+            conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_memory_summary ON memory_items(summary)"
             )
             
             # Index on tags for filtering
-            self.conn.execute(
+            conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_memory_tags ON memory_tags(tag)"
             )
             
             # Index on created_at for sorting
-            self.conn.execute(
+            conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_memory_created ON memory_items(created_at)"
             )
             
             # Index on last_accessed for filtering
-            self.conn.execute(
+            conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_memory_accessed ON memory_items(last_accessed)"
             )
             

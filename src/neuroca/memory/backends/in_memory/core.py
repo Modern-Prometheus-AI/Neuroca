@@ -448,7 +448,14 @@ class InMemoryBackend(BaseStorageBackend):
         item_dict = await self.read(memory_id)
         if item_dict is None:
             return None
-        return MemoryItem.model_validate(item_dict)
+        # Remove internal metadata before validation
+        item_dict_cleaned = {k: v for k, v in item_dict.items() if k != '_meta'}
+        try:
+            # Validate the cleaned dictionary
+            return MemoryItem.model_validate(item_dict_cleaned)
+        except Exception as e:
+            logger.error(f"Failed to validate retrieved item {memory_id}: {e}. Data: {item_dict_cleaned}", exc_info=True)
+            return None
     
     async def batch_store(self, memory_items: List[MemoryItem]) -> List[str]:
         """

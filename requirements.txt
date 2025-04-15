@@ -11,3 +11,5 @@ aioredis>=2.0.1
 psutil>=7.0.0
 numpy>=2.2.4
 psycopg2-binary>=2.9.10
+openai
+python-dotenv

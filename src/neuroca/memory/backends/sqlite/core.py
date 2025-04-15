@@ -305,17 +305,17 @@ class SQLiteBackend(BaseStorageBackend):
             # Initialize the connection
             conn = self.connection.get_connection()
             
-            # Create schema component and initialize database
-            self.schema = SQLiteSchema(conn)
+            # Create components with the connection manager rather than a direct connection
+            self.schema = SQLiteSchema(self.connection)
             await self.connection.execute_async(self.schema.initialize_schema)
             
-            # Create other components
-            self.crud = SQLiteCRUD(conn)
-            self.search = SQLiteSearch(conn)
-            self.stats = SQLiteStats(conn, self.db_path)
+            # Create other components using the connection manager
+            self.crud = SQLiteCRUD(self.connection)
+            self.search = SQLiteSearch(self.connection)
+            self.stats = SQLiteStats(self.connection, self.db_path)
             
             # Create batch component last as it depends on crud
-            self.batch = SQLiteBatch(conn, self.crud)
+            self.batch = SQLiteBatch(self.connection, self.crud)
             
             logger.info(f"Initialized SQLite backend at {self.db_path}")
         except Exception as e:

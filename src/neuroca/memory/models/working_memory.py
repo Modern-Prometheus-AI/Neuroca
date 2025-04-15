@@ -10,7 +10,7 @@ import heapq
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from neuroca.memory.models.memory_item import MemoryItem
 
@@ -39,7 +39,7 @@ class WorkingMemoryItem(BaseModel):
     # Source info
     source_tier: str  # The tier this memory was retrieved from
     
-    @validator("memory", pre=True)
+    @field_validator("memory", mode="before")
     def validate_memory(cls, v):
         """Ensure memory is a MemoryItem object."""
         if isinstance(v, dict):
