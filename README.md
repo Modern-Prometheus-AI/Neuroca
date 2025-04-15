@@ -3,7 +3,7 @@
   <img src="src/neuroca/assets/images/Neuroca-logo.png" alt="Neuroca Logo" width="400"/>
 </p>
 
-<h3 align="center"><em>NeuroCognitive Architecture (NCA) for LLMs</em></h3>
+<h3 align="center"><i>Persistent Memory System for LLMs (NCA)</i></h3>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"/></a>
