@@ -76,6 +76,20 @@ class DatabaseError(NCAError):
         super().__init__(f"Database error: {message}")
 
 
+class ConnectionError(DatabaseError):
+    """Raised when there is an error connecting to the database."""
+
+    def __init__(self, message: str = "Database connection failed"):
+        super().__init__(f"Connection error: {message}")
+
+
+class QueryError(DatabaseError):
+    """Raised when a database query fails."""
+
+    def __init__(self, message: str = "Database query failed"):
+        super().__init__(f"Query error: {message}")
+
+
 class IntegrationError(NCAError):
     """Raised when there is an error with an external integration."""
     

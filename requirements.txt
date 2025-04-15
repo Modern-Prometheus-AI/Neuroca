@@ -1,3 +1,13 @@
 matplotlib
 pydantic
 pydantic_settings
+pytest-asyncio
+pytest-cov
+pytest-mock
+asyncpg
+pyyaml
+sqlalchemy
+aioredis>=2.0.1
+psutil>=7.0.0
+numpy>=2.2.4
+psycopg2-binary>=2.9.10
