@@ -32,8 +32,8 @@ from pydantic import (
     Field,
     confloat,
     conint,
-    root_validator,
-    validator,
+    field_validator,
+    model_validator,
 )
 
 # Configure module logger
@@ -64,7 +64,7 @@ class HealthMetricsRequest(BaseModel):
         description="Timestamp of the health metrics measurement (UTC)"
     )
     
-    @validator('timestamp')
+    @field_validator('timestamp')
     def ensure_utc(cls, v):
         """Ensure timestamp is in UTC timezone."""
         if v and v.tzinfo is not None and v.tzinfo != datetime.timezone.utc:
@@ -131,7 +131,7 @@ class MemoryCreateRequest(BaseModel):
         description="Optional expiration time for temporary memories"
     )
     
-    @validator('tags')
+    @field_validator('tags')
     def validate_tags(cls, v):
         """Validate that tags are properly formatted."""
         if not all(isinstance(tag, str) for tag in v):
@@ -142,7 +142,7 @@ class MemoryCreateRequest(BaseModel):
         
         return v
     
-    @validator('expiration')
+    @field_validator('expiration')
     def validate_expiration(cls, v):
         """Ensure expiration is in the future if provided."""
         if v and v < datetime.datetime.now(datetime.timezone.utc):
@@ -199,22 +199,19 @@ class MemoryQueryRequest(BaseModel):
         description="Whether to use semantic search or exact matching"
     )
     
-    @root_validator
-    def check_query_parameters(cls, values):
+    @model_validator(mode='after')
+    def check_query_parameters(self) -> 'MemoryQueryRequest':
         """Validate that the query parameters make sense together."""
-        query = values.get('query')
-        semantic_search = values.get('semantic_search')
-        
-        if semantic_search and (not query or len(query.strip()) < 3):
+        if self.semantic_search and (not self.query or len(self.query.strip()) < 3):
             raise ValueError("Semantic search requires a query of at least 3 characters")
         
         # Log debug information about the query
         logger.debug(
             "Memory query request: query='%s', semantic=%s, tiers=%s, tags=%s", 
-            query, semantic_search, values.get('tiers'), values.get('tags')
+            self.query, self.semantic_search, self.tiers, self.tags
         )
         
-        return values
+        return self
     
     class Config:
         schema_extra = {
@@ -268,7 +265,7 @@ class LLMIntegrationRequest(BaseModel):
         description="Optional system message to prepend to the conversation"
     )
     
-    @validator('prompt')
+    @field_validator('prompt')
     def validate_prompt(cls, v):
         """Validate that the prompt is properly formatted and safe."""
         # Check for potential prompt injection patterns
@@ -285,17 +282,14 @@ class LLMIntegrationRequest(BaseModel):
         
         return v
     
-    @root_validator
-    def validate_memory_context(cls, values):
+    @model_validator(mode='after')
+    def validate_memory_context(self) -> 'LLMIntegrationRequest':
         """Ensure memory query is provided if memory context is requested."""
-        include_memory = values.get('include_memory_context')
-        memory_query = values.get('memory_query')
-        
-        if include_memory and not memory_query:
+        if self.include_memory_context and not self.memory_query:
             logger.info("Memory context requested but no memory query provided, using prompt as query")
-            values['memory_query'] = values.get('prompt')[:200]  # Use first 200 chars of prompt
+            self.memory_query = self.prompt[:200]  # Use first 200 chars of prompt
             
-        return values
+        return self
     
     class Config:
         schema_extra = {
@@ -335,7 +329,7 @@ class CognitiveProcessRequest(BaseModel):
         description="Whether to execute the process asynchronously"
     )
     
-    @validator('process_type')
+    @field_validator('process_type')
     def validate_process_type(cls, v):
         """Validate that the process type is supported."""
         valid_processes = [
@@ -354,12 +348,9 @@ class CognitiveProcessRequest(BaseModel):
         
         return v
     
-    @root_validator
-    def validate_parameters(cls, values):
+    @model_validator(mode='after')
+    def validate_parameters(self) -> 'CognitiveProcessRequest':
         """Validate that the required parameters for the process type are provided."""
-        process_type = values.get('process_type')
-        parameters = values.get('parameters', {})
-        
         # Define required parameters for each process type
         required_params = {
             "memory_consolidation": ["target_tier", "selection_criteria"],
@@ -372,12 +363,12 @@ class CognitiveProcessRequest(BaseModel):
             "cognitive_reflection": ["reflection_target", "depth"]
         }
         
-        if process_type in required_params:
-            for param in required_params[process_type]:
-                if param not in parameters:
-                    raise ValueError(f"Missing required parameter '{param}' for process type '{process_type}'")
+        if self.process_type in required_params:
+            for param in required_params[self.process_type]:
+                if param not in self.parameters:
+                    raise ValueError(f"Missing required parameter '{param}' for process type '{self.process_type}'")
         
-        return values
+        return self
     
     class Config:
         schema_extra = {
@@ -425,7 +416,7 @@ class UserProfileUpdateRequest(BaseModel):
         description="User's interests and topics they care about"
     )
     
-    @validator('communication_style')
+    @field_validator('communication_style')
     def validate_communication_style(cls, v):
         """Validate that the communication style is supported."""
         if v is not None:
@@ -434,12 +425,12 @@ class UserProfileUpdateRequest(BaseModel):
                 raise ValueError(f"Communication style must be one of: {', '.join(valid_styles)}")
         return v
     
-    @root_validator
-    def ensure_not_empty(cls, values):
+    @model_validator(mode='after')
+    def ensure_not_empty(self) -> 'UserProfileUpdateRequest':
         """Ensure that at least one field is being updated."""
-        if all(v is None for v in values.values()):
+        if all(v is None for v in self.model_dump().values()):
             raise ValueError("At least one field must be provided for update")
-        return values
+        return self
     
     class Config:
         schema_extra = {
@@ -481,12 +472,11 @@ class SystemConfigUpdateRequest(BaseModel):
         description="Settings for cognitive processes"
     )
     
-    @root_validator
-    def validate_config_structure(cls, values):
+    @model_validator(mode='after')
+    def validate_config_structure(self) -> 'SystemConfigUpdateRequest':
         """Validate the structure of configuration settings."""
         # Validate memory settings if provided
-        memory_settings = values.get('memory_settings')
-        if memory_settings is not None:
+        if self.memory_settings is not None:
             valid_memory_keys = [
                 "working_memory_capacity", 
                 "short_term_retention_period",
@@ -495,13 +485,12 @@ class SystemConfigUpdateRequest(BaseModel):
                 "association_strength_decay"
             ]
             
-            for key in memory_settings:
+            for key in self.memory_settings:
                 if key not in valid_memory_keys:
                     raise ValueError(f"Invalid memory setting: {key}")
         
         # Validate health dynamics settings if provided
-        health_dynamics = values.get('health_dynamics')
-        if health_dynamics is not None:
+        if self.health_dynamics is not None:
             valid_health_keys = [
                 "energy_decay_rate",
                 "stress_recovery_rate",
@@ -510,15 +499,15 @@ class SystemConfigUpdateRequest(BaseModel):
                 "performance_degradation_factors"
             ]
             
-            for key in health_dynamics:
+            for key in self.health_dynamics:
                 if key not in valid_health_keys:
                     raise ValueError(f"Invalid health dynamics setting: {key}")
         
         # Ensure at least one setting is being updated
-        if all(v is None for v in values.values()):
+        if all(v is None for v in self.model_dump().values()):
             raise ValueError("At least one configuration category must be provided for update")
         
-        return values
+        return self
     
     class Config:
         schema_extra = {
@@ -571,7 +560,7 @@ class SessionInitRequest(BaseModel):
         description="Additional parameters for session configuration"
     )
     
-    @validator('session_type')
+    @field_validator('session_type')
     def validate_session_type(cls, v):
         """Validate that the session type is supported."""
         valid_types = ["standard", "focused", "creative", "analytical", "emergency"]

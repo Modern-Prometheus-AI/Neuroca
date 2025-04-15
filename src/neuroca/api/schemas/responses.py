@@ -25,9 +25,9 @@ Usage:
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar, Self
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -141,7 +141,7 @@ class SuccessResponse(BaseResponse, Generic[T]):
         description="Optional metadata about the response"
     )
     
-    @validator('status')
+    @field_validator('status')
     def validate_status(cls, v):
         """Ensure status is always 'success' for SuccessResponse."""
         if v != ResponseStatus.SUCCESS:
@@ -164,7 +164,7 @@ class ErrorResponse(BaseResponse):
         description="Optional metadata about the response"
     )
     
-    @validator('status')
+    @field_validator('status')
     def validate_status(cls, v):
         """Ensure status is always 'error' for ErrorResponse."""
         if v != ResponseStatus.ERROR:
@@ -201,47 +201,53 @@ class PaginationInfo(BaseModel):
     has_next: bool = Field(..., description="Whether there is a next page")
     has_prev: bool = Field(..., description="Whether there is a previous page")
     
-    @validator('page')
+    @field_validator('page')
     def validate_page(cls, v):
         """Ensure page is at least 1."""
         if v < 1:
             raise ValueError("Page must be at least 1")
         return v
     
-    @validator('page_size')
+    @field_validator('page_size')
     def validate_page_size(cls, v):
         """Ensure page_size is at least 1."""
         if v < 1:
             raise ValueError("Page size must be at least 1")
         return v
     
-    @validator('total_pages')
-    def calculate_total_pages(cls, v, values):
+    @field_validator('total_pages')
+    @classmethod
+    def calculate_total_pages(cls, v, info):
         """Validate total_pages or calculate it if not provided."""
-        if 'total_items' in values and 'page_size' in values:
-            page_size = values['page_size']
-            total_items = values['total_items']
+        data = info.data
+        if 'total_items' in data and 'page_size' in data:
+            page_size = data['page_size']
+            total_items = data['total_items']
             calculated = (total_items + page_size - 1) // page_size  # Ceiling division
             if v != calculated:
                 logger.warning(f"Provided total_pages {v} doesn't match calculated value {calculated}")
                 return calculated
         return v
     
-    @validator('has_next')
-    def calculate_has_next(cls, v, values):
+    @field_validator('has_next')
+    @classmethod
+    def calculate_has_next(cls, v, info):
         """Validate has_next or calculate it if not provided."""
-        if all(k in values for k in ['page', 'total_pages']):
-            calculated = values['page'] < values['total_pages']
+        data = info.data
+        if all(k in data for k in ['page', 'total_pages']):
+            calculated = data['page'] < data['total_pages']
             if v != calculated:
                 logger.warning(f"Provided has_next {v} doesn't match calculated value {calculated}")
                 return calculated
         return v
     
-    @validator('has_prev')
-    def calculate_has_prev(cls, v, values):
+    @field_validator('has_prev')
+    @classmethod
+    def calculate_has_prev(cls, v, info):
         """Validate has_prev or calculate it if not provided."""
-        if 'page' in values:
-            calculated = values['page'] > 1
+        data = info.data
+        if 'page' in data:
+            calculated = data['page'] > 1
             if v != calculated:
                 logger.warning(f"Provided has_prev {v} doesn't match calculated value {calculated}")
                 return calculated
@@ -299,8 +305,9 @@ class HealthResponse(SuccessResponse):
         description="Health status of individual components"
     )
     
-    @validator('overall_status', pre=True)
-    def calculate_overall_status(cls, v, values):
+    @field_validator('overall_status', mode='before')
+    @classmethod
+    def calculate_overall_status(cls, v, info):
         """
         Calculate overall status based on component statuses if not explicitly provided.
         
@@ -309,8 +316,9 @@ class HealthResponse(SuccessResponse):
         - DEGRADED if any component is DEGRADED and none are UNHEALTHY
         - HEALTHY if all components are HEALTHY
         """
-        if 'components' in values:
-            components = values['components']
+        data = info.data
+        if 'components' in data:
+            components = data['components']
             if any(c.status == HealthStatus.UNHEALTHY for c in components):
                 return HealthStatus.UNHEALTHY
             elif any(c.status == HealthStatus.DEGRADED for c in components):
@@ -348,7 +356,7 @@ class WarningResponse(BaseResponse, Generic[T]):
         description="Optional metadata about the response"
     )
     
-    @validator('status')
+    @field_validator('status')
     def validate_status(cls, v):
         """Ensure status is always 'warning' for WarningResponse."""
         if v != ResponseStatus.WARNING:
@@ -368,13 +376,15 @@ class BatchOperationResult(BaseModel):
     data: Optional[Any] = Field(None, description="Operation result data if successful")
     error: Optional[ErrorDetail] = Field(None, description="Error details if failed")
     
-    @validator('error')
-    def validate_error_presence(cls, v, values):
+    @field_validator('error')
+    @classmethod
+    def validate_error_presence(cls, v, info):
         """Ensure error is present only for failed operations."""
-        if 'success' in values:
-            if values['success'] and v is not None:
+        data = info.data
+        if 'success' in data:
+            if data['success'] and v is not None:
                 raise ValueError("Error should not be present for successful operations")
-            elif not values['success'] and v is None:
+            elif not data['success'] and v is None:
                 raise ValueError("Error must be present for failed operations")
         return v
 
@@ -395,11 +405,13 @@ class BatchResponse(SuccessResponse):
         description="Summary of batch operation results"
     )
     
-    @validator('summary', always=True)
-    def calculate_summary(cls, v, values):
+    @field_validator('summary', mode='before')
+    @classmethod
+    def calculate_summary(cls, v, info):
         """Calculate summary statistics based on operation results."""
-        if 'data' in values:
-            results = values['data']
+        data = info.data
+        if 'data' in data:
+            results = data['data']
             total = len(results)
             succeeded = sum(1 for r in results if r.success)
             failed = total - succeeded

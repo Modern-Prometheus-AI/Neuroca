@@ -43,8 +43,7 @@ from typing import Any, Optional
 
 from sqlalchemy import create_engine, event, exc
 from sqlalchemy.engine import Engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.orm import Session, scoped_session, sessionmaker, DeclarativeBase
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -53,7 +52,9 @@ logger = logging.getLogger(__name__)
 _thread_local = threading.local()
 
 # SQLAlchemy base class for all models
-Base = declarative_base()
+class Base(DeclarativeBase):
+    """Base class for all SQLAlchemy models in the system."""
+    pass
 
 # Global engine instances
 _engines: dict[str, Engine] = {}

@@ -9,7 +9,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from neuroca.memory.models.memory_item import MemoryItem
 
@@ -105,7 +105,7 @@ class MemorySearchResult(BaseModel):
     similarity: Optional[float] = None  # Similarity score (for vector searches)
     distance: Optional[float] = None  # Distance score (for vector searches)
     
-    @validator("memory", pre=True)
+    @field_validator("memory", mode="before")
     def validate_memory(cls, v):
         """Ensure memory is a MemoryItem object."""
         if isinstance(v, dict):
@@ -178,7 +178,7 @@ class MemorySearchResults(BaseModel):
     options: MemorySearchOptions  # The search options used
     execution_time_ms: Optional[float] = None  # How long the search took
     
-    @validator("options", pre=True)
+    @field_validator("options", mode="before")
     def validate_options(cls, v):
         """Ensure options is a MemorySearchOptions object."""
         if isinstance(v, dict):
