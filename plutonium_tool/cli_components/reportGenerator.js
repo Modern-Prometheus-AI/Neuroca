@@ -120,129 +120,152 @@ function collectTestFiles(dir, baseDir) {
  * @param {string} projectRoot - Absolute path to the project root.
  * @param {string} toolDirName - Name of the main tool directory (e.g., 'Neuroca').
  * @param {string} reportsDir - Absolute path to the reports directory.
- * @param {object} results - Object containing results from commandRunner steps (e.g., results.pkgCheck, results.conflictCheck).
+ * @param {object} results - Object containing results from commandRunner steps.
  * @returns {object} Structured data object containing aggregated analysis results.
  */
 function aggregateReportData(projectRoot, toolDirName, reportsDir, results) {
     const timestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''); // Format timestamp
     const coverageDir = path.join(reportsDir, 'coverage'); // Path to coverage reports
 
-    // --- Dependency Data Aggregation ---
-    let packageData = {
-        python: { installed: {}, unpinned: 0 },
-        node: { installed: {}, unpinned: 0 },
-        missing: [],
-        crossLanguageConflicts: []
-    };
-    
-    // Process Python packages
-    if (results.pkgCheck?.status === 0 && results.pkgCheck.stdout) {
+    // --- Python Dependency Data Aggregation ---
+    let pythonInstalledPackages = {};
+    let pythonUnpinnedCount = 0;
+    // Check if Python package check command ran successfully and produced output
+    if (results.pythonPkgCheck?.status === 0 && results.pythonPkgCheck.stdout) {
         try {
             // Attempt to parse the JSON output from the package check command
-            packageData.python.installed = JSON.parse(results.pkgCheck.stdout);
+            pythonInstalledPackages = JSON.parse(results.pythonPkgCheck.stdout);
             // Save the raw installed packages list to a file for reference
             fs.writeFileSync(
                 path.join(reportsDir, 'installed_packages.json'),
-                JSON.stringify(packageData.python.installed, null, 2) // Pretty-print JSON
+                JSON.stringify(pythonInstalledPackages, null, 2) // Pretty-print JSON
             );
-            console.log(`✅ Parsed ${Object.keys(packageData.python.installed).length} installed Python packages`);
-            // Count how many packages are likely not pinned
-            packageData.python.unpinned = Object.values(packageData.python.installed).reduce((count, version) => {
-                return count + (isPinned(version) ? 0 : 1);
-            }, 0);
+             console.log(`✅ Parsed ${Object.keys(pythonInstalledPackages).length} installed Python packages`);
+             // Count how many packages are likely not pinned
+             pythonUnpinnedCount = Object.values(pythonInstalledPackages).reduce((count, version) => {
+                 return count + (isPinned(version) ? 0 : 1);
+             }, 0);
         } catch (e) {
             // Log errors if JSON parsing fails
-            console.error('❌ Error parsing installed packages JSON:', e.message);
-            console.error('Raw output:', results.pkgCheck.stdout); // Show raw output for debugging
+            console.error('❌ Error parsing installed Python packages JSON:', e.message);
+            if (results.pythonPkgCheck.stdout) {
+                console.error('Raw output:', results.pythonPkgCheck.stdout.substring(0, 200) + '...'); // Show partial raw output for debugging
+            }
         }
     } else {
         console.error('❌ Failed to retrieve installed Python packages or command failed.');
-        if (results.pkgCheck?.stderr) console.error("Stderr:", results.pkgCheck.stderr);
+        if (results.pythonPkgCheck?.stderr) console.error("Stderr:", results.pythonPkgCheck.stderr);
     }
 
-    // Process Node.js packages
-    if (results.npmCheck?.status === 0 && results.npmCheck.stdout) {
+    // --- JavaScript Dependency Data Aggregation ---
+    let jsInstalledPackages = {};
+    let jsUnpinnedCount = 0;
+    if (results.jsPackages?.status === 0 && results.jsPackages.stdout) {
         try {
-            // Parse npm list --json output
-            const npmData = JSON.parse(results.npmCheck.stdout);
-            if (npmData.dependencies) {
-                // Extract packages from dependencies object
-                Object.entries(npmData.dependencies).forEach(([name, data]) => {
-                    packageData.node.installed[name] = data.version || 'unknown';
-                    // Check if npm package uses a specific version (not a range)
-                    if (data.from && !isPinned(data.from)) {
-                        packageData.node.unpinned++;
-                    }
-                });
-            }
-            console.log(`✅ Parsed ${Object.keys(packageData.node.installed).length} installed Node.js packages`);
+            jsInstalledPackages = JSON.parse(results.jsPackages.stdout);
+            console.log(`✅ Parsed ${Object.keys(jsInstalledPackages).length} installed JavaScript packages`);
+            
+            // Count how many JS packages are likely not pinned
+            jsUnpinnedCount = Object.values(jsInstalledPackages).reduce((count, version) => {
+                return count + (isPinned(version) ? 0 : 1);
+            }, 0);
+            
+            // Save JS packages to a separate file
+            fs.writeFileSync(
+                path.join(reportsDir, 'installed_js_packages.json'),
+                JSON.stringify(jsInstalledPackages, null, 2)
+            );
         } catch (e) {
-            console.error('❌ Error parsing npm packages JSON:', e.message);
+            console.error('❌ Error parsing installed JavaScript packages JSON:', e.message);
+            if (results.jsPackages.stdout) {
+                console.error('Raw output:', results.jsPackages.stdout.substring(0, 200) + '...'); 
+            }
         }
     } else {
-        console.log('ℹ️ No Node.js packages found or npm command failed.');
+        console.warn('⚠️ Failed to retrieve installed JavaScript packages or command failed.');
     }
 
-    // --- Conflict Data Aggregation ---
-    let dependencyConflicts = [];
+    // --- Python Conflict Data Aggregation ---
+    let pythonDependencyConflicts = [];
     // Check if conflict check command produced any output (stdout or stderr)
-    if (results.conflictCheck && (results.conflictCheck.stdout || results.conflictCheck.stderr)) {
+    if (results.pythonConflictCheck && (results.pythonConflictCheck.stdout || results.pythonConflictCheck.stderr)) {
         // Combine stdout and stderr for parsing
-        const output = (results.conflictCheck.stdout || '') + '\n' + (results.conflictCheck.stderr || '');
+        const output = (results.pythonConflictCheck.stdout || '') + '\n' + (results.pythonConflictCheck.stderr || '');
         const lines = output.split('\n');
         // Filter lines that indicate conflicts according to 'pip check' format
-        dependencyConflicts = lines.filter(line =>
+        pythonDependencyConflicts = lines.filter(line =>
             line.includes('requires') && (line.includes('which is not installed') || line.includes('has requirement'))
         ).map(line => line.trim()); // Store trimmed lines
 
-        // Process missing packages
-        const missingRegex = /(\w+) requires (\w+).*which is not installed/i;
-        dependencyConflicts.forEach(conflict => {
-            const match = conflict.match(missingRegex);
-            if (match) {
-                packageData.missing.push({
-                    requiringPackage: match[1],
-                    missingPackage: match[2],
-                    message: conflict
-                });
-            }
-        });
-
-        // Check for potential cross-language conflicts
-        // This is a simple check looking for Node.js packages that might conflict with Python packages
-        const pythonPackages = Object.keys(packageData.python.installed).map(p => p.toLowerCase());
-        const nodePackages = Object.keys(packageData.node.installed).map(n => n.toLowerCase());
-        
-        // Find packages with same name in both ecosystems (potential namespace conflicts)
-        const sameNamePackages = pythonPackages.filter(p => nodePackages.includes(p));
-        if (sameNamePackages.length > 0) {
-            packageData.crossLanguageConflicts = sameNamePackages.map(name => ({
-                packageName: name,
-                pythonVersion: packageData.python.installed[Object.keys(packageData.python.installed).find(p => p.toLowerCase() === name)],
-                nodeVersion: packageData.node.installed[Object.keys(packageData.node.installed).find(n => n.toLowerCase() === name)],
-                message: `Package "${name}" exists in both Python and Node.js ecosystems - could cause namespace conflicts if imported incorrectly.`
-            }));
-        }
-
-        if (dependencyConflicts.length > 0) {
-            console.log(`⚠️ Found ${dependencyConflicts.length} dependency conflicts or missing dependencies.`);
+        if (pythonDependencyConflicts.length > 0) {
+            console.log(`⚠️ Found ${pythonDependencyConflicts.length} Python dependency conflicts or missing dependencies.`);
             // Save conflicts to a file
             try {
                 fs.writeFileSync(
-                    path.join(reportsDir, 'dependency_conflicts.json'),
-                    JSON.stringify(dependencyConflicts, null, 2) // Pretty-print JSON
+                    path.join(reportsDir, 'python_dependency_conflicts.json'),
+                    JSON.stringify(pythonDependencyConflicts, null, 2) // Pretty-print JSON
                 );
             } catch(e) {
-                console.error(`❌ Failed to write dependency conflicts file: ${e.message}`);
+                console.error(`❌ Failed to write Python dependency conflicts file: ${e.message}`);
             }
-        } else if (results.conflictCheck.status === 0) {
+        } else if (results.pythonConflictCheck.status === 0) {
             // Only log success if pip check exited cleanly
-            console.log('✅ No dependency conflicts found via pip check.');
+            console.log('✅ No Python dependency conflicts found via pip check.');
         } else {
             console.warn('⚠️ Pip check exited with non-zero status but no conflict lines detected in output.');
         }
     } else {
-        console.error('❌ Failed to run or get output from pip check for conflicts.');
+        console.warn('⚠️ Failed to run or get output from pip check for conflicts.');
+    }
+
+    // --- JavaScript Conflict Data Aggregation ---
+    let jsDependencyConflicts = [];
+    if (results.jsConflictCheck) {
+        if (results.jsConflictCheck.stdout) {
+            const lines = results.jsConflictCheck.stdout.split('\n').filter(Boolean);
+            jsDependencyConflicts = lines.map(line => line.trim());
+            
+            if (jsDependencyConflicts.length > 0) {
+                console.log(`⚠️ Found ${jsDependencyConflicts.length} JavaScript dependency conflicts.`);
+                // Save JS conflicts to a file
+                try {
+                    fs.writeFileSync(
+                        path.join(reportsDir, 'js_dependency_conflicts.json'),
+                        JSON.stringify(jsDependencyConflicts, null, 2)
+                    );
+                } catch(e) {
+                    console.error(`❌ Failed to write JavaScript dependency conflicts file: ${e.message}`);
+                }
+            } else {
+                console.log('✅ No JavaScript dependency conflicts found.');
+            }
+        }
+    } else {
+        console.warn('⚠️ JavaScript conflict check data not available.');
+    }
+
+    // --- Cross-Language Dependency Conflict Check ---
+    let crossLanguageConflicts = [];
+    
+    // Check for packages that exist in both Python and JS with different versions
+    // This is a basic check that can be expanded for more sophisticated cross-language conflict detection
+    for (const [pyName, pyVersion] of Object.entries(pythonInstalledPackages)) {
+        // Look for similar package name in JS packages (normalized)
+        const normalizedPyName = pyName.replace(/[_.-]/g, '').toLowerCase();
+        
+        for (const [jsName, jsVersion] of Object.entries(jsInstalledPackages)) {
+            const normalizedJsName = jsName.replace(/[_.-]/g, '').toLowerCase();
+            
+            // If names are similar but not exactly the same
+            if (normalizedPyName === normalizedJsName && pyName !== jsName) {
+                crossLanguageConflicts.push(`Potential cross-language package duplication: Python '${pyName}' (${pyVersion}) and JavaScript '${jsName}' (${jsVersion}) appear to be similar packages.`);
+            }
+            
+            // Check for exact same name
+            if (pyName.toLowerCase() === jsName.toLowerCase() && pyName !== jsName) {
+                crossLanguageConflicts.push(`Cross-language case conflict: Python '${pyName}' (${pyVersion}) and JavaScript '${jsName}' (${jsVersion}) have the same name with different casing.`);
+            }
+        }
     }
 
     // --- Coverage Data Aggregation ---
@@ -263,39 +286,50 @@ function aggregateReportData(projectRoot, toolDirName, reportsDir, results) {
                     : 0;
                 console.log(`✅ Parsed coverage data: ${coverageData.coverage_percent.toFixed(2)}%`);
             } else {
-                console.warn(`⚠️ Coverage JSON found at ${coveragePath} but missing "totals" key.`);
+                 console.warn(`⚠️ Coverage JSON found at ${coveragePath} but missing "totals" key.`);
             }
         } else {
-            // Warn if the coverage report wasn't generated or found
-            console.warn(`⚠️ Coverage JSON report not found at: ${coveragePath}. Test run might have failed.`);
+             // Warn if the coverage report wasn't generated or found
+             console.warn(`⚠️ Coverage JSON report not found at: ${coveragePath}. Test run might have failed.`);
         }
     } catch (e) {
         // Log errors during coverage data processing
         console.error(`❌ Error reading or parsing coverage data: ${e.message}`);
     }
 
-    // --- Test Files Aggregation ---
-    let testFiles = [];
-    try {
-        // Define the base directory for tests relative to project root
-        const testDir = path.join(projectRoot, toolDirName, 'tests');
-        testFiles = collectTestFiles(testDir, projectRoot); // Collect recursively
-        console.log(`✅ Found ${testFiles.length} potential test files.`);
-    } catch (e) {
-        console.error(`❌ Error collecting test files: ${e.message}`);
-    }
+     // --- Test Files Aggregation ---
+     let testFiles = [];
+     try {
+         // Define the base directory for tests relative to project root
+         const testDir = path.join(projectRoot, toolDirName, 'tests');
+         testFiles = collectTestFiles(testDir, projectRoot); // Collect recursively
+         console.log(`✅ Found ${testFiles.length} potential test files.`);
+     } catch (e) {
+         console.error(`❌ Error collecting test files: ${e.message}`);
+     }
 
     // --- Assemble Final Report Data Structure ---
     const reportData = {
         timestamp,
         dependency_analysis: {
-            python: packageData.python,
-            node: packageData.node,
-            total_packages: Object.keys(packageData.python.installed).length + Object.keys(packageData.node.installed).length,
-            unpinned_packages: packageData.python.unpinned + packageData.node.unpinned,
-            conflicts: dependencyConflicts,
-            missing_packages: packageData.missing,
-            cross_language_conflicts: packageData.crossLanguageConflicts
+            python: {
+                total_packages: Object.keys(pythonInstalledPackages).length,
+                unpinned_packages: pythonUnpinnedCount,
+                conflicts: pythonDependencyConflicts,
+                installed_packages: pythonInstalledPackages // Include the full list
+            },
+            javascript: {
+                total_packages: Object.keys(jsInstalledPackages).length,
+                unpinned_packages: jsUnpinnedCount,
+                conflicts: jsDependencyConflicts,
+                installed_packages: jsInstalledPackages
+            },
+            cross_language_conflicts: crossLanguageConflicts,
+            // Legacy fields for backward compatibility
+            total_packages: Object.keys(pythonInstalledPackages).length + Object.keys(jsInstalledPackages).length,
+            unpinned_packages: pythonUnpinnedCount + jsUnpinnedCount,
+            conflicts: [...pythonDependencyConflicts, ...jsDependencyConflicts, ...crossLanguageConflicts],
+            installed_packages: pythonInstalledPackages // Keep Python packages as default for backward compatibility
         },
         testing_analysis: {
             coverage: coverageData,
@@ -305,29 +339,38 @@ function aggregateReportData(projectRoot, toolDirName, reportsDir, results) {
     };
 
     // --- Generate Recommendations Based on Aggregated Data ---
-    if (reportData.dependency_analysis.unpinned_packages > 0) {
+    if (reportData.dependency_analysis.python.unpinned_packages > 0) {
         reportData.recommendations.push({
             type: 'warning', // Severity type
-            area: 'dependencies', // Area of concern
-            message: `Pin the ${reportData.dependency_analysis.unpinned_packages} unpinned package(s) to specific versions in your requirements file(s) (e.g., requirements.txt, pyproject.toml) for reproducible builds.`,
+            area: 'dependencies',
+            message: `Pin the ${reportData.dependency_analysis.python.unpinned_packages} unpinned Python package(s) to specific versions in your requirements file(s) (e.g., requirements.txt, pyproject.toml) for reproducible builds.`,
             priority: 'high' // Priority level
         });
     }
 
-    if (reportData.dependency_analysis.conflicts.length > 0) {
+    if (reportData.dependency_analysis.javascript.unpinned_packages > 0) {
         reportData.recommendations.push({
-            type: 'critical',
+            type: 'warning',
             area: 'dependencies',
-            message: `Resolve ${reportData.dependency_analysis.conflicts.length} dependency conflict(s) identified by 'pip check'. See the 'Conflicts' tab for details. Mismatched versions can cause runtime errors.`,
+            message: `Pin the ${reportData.dependency_analysis.javascript.unpinned_packages} unpinned JavaScript package(s) to specific versions in your package.json file for consistent builds.`,
             priority: 'high'
         });
     }
 
-    if (reportData.dependency_analysis.missing_packages.length > 0) {
+    if (reportData.dependency_analysis.python.conflicts.length > 0) {
         reportData.recommendations.push({
             type: 'critical',
             area: 'dependencies',
-            message: `Install ${reportData.dependency_analysis.missing_packages.length} missing package(s) required by your dependencies. See the 'Conflicts' tab for details.`,
+            message: `Resolve ${reportData.dependency_analysis.python.conflicts.length} Python dependency conflict(s) identified by 'pip check'. See the 'Conflicts' tab for details.`,
+            priority: 'high'
+        });
+    }
+
+    if (reportData.dependency_analysis.javascript.conflicts.length > 0) {
+        reportData.recommendations.push({
+            type: 'critical',
+            area: 'dependencies',
+            message: `Resolve ${reportData.dependency_analysis.javascript.conflicts.length} JavaScript dependency conflict(s) or vulnerabilities. See the 'Conflicts' tab for details.`,
             priority: 'high'
         });
     }
@@ -336,7 +379,7 @@ function aggregateReportData(projectRoot, toolDirName, reportsDir, results) {
         reportData.recommendations.push({
             type: 'warning',
             area: 'dependencies',
-            message: `Found ${reportData.dependency_analysis.cross_language_conflicts.length} potential cross-language conflicts between Python and Node.js packages. Review imports to ensure correct package usage.`,
+            message: `Review ${reportData.dependency_analysis.cross_language_conflicts.length} potential cross-language package conflicts. These could lead to confusion or versioning issues.`,
             priority: 'medium'
         });
     }
@@ -351,8 +394,8 @@ function aggregateReportData(projectRoot, toolDirName, reportsDir, results) {
             priority: coverageData.coverage_percent < 50 ? 'high' : 'medium'
         });
     } else if (coverageData.total === 0 && testFiles.length > 0) {
-        // Warn if tests exist but no lines were covered
-        reportData.recommendations.push({
+         // Warn if tests exist but no lines were covered
+         reportData.recommendations.push({
             type: 'warning',
             area: 'testing',
             message: `No executable lines found during coverage analysis, although ${testFiles.length} test files were detected. Ensure tests are running correctly and covering the intended code in 'src/${toolDirName}'.`,
@@ -360,543 +403,355 @@ function aggregateReportData(projectRoot, toolDirName, reportsDir, results) {
         });
     }
 
-    // Save the aggregated data to a JSON file for potential other uses
-    try {
-        fs.writeFileSync(
-            path.join(reportsDir, 'unified_analysis.json'),
-            JSON.stringify(reportData, null, 2) // Pretty-print
-        );
-    } catch (e) {
-        console.error(`❌ Failed to write unified JSON data: ${e.message}`);
-    }
+     // Save the aggregated data to a JSON file for potential other uses
+     try {
+         fs.writeFileSync(
+             path.join(reportsDir, 'unified_analysis.json'),
+             JSON.stringify(reportData, null, 2) // Pretty-print
+         );
+     } catch (e) {
+          console.error(`❌ Failed to write unified JSON data: ${e.message}`);
+     }
 
     // Return the structured data
     return reportData;
 }
 
 /**
- * Generates HTML for the report using aggregated data.
- * @param {object} reportData - Object containing aggregated analysis data.
- * @param {string} reportsDir - Path to the reports directory where assets may be stored.
- * @returns {string} HTML content for the report.
+ * Generates a unified HTML report from aggregated analysis data.
+ * @param {object} data - The aggregated analysis data from aggregateReportData.
+ * @param {string} [plutoniumIconBase64=''] - Base64 encoded icon data URL (optional).
+ * @returns {string} HTML report content as a string.
  */
-function generateReportHTML(reportData, reportsDir) {
-    const iconPath = path.join(reportsDir, 'plutonium-icon.png');
-    // Use a relative path for the HTML file
-    const iconRelativePath = path.basename(iconPath);
+function generateUnifiedHtmlReport(data, plutoniumIconBase64 = '') {
+    // Destructure data for easier access
+    const { timestamp, dependency_analysis: depData, testing_analysis: testData, recommendations } = data;
 
-    // Format timestamp
-    const timestamp = reportData.timestamp;
+    // Helper function to determine CSS class based on coverage percentage
+    const getCoverageClass = (percent) => {
+        if (percent >= 80) return 'high-coverage';
+        if (percent >= 60) return 'medium-coverage';
+        if (percent >= 40) return 'low-coverage';
+        return 'critical-coverage'; // Use for < 40%
+    };
+    const coverageClass = getCoverageClass(testData.coverage.coverage_percent);
 
-    // Calculate total packages
-    const totalPythonPackages = Object.keys(reportData.dependency_analysis.python.installed).length;
-    const totalNodePackages = Object.keys(reportData.dependency_analysis.node.installed).length;
-    const totalPackages = totalPythonPackages + totalNodePackages;
-    
-    // Format coverage percentage
-    const coveragePercent = reportData.testing_analysis.coverage.coverage_percent.toFixed(2);
-    
-    // Generate HTML for installed Python packages (sorted alphabetically)
-    const pythonPackageRows = Object.entries(reportData.dependency_analysis.python.installed)
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([name, version]) => {
-            const isPinned = version && !version.includes('~') && !version.includes('>') && 
-                            !version.includes('<') && !version.includes('*');
-            const statusClass = isPinned ? 'bg-success-subtle text-success-emphasis' : 'bg-warning-subtle text-warning-emphasis';
-            const statusText = isPinned ? 'Pinned' : 'Unpinned';
-            
-            return `
-            <tr>
-                <td>${name}</td>
-                <td>${version}</td>
-                <td class="${statusClass}">${statusText}</td>
-            </tr>`;
-        }).join('');
+    // Helper function for coverage status text
+    const getCoverageStatusText = (percent, totalLines) => {
+        if (totalLines === 0) return 'ℹ No lines found to cover.';
+        if (percent >= 80) return '✓ Good coverage';
+        if (percent >= 60) return 'ℹ Moderate coverage';
+        if (percent >= 40) return '⚠️ Low coverage';
+        return '❌ Critical: Very low coverage';
+    };
+    const coverageStatusText = getCoverageStatusText(testData.coverage.coverage_percent, testData.coverage.total);
 
-    // Generate HTML for installed Node packages (sorted alphabetically)
-    const nodePackageRows = Object.entries(reportData.dependency_analysis.node.installed)
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([name, version]) => {
-            const isPinned = version && !version.includes('~') && !version.includes('>') && 
-                            !version.includes('<') && !version.includes('^') && !version.includes('*');
-            const statusClass = isPinned ? 'bg-success-subtle text-success-emphasis' : 'bg-warning-subtle text-warning-emphasis';
-            const statusText = isPinned ? 'Pinned' : 'Unpinned';
-            
-            return `
-            <tr>
-                <td>${name}</td>
-                <td>${version}</td>
-                <td class="${statusClass}">${statusText}</td>
-            </tr>`;
-        }).join('');
-
-    // Generate HTML for missing packages
-    const missingPackageRows = reportData.dependency_analysis.missing_packages
-        .map(pkg => `
-            <tr>
-                <td>${pkg.requiringPackage}</td>
-                <td>${pkg.missingPackage}</td>
-                <td class="bg-danger-subtle text-danger-emphasis">${pkg.message}</td>
-            </tr>
-        `).join('');
-
-    // Generate HTML for cross-language conflicts
-    const crossLangConflictRows = reportData.dependency_analysis.cross_language_conflicts
-        .map(conflict => `
-            <tr>
-                <td>${conflict.packageName}</td>
-                <td>Python: ${conflict.pythonVersion}<br>Node.js: ${conflict.nodeVersion}</td>
-                <td class="bg-warning-subtle text-warning-emphasis">${conflict.message}</td>
-            </tr>
-        `).join('');
-
-    // Generate HTML for dependency conflicts
-    const conflictRows = reportData.dependency_analysis.conflicts
-        .map(conflict => `
-            <tr>
-                <td colspan="3" class="bg-danger-subtle text-danger-emphasis">${conflict}</td>
-            </tr>
-        `).join('');
-
-    // Generate HTML for test files (showing path relative to project root)
-    const testFileRows = reportData.testing_analysis.test_files
-        .map(file => `
-            <tr>
-                <td>${file.relativePath}</td>
-                <td>${file.fileSize} bytes</td>
-            </tr>
-        `).join('');
-
-    // Generate HTML for recommendations using badge styling
-    const recommendationsHTML = reportData.recommendations
-        .sort((a, b) => {
-            // Sort by priority (high > medium > low)
-            const priorityOrder = { high: 0, medium: 1, low: 2 };
-            return priorityOrder[a.priority] - priorityOrder[b.priority];
-        })
-        .map(rec => {
-            // Select badge color based on type
-            const badgeClass = rec.type === 'critical' ? 'bg-danger' :
-                              rec.type === 'warning' ? 'bg-warning' :
-                              'bg-info';
-            
-            // Select icon based on area
-            const iconClass = rec.area === 'dependencies' ? 'bi-box-seam' :
-                             rec.area === 'testing' ? 'bi-clipboard-check' :
-                             'bi-info-circle';
-            
-            return `
-            <div class="col-12 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <span class="me-2"><i class="bi ${iconClass} fs-4"></i></span>
-                            <div>
-                                <div class="d-flex align-items-center mb-1">
-                                    <span class="badge ${badgeClass} me-2">${rec.type.toUpperCase()}</span>
-                                    <span class="badge bg-secondary">${rec.area}</span>
-                                    <span class="ms-2 badge ${rec.priority === 'high' ? 'bg-danger' : 
-                                                            rec.priority === 'medium' ? 'bg-warning' : 
-                                                            'bg-info'}">
-                                        Priority: ${rec.priority.toUpperCase()}
-                                    </span>
-                                </div>
-                                <p class="mb-0">${rec.message}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-
-    // Assemble the full HTML report
+    // Generate HTML using template literals for readability
+    // Includes CSS for styling and basic JS for tabs and search functionality
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plutonium - Project Analysis Report</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <title>Unified Project Analysis Report</title>
     <style>
-        body { background-color: #f8f9fa; }
-        .report-header { 
-            background: linear-gradient(135deg, #6f42c1, #007bff);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        /* Embedded CSS for styling the report */
+        :root { /* Dark theme defaults */
+            color-scheme: dark;
+            --primary-color: #bb86fc; --secondary-color: #03dac6;
+            --warning-color: #ffb74d; --error-color: #cf6679; --success-color: #81c784;
+            --background-color: #121212; --card-bg: #1e1e1e; --text-color: #e0e0e0;
+            --border-color: #333333; --link-color: #8ab4f8;
         }
-        .logo-img {
-            height: 60px;
-            margin-right: 15px;
+        @media (prefers-color-scheme: light) { /* Light theme overrides */
+            :root {
+                color-scheme: light;
+                --primary-color: #6200ee; --secondary-color: #018786;
+                --warning-color: #ffa000; --error-color: #b00020; --success-color: #388e3c;
+                --background-color: #f5f5f5; --card-bg: #ffffff; --text-color: #212121;
+                --border-color: #e0e0e0; --link-color: #1a73e8;
+            }
         }
-        .card {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-radius: 8px;
-            border: none;
-            margin-bottom: 1.5rem;
-        }
-        .card-header {
-            background-color: #f1f1f1;
-            border-bottom: 1px solid #e3e3e3;
-            font-weight: 600;
-        }
-        .nav-tabs .nav-link {
-            color: #495057;
-            border: none;
-            border-bottom: 2px solid transparent;
-        }
-        .nav-tabs .nav-link.active {
-            color: #007bff;
-            background-color: transparent;
-            border-bottom: 2px solid #007bff;
-        }
-        .tab-pane {
-            padding: 1.5rem;
-        }
-        .badge {
-            font-weight: 500;
-        }
-        .progress {
-            height: 8px;
-            margin-bottom: 0.5rem;
-        }
-        .progress-label {
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
-        }
-        table {
-            font-size: 0.875rem;
-        }
-        .timestamp {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.8);
+        /* General body styling */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: var(--text-color); background-color: var(--background-color); margin: 0; padding: 0; font-size: 16px; }
+        /* Container for centering content */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        /* Header styling */
+        header { background-color: rgba(0, 0, 0, 0.2); padding: 30px 0; text-align: center; border-bottom: 1px solid var(--border-color); margin-bottom: 40px; }
+        .header-content { display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .header-content img { max-width: 80px; margin-bottom: 15px; border-radius: 50%; background-color: var(--card-bg); padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        /* Headings */
+        h1, h2, h3 { color: var(--primary-color); font-weight: 600; margin-top: 0; }
+        h1 { font-size: 2.2em; margin-bottom: 10px; }
+        h2 { font-size: 1.8em; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 40px; margin-bottom: 25px; }
+        h3 { font-size: 1.3em; color: var(--secondary-color); margin-bottom: 15px; }
+        /* Card styling for sections */
+        .card { background-color: var(--card-bg); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); }
+        /* Status colors */
+        .warning { color: var(--warning-color); } .error { color: var(--error-color); } .success { color: var(--success-color); } .info { color: var(--secondary-color); }
+        /* Table styling */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 1px var(--border-color); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        th { background-color: rgba(187, 134, 252, 0.1); font-weight: 600; color: var(--primary-color); position: sticky; top: 0; z-index: 1; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+        /* Summary statistics cards */
+        .summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+        .stat-card { background: linear-gradient(135deg, rgba(187, 134, 252, 0.05), rgba(3, 218, 198, 0.05)); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border: 1px solid var(--border-color); transition: transform 0.2s ease; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-value { font-size: 2.5em; font-weight: 700; margin: 8px 0; }
+        .stat-label { font-size: 1em; color: var(--text-color); opacity: 0.8; }
+        /* Footer */
+        footer { margin-top: 60px; padding: 20px 0; text-align: center; font-size: 0.9em; color: var(--text-color); opacity: 0.7; border-top: 1px solid var(--border-color); }
+        /* Progress bar for coverage */
+        .progress-bar-container { width: 100%; background-color: rgba(255, 255, 255, 0.1); border-radius: 4px; margin: 10px 0; overflow: hidden; height: 12px; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); border-radius: 4px; transition: width 0.5s ease-in-out; }
+        /* Recommendation styling */
+        .recommendation { border-left: 5px solid var(--primary-color); padding: 10px 15px; margin-bottom: 20px; background-color: rgba(187, 134, 252, 0.03); border-radius: 0 4px 4px 0; }
+        .recommendation h3 { margin-top: 0; margin-bottom: 8px; display: flex; align-items: center; font-size: 1.1em;}
+        .recommendation p { margin-bottom: 0; }
+        .recommendation.warning { border-left-color: var(--warning-color); background-color: rgba(255, 183, 77, 0.03); }
+        .recommendation.critical { border-left-color: var(--error-color); background-color: rgba(207, 102, 121, 0.03); }
+        .recommendation.info { border-left-color: var(--secondary-color); background-color: rgba(3, 218, 198, 0.03); }
+        /* Priority badges */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; margin-right: 10px; border: 1px solid; line-height: 1; }
+        .badge.high { background-color: rgba(207, 102, 121, 0.2); color: var(--error-color); border-color: var(--error-color); }
+        .badge.medium { background-color: rgba(255, 183, 77, 0.2); color: var(--warning-color); border-color: var(--warning-color); }
+        /* Coverage classes */
+        .high-coverage { color: var(--success-color); }
+        .medium-coverage { color: var(--secondary-color); }
+        .low-coverage { color: var(--warning-color); }
+        .critical-coverage { color: var(--error-color); }
+        /* Tab styles */
+        .tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .tab { cursor: pointer; padding: 12px 20px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); transition: all 0.2s ease; }
+        .tab:hover { background-color: rgba(187, 134, 252, 0.1); }
+        .tab.active { background-color: rgba(187, 134, 252, 0.2); border-color: var(--primary-color); color: var(--primary-color); font-weight: 600; }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Coverage iframe */
+        .coverage-iframe-container { width: 100%; height: 600px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 20px; }
+        .coverage-iframe { width: 100%; height: 100%; border: none; }
+        /* Search */
+        .search-container { margin-bottom: 15px; }
+        .search-box { width: 100%; padding: 10px 15px; font-size: 16px; border-radius: 6px; border: 1px solid var(--border-color); background-color: rgba(255, 255, 255, 0.05); color: var(--text-color); transition: all 0.2s ease; }
+        .search-box:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.3); }
+        /* Status tags for dependencies */
+        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 600; }
+        .status-tag.ok { background-color: rgba(129, 199, 132, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
+        .status-tag.unpinned { background-color: rgba(255, 183, 77, 0.2); color: var(--warning-color); border: 1px solid var(--warning-color); }
+        .status-tag.conflict { background-color: rgba(207, 102, 121, 0.2); color: var(--error-color); border: 1px solid var(--error-color); }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container { padding: 0 15px; }
+            .summary-stats { grid-template-columns: 1fr; }
+            .tab { padding: 10px; width: calc(50% - 10px); text-align: center; }
         }
     </style>
 </head>
 <body>
-    <!-- Report Header -->
-    <div class="report-header">
-        <div class="container">
-            <div class="d-flex align-items-center">
-                <img src="${iconRelativePath}" alt="Plutonium Logo" class="logo-img">
-                <div>
-                    <h1 class="mb-0">Plutonium Code Analysis Report</h1>
-                    <p class="timestamp mb-0">Generated on ${timestamp}</p>
-                </div>
-            </div>
+    <header>
+        <div class="header-content">
+            ${plutoniumIconBase64 ? `<img src="${plutoniumIconBase64}" alt="Plutonium Logo">` : ''}
+            <h1>Project Analysis Report</h1>
+            <p class="generated-time">Generated: ${timestamp}</p>
         </div>
-    </div>
-
-    <!-- Main Container -->
-    <div class="container mb-5">
-        <!-- Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Test Coverage</h5>
-                        <div class="progress-label d-flex justify-content-between">
-                            <span>Coverage</span>
-                            <span>${coveragePercent}%</span>
-                        </div>
-                        <div class="progress mb-3">
-                            <div class="progress-bar ${coveragePercent >= 80 ? 'bg-success' : 
-                                                      coveragePercent >= 50 ? 'bg-warning' : 
-                                                      'bg-danger'}" 
-                                 role="progressbar" 
-                                 style="width: ${coveragePercent}%" 
-                                 aria-valuenow="${coveragePercent}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100"></div>
-                        </div>
-                        <p class="mb-0">
-                            <i class="bi bi-file-earmark-code me-1"></i>
-                            ${reportData.testing_analysis.coverage.covered} / ${reportData.testing_analysis.coverage.total} lines covered
-                        </p>
-                        <p class="mb-0">
-                            <i class="bi bi-file-earmark-text me-1"></i>
-                            ${reportData.testing_analysis.test_files.length} test files
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Dependencies</h5>
-                        <p class="mb-1">
-                            <i class="bi bi-box-seam me-1"></i>
-                            ${totalPackages} Total Packages
-                        </p>
-                        <p class="mb-1">
-                            <i class="bi bi-file-earmark-fill me-1"></i>
-                            ${totalPythonPackages} Python packages
-                        </p>
-                        <p class="mb-1">
-                            <i class="bi bi-filetype-js me-1"></i>
-                            ${totalNodePackages} Node.js packages
-                        </p>
-                        <p class="mb-1 ${reportData.dependency_analysis.unpinned_packages > 0 ? 'text-warning' : 'text-success'}">
-                            <i class="bi ${reportData.dependency_analysis.unpinned_packages > 0 ? 'bi-exclamation-triangle' : 'bi-check-circle'} me-1"></i>
-                            ${reportData.dependency_analysis.unpinned_packages} Unpinned packages
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Conflicts</h5>
-                        <p class="mb-1 ${reportData.dependency_analysis.conflicts.length > 0 ? 'text-danger' : 'text-success'}">
-                            <i class="bi ${reportData.dependency_analysis.conflicts.length > 0 ? 'bi-x-circle' : 'bi-check-circle'} me-1"></i>
-                            ${reportData.dependency_analysis.conflicts.length} Dependency conflicts
-                        </p>
-                        <p class="mb-1 ${reportData.dependency_analysis.missing_packages.length > 0 ? 'text-danger' : 'text-success'}">
-                            <i class="bi ${reportData.dependency_analysis.missing_packages.length > 0 ? 'bi-x-circle' : 'bi-check-circle'} me-1"></i>
-                            ${reportData.dependency_analysis.missing_packages.length} Missing packages
-                        </p>
-                        <p class="mb-1 ${reportData.dependency_analysis.cross_language_conflicts.length > 0 ? 'text-warning' : 'text-success'}">
-                            <i class="bi ${reportData.dependency_analysis.cross_language_conflicts.length > 0 ? 'bi-exclamation-triangle' : 'bi-check-circle'} me-1"></i>
-                            ${reportData.dependency_analysis.cross_language_conflicts.length} Cross-language conflicts
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recommendations -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <i class="bi bi-lightbulb me-2"></i> Recommendations
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    ${recommendationsHTML || `<div class="col-12"><p class="text-success mb-0"><i class="bi bi-check-circle me-2"></i>No issues found! Your project looks good.</p></div>`}
-                </div>
-            </div>
-        </div>
-
-        <!-- Detailed Analysis Tabs -->
+    </header>
+    <div class="container">
         <div class="card">
-            <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="test-coverage-tab" data-bs-toggle="tab" href="#test-coverage">
-                            Test Coverage (${reportData.testing_analysis.test_files.length})
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="dependencies-tab" data-bs-toggle="tab" href="#dependencies">
-                            Dependencies (${totalPackages})
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link ${reportData.dependency_analysis.conflicts.length > 0 ? 'text-danger' : ''}" 
-                           id="conflicts-tab" data-bs-toggle="tab" href="#conflicts">
-                            Conflicts (${reportData.dependency_analysis.conflicts.length})
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="detailed-coverage-tab" data-bs-toggle="tab" href="#detailed-coverage">
-                            Detailed Coverage
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <div class="card-body p-0">
-                <div class="tab-content">
-                    <!-- Test Coverage Tab -->
-                    <div class="tab-pane fade show active" id="test-coverage">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Test File</th>
-                                        <th>Size</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${testFileRows || `<tr><td colspan="2" class="text-center text-muted">No test files found.</td></tr>`}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Dependencies Tab -->
-                    <div class="tab-pane fade" id="dependencies">
-                        <div class="accordion" id="dependenciesAccordion">
-                            <!-- Python Packages -->
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" 
-                                            data-bs-target="#pythonPackages" aria-expanded="true" aria-controls="pythonPackages">
-                                        Python Packages (${totalPythonPackages})
-                                    </button>
-                                </h2>
-                                <div id="pythonPackages" class="accordion-collapse collapse show" data-bs-parent="#dependenciesAccordion">
-                                    <div class="accordion-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover mb-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Package</th>
-                                                        <th>Installed Version</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${pythonPackageRows || `<tr><td colspan="3" class="text-center text-muted">No Python packages found.</td></tr>`}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Node Packages -->
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                                            data-bs-target="#nodePackages" aria-expanded="false" aria-controls="nodePackages">
-                                        Node.js Packages (${totalNodePackages})
-                                    </button>
-                                </h2>
-                                <div id="nodePackages" class="accordion-collapse collapse" data-bs-parent="#dependenciesAccordion">
-                                    <div class="accordion-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover mb-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Package</th>
-                                                        <th>Installed Version</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${nodePackageRows || `<tr><td colspan="3" class="text-center text-muted">No Node.js packages found.</td></tr>`}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Conflicts Tab -->
-                    <div class="tab-pane fade" id="conflicts">
-                        <div class="accordion" id="conflictsAccordion">
-                            <!-- Dependency Conflicts -->
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" 
-                                            data-bs-target="#dependencyConflicts" aria-expanded="true" aria-controls="dependencyConflicts">
-                                        Dependency Conflicts (${reportData.dependency_analysis.conflicts.length})
-                                    </button>
-                                </h2>
-                                <div id="dependencyConflicts" class="accordion-collapse collapse show" data-bs-parent="#conflictsAccordion">
-                                    <div class="accordion-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover mb-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th colspan="3">Conflict Details</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${conflictRows || `<tr><td colspan="3" class="text-center text-muted">No dependency conflicts found.</td></tr>`}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Missing Packages -->
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                                            data-bs-target="#missingPackages" aria-expanded="false" aria-controls="missingPackages">
-                                        Missing Packages (${reportData.dependency_analysis.missing_packages.length})
-                                    </button>
-                                </h2>
-                                <div id="missingPackages" class="accordion-collapse collapse" data-bs-parent="#conflictsAccordion">
-                                    <div class="accordion-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover mb-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Requiring Package</th>
-                                                        <th>Missing Package</th>
-                                                        <th>Message</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${missingPackageRows || `<tr><td colspan="3" class="text-center text-muted">No missing packages found.</td></tr>`}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Cross-Language Conflicts -->
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                                            data-bs-target="#crossLangConflicts" aria-expanded="false" aria-controls="crossLangConflicts">
-                                        Cross-Language Conflicts (${reportData.dependency_analysis.cross_language_conflicts.length})
-                                    </button>
-                                </h2>
-                                <div id="crossLangConflicts" class="accordion-collapse collapse" data-bs-parent="#conflictsAccordion">
-                                    <div class="accordion-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover mb-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Package Name</th>
-                                                        <th>Versions</th>
-                                                        <th>Issue</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${crossLangConflictRows || `<tr><td colspan="3" class="text-center text-muted">No cross-language conflicts found.</td></tr>`}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Detailed Coverage Tab -->
-                    <div class="tab-pane fade" id="detailed-coverage">
-                        <div class="p-3">
-                            <p class="mb-3">For detailed coverage information, check the generated HTML coverage report in the <code>reports/coverage</code> directory.</p>
-                            <p class="mb-0"><i class="bi bi-info-circle me-2"></i>The coverage report contains line-by-line analysis of which code is covered by tests.</p>
-                        </div>
-                    </div>
+            <h2>Executive Summary</h2>
+            <div class="summary-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Code Coverage</div>
+                    <div class="stat-value ${coverageClass}">${testData.coverage.coverage_percent.toFixed(1)}%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Packages</div>
+                    <div class="stat-value">${depData.total_packages}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Unpinned Packages</div>
+                    <div class="stat-value ${depData.unpinned_packages > 0 ? 'warning' : 'success'}">${depData.unpinned_packages}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Dependency Conflicts</div>
+                    <div class="stat-value ${depData.conflicts.length > 0 ? 'error' : 'success'}">${depData.conflicts.length}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="text-center mt-4">
-            <p class="text-muted small mb-0">Generated by Plutonium - Universal Development Toolkit</p>
+        ${recommendations.length > 0 ? `
+        <div class="card">
+            <h2>Recommendations</h2>
+            ${recommendations.map(rec => `
+                <div class="recommendation ${rec.type}">
+                    <h3><span class="badge ${rec.priority}">${rec.priority.toUpperCase()}</span> ${rec.area.charAt(0).toUpperCase() + rec.area.slice(1)}</h3>
+                    <p>${rec.message}</p>
+                </div>
+            `).join('')}
         </div>
+        ` : ''}
+
+        <div class="tabs">
+            <div class="tab active" data-tab="coverage">Test Coverage (${testData.test_files.length})</div>
+            <div class="tab" data-tab="dependencies">Dependencies (${depData.total_packages})</div>
+            <div class="tab" data-tab="conflicts">Conflicts (${depData.conflicts.length})</div>
+            <div class="tab" data-tab="detailed-coverage">Detailed Coverage</div>
+        </div>
+
+        <div class="tab-content active" id="tab-coverage">
+            <div class="card">
+                <h2>Test Coverage Analysis</h2>
+                <div class="coverage-summary">
+                    <div class="coverage-percent ${coverageClass}">${testData.coverage.coverage_percent.toFixed(1)}%</div>
+                    <div class="coverage-details">
+                        <p>Lines covered: <strong>${testData.coverage.covered}</strong> out of <strong>${testData.coverage.total}</strong></p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${testData.coverage.coverage_percent}%;"></div>
+                        </div>
+                        <p class="${coverageClass}">${coverageStatusText}</p>
+                    </div>
+                </div>
+                <h3>Test Files (${testData.test_files.length})</h3>
+                 <div class="search-container">
+                     <input type="text" class="search-box" id="test-file-search" placeholder="Search test files (e.g., test_memory.py)...">
+                 </div>
+                ${testData.test_files.length > 0 ? `
+                <table>
+                    <thead><tr><th>Test File Path</th></tr></thead>
+                    <tbody class="searchable-content">
+                        ${testData.test_files.map(file => `<tr><td>${file}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+                ` : '<p>No test files found or collected.</p>'}
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-dependencies">
+            <div class="card">
+                <h2>Dependency Analysis</h2>
+                <h3>Python Packages (${depData.total_packages})</h3>
+                ${depData.unpinned_packages > 0 ? `
+                <p class="warning">⚠️ ${depData.unpinned_packages} package(s) are not pinned to specific versions.</p>
+                ` : '<p class="success">✓ All detected packages appear to be pinned.</p>'}
+                 <div class="search-container">
+                     <input type="text" class="search-box" id="package-search" placeholder="Search packages (e.g., requests)...">
+                 </div>
+                <table>
+                    <thead><tr><th>Package</th><th>Installed Version</th><th>Status</th></tr></thead>
+                    <tbody class="searchable-content">
+                        ${Object.entries(depData.installed_packages).sort((a,b) => a[0].localeCompare(b[0])).map(([name, version]) => {
+                            const status = getPackageStatus(name, version, depData.conflicts);
+                            return `
+                            <tr>
+                                <td>${name}</td>
+                                <td>${version}</td>
+                                <td>
+                                    <span class="status-tag ${status.cssClass}">${status.icon} ${status.message}</span>
+                                </td>
+                            </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-conflicts">
+            <div class="card">
+                <h2>Dependency Conflicts</h2>
+                ${depData.conflicts.length > 0 ? `
+                <p class="error">❌ Found ${depData.conflicts.length} dependency conflict(s) or missing dependencies via 'pip check'.</p>
+                <table>
+                    <thead><tr><th>Issue Description</th></tr></thead>
+                    <tbody>
+                        ${depData.conflicts.map(conflict => `<tr><td class="error">${conflict}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+                ` : '<p class="success">✓ No dependency conflicts found via \'pip check\'.</p>'}
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-detailed-coverage">
+             <div class="card">
+                 <h2>Detailed Coverage Report</h2>
+                 <div class="coverage-guide-card">
+                    <h3>📊 How to Read Coverage Reports</h3>
+                    <p>Coverage reports show which parts of your code are executed during tests:</p>
+                    <ul>
+                        <li><strong style="color: var(--success-color);">Green lines</strong>: Code that was executed by tests</li>
+                        <li><strong style="color: var(--error-color);">Red lines</strong>: Code that was never executed during tests</li>
+                        <li><strong style="color: var(--warning-color);">Yellow lines</strong> (if any): Branch coverage - a conditional that was only partially tested</li>
+                    </ul>
+                    <p>Higher percentages mean more code is being tested. When viewing the detailed report:</p>
+                    <ol>
+                        <li>Click on module/file names to drill down into specific code files</li>
+                        <li>Look for red sections to identify untested code</li>
+                        <li>Focus on testing critical functions with low coverage</li>
+                    </ol>
+                 </div>
+                 <p>The full HTML coverage report provides line-by-line details. It may take a moment to load below.</p>
+                 <p><a href="coverage/html/index.html" target="_blank">Open full HTML coverage report in new tab</a></p>
+                 <div class="coverage-iframe-container">
+                     <iframe class="coverage-iframe" src="coverage/html/index.html" title="Detailed Coverage Report" sandbox="allow-scripts allow-same-origin"></iframe>
+                 </div>
+             </div>
+         </div>
+
+        <footer>
+            Generated by Plutonium - Universal Development Toolkit
+        </footer>
     </div>
 
-    <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simple inline script for tabs and search - Consider moving to a separate file
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching logic
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    const targetId = 'tab-' + tab.getAttribute('data-tab');
+                    const targetContent = document.getElementById(targetId);
+                    if(targetContent) targetContent.classList.add('active');
+                });
+            });
+
+            // Generic search filter function
+            const addSearchFilter = (inputId, tableBodySelector) => {
+                const searchInput = document.getElementById(inputId);
+                if (!searchInput) return; // Exit if input not found
+                const tableBody = document.querySelector(tableBodySelector);
+                if (!tableBody) return; // Exit if table body not found
+                const tableRows = tableBody.querySelectorAll('tr');
+                if (tableRows.length === 0) return; // Exit if no rows
+
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    tableRows.forEach(row => {
+                        const textContent = row.textContent.toLowerCase();
+                        // Show row if search term is empty or text includes term
+                        row.style.display = (searchTerm === '' || textContent.includes(searchTerm)) ? '' : 'none';
+                    });
+                });
+            };
+
+            // Apply search filters to relevant tables
+            addSearchFilter('test-file-search', '#tab-coverage .searchable-content');
+            addSearchFilter('package-search', '#tab-dependencies .searchable-content');
+        });
+    </script>
 </body>
 </html>`;
 }
 
+
 // Export the necessary functions
 module.exports = {
-    generateReportHTML,
+    generateUnifiedHtmlReport,
     aggregateReportData // Exporting aggregation might be useful separately
 };

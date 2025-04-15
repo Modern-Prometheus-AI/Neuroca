@@ -15,7 +15,7 @@ from typing import Dict, Any
 from neuroca.memory.backends.factory.backend_type import BackendType
 from neuroca.memory.backends.factory.storage_factory import StorageBackendFactory
 from neuroca.memory.backends.base import BaseStorageBackend
-from neuroca.memory.backends.in_memory_backend import InMemoryBackend
+from neuroca.memory.backends.in_memory.core import InMemoryBackend
 from neuroca.memory.config.loader import ConfigurationLoader, get_backend_config
 
 

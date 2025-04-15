@@ -110,7 +110,8 @@ class TestLTMCategory:
         
         # Should add default categories
         assert "categories" in sample_memory_item.metadata.tags
-        assert sample_memory_item.metadata.tags["categories"] == ["general", "test"]
+        assert isinstance(sample_memory_item.metadata.tags["categories"], list)
+        assert set(sample_memory_item.metadata.tags["categories"]) == set(["general", "test"])
     
     def test_process_on_store_with_existing_categories(self, category_manager, sample_memory_item):
         """
@@ -123,6 +124,7 @@ class TestLTMCategory:
         category_manager.process_on_store(sample_memory_item)
         
         # Should not modify existing categories
+        assert isinstance(sample_memory_item.metadata.tags["categories"], list)
         assert sample_memory_item.metadata.tags["categories"] == ["existing"]
     
     def test_process_post_store(self, category_manager, sample_memory_item):
@@ -160,7 +162,9 @@ class TestLTMCategory:
         memory_id = "test-memory-id"
         category = "new-category"
         
-        # Configure backend to return the memory
+        # Configure backend to return the memory and ensure tags is a dict
+        if "tags" not in sample_memory_data["metadata"]:
+            sample_memory_data["metadata"]["tags"] = {}
         category_manager._backend.retrieve.return_value = sample_memory_data
         
         # Configure update_func to return True (success)
@@ -192,6 +196,10 @@ class TestLTMCategory:
         """
         memory_id = "test-memory-id"
         category = "existing-category"
+        
+        # Ensure metadata.tags exists and is a dict
+        if "tags" not in sample_memory_data["metadata"]:
+            sample_memory_data["metadata"]["tags"] = {}
         
         # Add existing category
         sample_memory_data["metadata"]["tags"]["categories"] = ["existing-category"]

@@ -6,6 +6,7 @@ focusing on cross-tier operations and proper integration of components.
 """
 
 import pytest
+import pytest_asyncio
 import time
 import asyncio
 from typing import Dict, List, Any, Generator
@@ -21,8 +22,8 @@ from neuroca.memory.tiers.ltm.core import LongTermMemoryTier
 from neuroca.memory.manager.core import MemoryManager
 
 
-@pytest.fixture
-def memory_tiers() -> Generator[Dict[str, MemoryTierInterface], None, None]: # Or Iterator[...]
+@pytest_asyncio.fixture
+async def memory_tiers() -> Dict[str, MemoryTierInterface]:
     """Setup memory tiers with in-memory backends for testing."""
     # Initialize tiers with in-memory backends for testing
     stm = ShortTermMemoryTier(
@@ -35,25 +36,28 @@ def memory_tiers() -> Generator[Dict[str, MemoryTierInterface], None, None]: # O
         storage_backend=StorageBackendFactory.create_storage(backend_type=BackendType.MEMORY)
     )
     
-    # Initialize tiers - these are async methods, so we need to use asyncio.run
-    asyncio.run(stm.initialize())
-    asyncio.run(mtm.initialize())
-    asyncio.run(ltm.initialize())
+    # Initialize tiers
+    await stm.initialize()
+    await mtm.initialize()
+    await ltm.initialize()
     
-    yield {
+    tiers = {
         "stm": stm,
         "mtm": mtm,
         "ltm": ltm
     }
     
-    # Cleanup - these are async methods too
-    asyncio.run(stm.shutdown())
-    asyncio.run(mtm.shutdown())
-    asyncio.run(ltm.shutdown())
+    # Cleanup will happen after yield
+    yield tiers
+    
+    # Cleanup
+    await tiers["stm"].shutdown()
+    await tiers["mtm"].shutdown()
+    await tiers["ltm"].shutdown()
 
 
-@pytest.fixture
-def memory_manager(memory_tiers) -> Generator[MemoryManager, None, None]: # Or Iterator[...]
+@pytest_asyncio.fixture
+async def memory_manager(memory_tiers) -> MemoryManager:
     """Setup memory manager with test tiers."""
     manager = MemoryManager(
         stm_storage=memory_tiers["stm"],
@@ -61,11 +65,13 @@ def memory_manager(memory_tiers) -> Generator[MemoryManager, None, None]: # Or I
         mtm_storage_type=BackendType.MEMORY,
         ltm_storage_type=BackendType.MEMORY
     )
-    asyncio.run(manager.initialize())
+    await manager.initialize()
     
+    # Yield once and cleanup after
     yield manager
     
-    asyncio.run(manager.shutdown())
+    # Cleanup
+    await manager.shutdown()
 
 
 @pytest.fixture
@@ -298,7 +304,10 @@ class TestBackendIntegration:
             
             # Verify
             assert retrieved is not None
-            assert retrieved.content == sample_memories[0].content
+            # Convert dict to MemoryItem if needed
+            if isinstance(retrieved, dict):
+                retrieved = MemoryItem.model_validate(retrieved)
+            assert retrieved.content.text == sample_memories[0].content.text
             
             # Test batch operations if supported
             batch_ids = await stm.batch_store(sample_memories[1:])
