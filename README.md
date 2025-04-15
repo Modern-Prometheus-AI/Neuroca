@@ -338,7 +338,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 
-- **Justin Lietz** - *Initial work & Lead Developer*
+- **Justin Lietz** - *Initial work & Lead Developer*, and an early prototype of his autonomous project generator
+
 
 ## Contact
 
