@@ -58,6 +58,8 @@ When rate limits are exceeded, the API returns a 429 Too Many Requests status co
 
 ## API Endpoints
 
+The NCA API is organized into several categories of endpoints. The following sections describe the available endpoints, their functionality, and usage.
+
 ### Authentication Endpoints
 
 #### POST /auth/login
@@ -685,11 +687,7 @@ Registers a new webhook for event notifications.
 
 ## Versioning and Deprecation
 
-API versions follow semantic versioning. When a new version is released, previous versions remain supported for at least 6 months. Deprecated endpoints will return a warning header:
-
-```
-X-API-Warning: This endpoint is deprecated and will be removed on YYYY-MM-DD. Please use /v2/new-endpoint instead.
-```
+The API is currently at version 1.0. As the API evolves, versions will follow semantic versioning. Deprecated endpoints will be clearly documented with information on the recommended replacement endpoints.
 
 ## Support
 
