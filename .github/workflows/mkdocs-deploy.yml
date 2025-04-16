@@ -3,11 +3,12 @@ name: Deploy MkDocs to GitHub Pages
 on:
   push:
     branches:
-      - main  # Or master, depending on your default branch name
+      - main 
     paths:
-      - 'Neuroca/docs/**'  # Only trigger when docs are changed
-      - '.github/workflows/mkdocs-deploy.yml'  # Or when workflow itself is changed
-
+      - 'Neuroca/docs/**' 
+      - '.github/workflows/mkdocs-deploy.yml'
+      - 'Neuroca/scripts/setup_mkdocs.py'
+      - 'Neuroca/src/neuroca/assets/**'  
 jobs:
   deploy:
     runs-on: ubuntu-latest
