@@ -14,6 +14,8 @@
 
 **➡️ View the full [Table of Contents](TABLE_OF_CONTENTS.md) for easy navigation.**
 
+**📚 Official Documentation: [https://docs.neuroca.dev/](https://docs.neuroca.dev/)**
+
 ---
 
 <h2 align="center">Overview</h2>
@@ -279,7 +281,9 @@ mypy neuroca
 
 ## Documentation
 
-Comprehensive documentation is available in the `docs/` directory and can be built and served locally using MkDocs:
+**Official Documentation:** [https://docs.neuroca.dev/](https://docs.neuroca.dev/)
+
+Comprehensive documentation is also available in the `docs/` directory and can be built and served locally using MkDocs:
 
 ```bash
 # Navigate to the docs directory within the Neuroca project
