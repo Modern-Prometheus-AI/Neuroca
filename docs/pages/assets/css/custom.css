@@ -1,5 +1,4 @@
 /* Custom CSS for Neuroca badge at the top of every page */
-
 .neuroca-badge-container {
   width: 100%;
   text-align: center;
@@ -9,21 +8,60 @@
 
 .neuroca-badge-container img {
   max-width: 320px;
-  width: 100%;
+  width: 90%;
   height: auto;
   display: inline-block;
 }
 
-/* Custom Material for MkDocs color overrides for branding */
+/* Base Theme Colors (Acts as Dark Mode Default) */
+/* These are your original settings that define the dark mode look */
 :root > * {
-  --md-primary-fg-color:        #0e223a;
+  --md-primary-fg-color:        #0e223a; /* Very Dark Blue - Header */
   --md-primary-fg-color--light: #1e3a5c;
   --md-primary-fg-color--dark:  #0a1626;
-  --md-accent-fg-color:         #00bfff;
+  --md-accent-fg-color:         #00bfff; /* Deep Sky Blue - Links, highlights */
   --md-accent-fg-color--light:  #33ccff;
   --md-accent-fg-color--dark:   #0099cc;
-  --md-default-bg-color:        #11151c;
-  --md-code-bg-color:           #181c23;
-  --md-typeset-color:           #e0e8ff;
-  --md-typeset-a-color:         #33ccff;
+  --md-default-bg-color:        #11151c; /* Your dark background */
+  --md-code-bg-color:           #181c23; /* Your dark code background */
+  --md-typeset-color:           #e0e8ff; /* Your light text on dark */
+  --md-typeset-a-color:         #33ccff; /* Your link color for dark */
+
+  /* Ensure default foreground (text) colors are defined for dark mode */
+  --md-default-fg-color:        rgba(224, 232, 255, 0.87); /* Light text */
+  --md-default-fg-color--light: rgba(224, 232, 255, 0.54); /* Dimmer secondary text */
+  --md-default-fg-color--dark:  rgba(224, 232, 255, 0.32); /* Even dimmer tertiary text */
 }
+
+/* === Dimmer Light Mode Colors (Default Scheme) === */
+/* These rules ONLY apply when light mode is selected */
+/* They override the :root settings above only for the light theme */
+[data-md-color-scheme="default"] {
+  /* Using Indigo from your mkdocs.yml palette choice for consistency */
+  --md-primary-fg-color:        #3f51b5; /* Standard Indigo - Header */
+  --md-primary-fg-color--light: #757de8; /* Lighter Indigo */
+  --md-primary-fg-color--dark:  #303f9f; /* Darker Indigo */
+
+  --md-accent-fg-color:         #3d5afe; /* Indigo Accent A400 - Links, highlights */
+
+  /* Dimmer Backgrounds - NOT pure white */
+  --md-default-bg-color:        #f0f4f8; /* Very light cool gray/blue tint (easier on eyes) */
+  --md-code-bg-color:           #e8eaf6; /* Light indigo tint for code */
+
+  /* Standard Dark Text for Readability on light background */
+  --md-typeset-color:           #212121; /* Dark gray for text */
+  --md-typeset-a-color:         #3d5afe; /* Use accent for links */
+
+  /* Other light mode adjustments */
+  --md-default-fg-color:        rgba(0, 0, 0, 0.87); /* Standard dark text */
+  --md-default-fg-color--light: rgba(0, 0, 0, 0.54); /* Lighter gray secondary text */
+  --md-default-fg-color--dark:  rgba(0, 0, 0, 0.32); /* Even lighter gray tertiary text */
+  --md-admonition-bg-color:     rgba(0, 0, 0, 0.03); /* Very light admonition background */
+  --md-code-fg-color:           #3f51b5; /* Indigo code text */
+  --md-code-hl-color:           #c5cae9; /* Lighter Indigo highlight */
+  --md-code-hl-number-color:    #d32f2f; /* Keep numbers distinct (e.g., red) */
+  --md-code-hl-string-color:    #388e3c; /* Keep strings distinct (e.g., green) */
+  --md-code-hl-keyword-color:   #7b1fa2; /* Keep keywords distinct (e.g., purple) */
+}
+
+/* Add any other custom CSS rules below if needed */
