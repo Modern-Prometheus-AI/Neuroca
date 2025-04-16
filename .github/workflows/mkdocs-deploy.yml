@@ -34,7 +34,6 @@ jobs:
       
       - name: Set up docs directory
         run: |
-          cd Neuroca
           python scripts/setup_mkdocs.py
       
       - name: Configure Git
@@ -46,5 +45,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd Neuroca
           mkdocs gh-deploy --force
