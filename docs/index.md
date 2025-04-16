@@ -1,10 +1,20 @@
 # NeuroCognitive Architecture (NCA)
 
-Welcome to the official documentation for the NeuroCognitive Architecture (NCA) - a biologically-inspired cognitive framework that enhances Large Language Models with human-like memory systems, health dynamics, and adaptive cognitive processes.
+Welcome to the official documentation for the NeuroCognitive Architecture (NCA) - a biologically-inspired cognitive framework designed to give Large Language Models (LLMs) **persistent, dynamic, and human-like memory**.
 
-## Overview
+## Beyond Retrieval - Enabling Automatic Memory
 
-The NeuroCognitive Architecture (NCA) is a comprehensive framework that implements a three-tiered memory system, cognitive control mechanisms, and health dynamics inspired by human cognition. By integrating these components with modern Language Models, NCA enables more contextually aware, adaptive, and human-like AI systems.
+NeuroCognitive Architecture (NCA) represents a fundamental shift away from common techniques like Retrieval-Augmented Generation (RAG), GraphRAG, PathRAG, and similar approaches. While those methods enhance LLMs by using external tools to **retrieve** information from vector databases or knowledge graphs at query time to augment a limited context window, **NCA enables the LLM itself to genuinely remember...** and not just remember, but remember persistently.
+
+Instead of relying on external lookups, NCA integrates a **dynamic, multi-tiered internal memory system** (Working, Episodic, Semantic) inspired by human cognition. Information isn't just fetched; it's processed, consolidated, prioritized, and even decays naturally over time based on relevance and interaction frequency, all managed by automatic background cognitive processes.
+
+This allows an LLM equipped with NCA to:
+
+* **Organically Recall Context:** Access relevant past interactions, learned facts, user preferences, and evolving goals without explicit retrieval calls.
+* **Learn and Adapt:** Truly evolve its understanding over time based on its "experiences" stored within its memory system.
+* **Maintain Coherence:** Overcome the limitations of fixed context windows, enabling stable, long-term conversational understanding and task execution.
+
+In essence, NCA focuses on building **intrinsic memory capabilities**, allowing the model to simply *remember*, rather than augmenting it with external data retrieval tools. This core memory function is supported by integrated cognitive control mechanisms and health dynamics, creating a more adaptive and contextually aware AI system.
 
 ## Key Features
 
