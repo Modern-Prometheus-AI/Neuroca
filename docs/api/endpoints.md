@@ -692,6 +692,6 @@ The API is currently at version 1.0. As the API evolves, versions will follow se
 ## Support
 
 For API support, please contact:
-- Email: api-support@neuroca.dev
+- Email: justin@neuroca.dev
 - Documentation: https://docs.neuroca.dev
 - Status page: https://status.neuroca.dev

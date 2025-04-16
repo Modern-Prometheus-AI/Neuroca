@@ -252,7 +252,7 @@ backup_postgres() {
     if [[ "${ENCRYPT}" == true ]]; then
         log "DEBUG" "Encrypting backup file"
         final_file="${compressed_file}.gpg"
-        if ! gpg --batch --yes -e -r "${GPG_RECIPIENT:-backup@neuroca.dev}" -o "${final_file}" "${compressed_file}" 2>> "${LOG_FILE}"; then
+        if ! gpg --batch --yes -e -r "${GPG_RECIPIENT:-justin@neuroca.dev}" -o "${final_file}" "${compressed_file}" 2>> "${LOG_FILE}"; then
             error_exit "Failed to encrypt backup file"
         fi
         # Remove the unencrypted compressed file
@@ -301,7 +301,7 @@ backup_mongodb() {
     if [[ "${ENCRYPT}" == true ]]; then
         log "DEBUG" "Encrypting backup file"
         final_file="${compressed_file}.gpg"
-        if ! gpg --batch --yes -e -r "${GPG_RECIPIENT:-backup@neuroca.dev}" -o "${final_file}" "${compressed_file}" 2>> "${LOG_FILE}"; then
+        if ! gpg --batch --yes -e -r "${GPG_RECIPIENT:-justin@neuroca.dev}" -o "${final_file}" "${compressed_file}" 2>> "${LOG_FILE}"; then
             error_exit "Failed to encrypt backup file"
         fi
         # Remove the unencrypted compressed file

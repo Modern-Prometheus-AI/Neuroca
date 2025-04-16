@@ -477,9 +477,9 @@ For additional support:
 - **Documentation**: [https://docs.neuroca.dev](https://docs.neuroca.dev)
 - **GitHub Issues**: [https://github.com/neuroca/neuroca/issues](https://github.com/neuroca/neuroca/issues)
 - **Community Forum**: [https://community.neuroca.dev](https://community.neuroca.dev)
-- **Email Support**: support@neuroca.dev
+- **Email Support**: justin@neuroca.dev
 
-For enterprise support options, please contact sales@neuroca.dev.
+For enterprise support options, please contact justin@neuroca.dev.
 
 ---
 

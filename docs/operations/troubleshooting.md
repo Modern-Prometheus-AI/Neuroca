@@ -422,7 +422,7 @@ If you cannot resolve an issue using this guide:
    ```
 
 2. **Contact support**:
-   - Email: support@neuroca.dev
+   - Email: justin@neuroca.dev
    - Support portal: https://support.neuroca.dev
    - Emergency hotline: +1-555-NEUROCA
 

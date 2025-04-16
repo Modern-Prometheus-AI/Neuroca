@@ -516,4 +516,4 @@ print(f"Deleted {response.json()['deleted_count']} memory items")
 
 These examples demonstrate the core functionality of the NeuroCognitive Architecture API. For more detailed information about specific endpoints, parameters, and response formats, please refer to the [API Reference](./reference.md).
 
-For support, please contact us at support@neuroca.dev or visit our [developer forum](https://forum.neuroca.dev).
+For support, please contact us at justin@neuroca.dev or visit our [developer forum](https://forum.neuroca.dev).

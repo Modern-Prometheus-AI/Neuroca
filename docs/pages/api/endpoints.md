@@ -694,6 +694,6 @@ X-API-Warning: This endpoint is deprecated and will be removed on YYYY-MM-DD. Pl
 ## Support
 
 For API support, please contact:
-- Email: api-support@neuroca.dev
+- Email: justin@neuroca.dev
 - Documentation: https://docs.neuroca.dev
 - Status page: https://status.neuroca.dev
