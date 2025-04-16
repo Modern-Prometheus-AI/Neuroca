@@ -27,7 +27,7 @@ import json
 
 # Get API token
 response = requests.post(
-    "https://api.neuroca.ai/v1/auth/token",
+    "https://api.neuroca.dev/v1/auth/token",
     json={
         "client_id": "your_client_id",
         "client_secret": "your_client_secret"
@@ -51,7 +51,7 @@ else:
 ```python
 # Create a new NCA instance
 response = requests.post(
-    "https://api.neuroca.ai/v1/instances",
+    "https://api.neuroca.dev/v1/instances",
     headers=headers,
     json={
         "name": "My NCA Instance",
@@ -83,7 +83,7 @@ print(f"Created NCA instance with ID: {instance_id}")
 ```python
 # Send a prompt to the NCA instance
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/interact",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/interact",
     headers=headers,
     json={
         "prompt": "What is the capital of France?",
@@ -108,7 +108,7 @@ Working memory is used for immediate processing and has limited capacity.
 ```python
 # Store information in working memory
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/working",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/working",
     headers=headers,
     json={
         "content": "The meeting is scheduled for 3 PM tomorrow.",
@@ -124,7 +124,7 @@ memory_id = response.json()["memory_id"]
 
 # Retrieve from working memory
 response = requests.get(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/working/{memory_id}",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/working/{memory_id}",
     headers=headers
 )
 
@@ -132,7 +132,7 @@ print(json.dumps(response.json(), indent=2))
 
 # List all items in working memory
 response = requests.get(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/working",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/working",
     headers=headers
 )
 
@@ -146,7 +146,7 @@ Short-term memory has a larger capacity but decays over time without reinforceme
 ```python
 # Store information in short-term memory
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/short-term",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/short-term",
     headers=headers,
     json={
         "content": "The client mentioned they prefer blue for the website theme.",
@@ -163,7 +163,7 @@ memory_id = response.json()["memory_id"]
 
 # Reinforce a memory to prevent decay
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/short-term/{memory_id}/reinforce",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/short-term/{memory_id}/reinforce",
     headers=headers,
     json={
         "strength": 0.5  # 0-1 scale
@@ -172,7 +172,7 @@ response = requests.post(
 
 # Search short-term memory
 response = requests.get(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/short-term/search",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/short-term/search",
     headers=headers,
     params={
         "query": "website theme",
@@ -190,7 +190,7 @@ Long-term memory is persistent and has the largest capacity.
 ```python
 # Store information in long-term memory
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/long-term",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/long-term",
     headers=headers,
     json={
         "content": "The company was founded in 2010 by Jane Smith and has grown to 500 employees.",
@@ -207,7 +207,7 @@ memory_id = response.json()["memory_id"]
 
 # Retrieve from long-term memory with semantic search
 response = requests.get(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/long-term/semantic-search",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/long-term/semantic-search",
     headers=headers,
     params={
         "query": "When was the company founded and by whom?",
@@ -219,7 +219,7 @@ print(json.dumps(response.json(), indent=2))
 
 # Transfer from short-term to long-term memory
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/transfer",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/transfer",
     headers=headers,
     json={
         "source_type": "short_term",
@@ -235,7 +235,7 @@ response = requests.post(
 ```python
 # Initiate a reasoning process
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/cognitive/reason",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/cognitive/reason",
     headers=headers,
     json={
         "question": "Should we expand our business to international markets?",
@@ -251,7 +251,7 @@ reasoning_id = response.json()["reasoning_id"]
 
 # Get reasoning results
 response = requests.get(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/cognitive/reason/{reasoning_id}",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/cognitive/reason/{reasoning_id}",
     headers=headers
 )
 
@@ -259,7 +259,7 @@ print(json.dumps(response.json(), indent=2))
 
 # Perform pattern recognition
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/cognitive/pattern",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/cognitive/pattern",
     headers=headers,
     json={
         "data": [
@@ -283,7 +283,7 @@ print(json.dumps(response.json(), indent=2))
 ```python
 # Get current health status
 response = requests.get(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/health",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/health",
     headers=headers
 )
 
@@ -291,7 +291,7 @@ print(json.dumps(response.json(), indent=2))
 
 # Update energy level
 response = requests.patch(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/health",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/health",
     headers=headers,
     json={
         "energy": 80  # Decrease energy to 80%
@@ -300,7 +300,7 @@ response = requests.patch(
 
 # Simulate rest to recover energy and reduce fatigue
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/health/rest",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/health/rest",
     headers=headers,
     json={
         "duration": 3600  # Rest for 1 hour (in seconds)
@@ -309,7 +309,7 @@ response = requests.post(
 
 # Get health history
 response = requests.get(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/health/history",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/health/history",
     headers=headers,
     params={
         "from": "2023-01-01T00:00:00Z",
@@ -326,7 +326,7 @@ print(json.dumps(response.json(), indent=2))
 ```python
 # Configure LLM integration
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/llm/configure",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/llm/configure",
     headers=headers,
     json={
         "provider": "openai",
@@ -341,7 +341,7 @@ response = requests.post(
 
 # Generate content with LLM through NCA
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/llm/generate",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/llm/generate",
     headers=headers,
     json={
         "prompt": "Write a summary of the quarterly financial results.",
@@ -357,7 +357,7 @@ print(json.dumps(response.json(), indent=2))
 
 # Analyze sentiment with LLM
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/llm/analyze",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/llm/analyze",
     headers=headers,
     json={
         "text": "I'm extremely disappointed with the customer service I received today.",
@@ -377,7 +377,7 @@ print(json.dumps(response.json(), indent=2))
 
 # 1. Store information
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/short-term",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/short-term",
     headers=headers,
     json={
         "content": "Sales increased by 15% in Q1, 12% in Q2, and 8% in Q3, but decreased by 3% in Q4.",
@@ -391,7 +391,7 @@ response = requests.post(
 
 # 2. Reason about the information
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/cognitive/reason",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/cognitive/reason",
     headers=headers,
     json={
         "question": "What might be causing the sales slowdown throughout the year?",
@@ -406,7 +406,7 @@ reasoning_result = response.json()["result"]
 
 # 3. Generate a report based on the reasoning
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/llm/generate",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/llm/generate",
     headers=headers,
     json={
         "prompt": "Write a brief report on our sales trend and potential causes for the slowdown.",
@@ -427,7 +427,7 @@ print(final_report)
 ```python
 # Process multiple items in a batch
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/batch",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/batch",
     headers=headers,
     json={
         "items": [
@@ -459,7 +459,7 @@ print(json.dumps(response.json(), indent=2))
 # Example of handling API errors
 try:
     response = requests.get(
-        f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/working/non_existent_id",
+        f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/working/non_existent_id",
         headers=headers
     )
     
@@ -484,7 +484,7 @@ except requests.exceptions.RequestException as e:
 ```python
 # Batch retrieve multiple memory items
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/batch-retrieve",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/batch-retrieve",
     headers=headers,
     json={
         "ids": [
@@ -499,7 +499,7 @@ print(json.dumps(response.json(), indent=2))
 
 # Batch delete multiple memory items
 response = requests.post(
-    f"https://api.neuroca.ai/v1/instances/{instance_id}/memory/batch-delete",
+    f"https://api.neuroca.dev/v1/instances/{instance_id}/memory/batch-delete",
     headers=headers,
     json={
         "ids": [
@@ -516,4 +516,4 @@ print(f"Deleted {response.json()['deleted_count']} memory items")
 
 These examples demonstrate the core functionality of the NeuroCognitive Architecture API. For more detailed information about specific endpoints, parameters, and response formats, please refer to the [API Reference](./reference.md).
 
-For support, please contact us at support@neuroca.ai or visit our [developer forum](https://forum.neuroca.ai).
+For support, please contact us at justin@neuroca.dev or visit our [developer forum](https://forum.neuroca.dev).

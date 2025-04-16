@@ -1,4 +1,4 @@
-# NeuroCognitive Architecture (NCA)
+<div align="center"><h1>NeuroCognitive Architecture (NCA)</h1></div>
 
 Welcome to the official documentation for the NeuroCognitive Architecture (NCA) - a biologically-inspired cognitive framework designed to give Large Language Models (LLMs) **persistent, dynamic, and human-like memory**.
 

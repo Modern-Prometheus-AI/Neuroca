@@ -72,7 +72,7 @@ receivers:
             *Started:* {{ .StartsAt | since }}
           {{ end }}
     email_configs:
-      - to: 'ops-team@neuroca.ai'
+      - to: 'ops-team@neuroca.dev'
         send_resolved: true
         headers:
           subject: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
@@ -103,7 +103,7 @@ receivers:
       - channel: '#nca-memory'
         send_resolved: true
     email_configs:
-      - to: 'memory-team@neuroca.ai'
+      - to: 'memory-team@neuroca.dev'
         send_resolved: true
   
   - name: 'health-team'
@@ -111,7 +111,7 @@ receivers:
       - channel: '#nca-health'
         send_resolved: true
     email_configs:
-      - to: 'health-team@neuroca.ai'
+      - to: 'health-team@neuroca.dev'
         send_resolved: true
   
   - name: 'integration-team'
@@ -119,7 +119,7 @@ receivers:
       - channel: '#nca-integration'
         send_resolved: true
     email_configs:
-      - to: 'integration-team@neuroca.ai'
+      - to: 'integration-team@neuroca.dev'
         send_resolved: true
   
   - name: 'monitoring-team'
@@ -127,7 +127,7 @@ receivers:
       - channel: '#nca-monitoring'
         send_resolved: true
     email_configs:
-      - to: 'monitoring-team@neuroca.ai'
+      - to: 'monitoring-team@neuroca.dev'
         send_resolved: true
 
 # Alert definitions
@@ -141,19 +141,19 @@ alerts:
           threshold: 95
           duration: 5m
           description: "Working memory capacity exceeds 95% for 5 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/memory/working-capacity"
+          runbook_url: "https://docs.neuroca.dev/runbooks/memory/working-capacity"
         warning:
           threshold: 85
           duration: 15m
           description: "Working memory capacity exceeds 85% for 15 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/memory/working-capacity"
+          runbook_url: "https://docs.neuroca.dev/runbooks/memory/working-capacity"
       
       latency:
         critical:
           threshold: 500  # ms
           duration: 5m
           description: "Working memory access latency exceeds 500ms for 5 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/memory/working-latency"
+          runbook_url: "https://docs.neuroca.dev/runbooks/memory/working-latency"
     
     # Short-term memory alerts
     short_term_memory:
@@ -162,14 +162,14 @@ alerts:
           threshold: 90
           duration: 10m
           description: "Short-term memory capacity exceeds 90% for 10 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/memory/short-term-capacity"
+          runbook_url: "https://docs.neuroca.dev/runbooks/memory/short-term-capacity"
       
       degradation:
         warning:
           threshold: 25  # % degradation rate
           duration: 30m
           description: "Short-term memory degradation rate exceeds 25% for 30 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/memory/short-term-degradation"
+          runbook_url: "https://docs.neuroca.dev/runbooks/memory/short-term-degradation"
     
     # Long-term memory alerts
     long_term_memory:
@@ -178,14 +178,14 @@ alerts:
           threshold: 30m  # 30 minutes lag
           duration: 15m
           description: "Long-term memory indexing lag exceeds 30 minutes for 15 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/memory/long-term-indexing"
+          runbook_url: "https://docs.neuroca.dev/runbooks/memory/long-term-indexing"
       
       retrieval_errors:
         critical:
           threshold: 10  # % error rate
           duration: 5m
           description: "Long-term memory retrieval error rate exceeds 10% for 5 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/memory/long-term-retrieval"
+          runbook_url: "https://docs.neuroca.dev/runbooks/memory/long-term-retrieval"
 
   # Health dynamics alerts
   health:
@@ -194,20 +194,20 @@ alerts:
         threshold: 15  # % remaining
         duration: 10m
         description: "System energy level below 15% for 10 minutes"
-        runbook_url: "https://docs.neuroca.ai/runbooks/health/energy-critical"
+        runbook_url: "https://docs.neuroca.dev/runbooks/health/energy-critical"
       
       warning:
         threshold: 30  # % remaining
         duration: 30m
         description: "System energy level below 30% for 30 minutes"
-        runbook_url: "https://docs.neuroca.ai/runbooks/health/energy-warning"
+        runbook_url: "https://docs.neuroca.dev/runbooks/health/energy-warning"
     
     homeostasis:
       critical:
         threshold: 40  # % deviation from baseline
         duration: 15m
         description: "Homeostasis deviation exceeds 40% for 15 minutes"
-        runbook_url: "https://docs.neuroca.ai/runbooks/health/homeostasis"
+        runbook_url: "https://docs.neuroca.dev/runbooks/health/homeostasis"
 
   # Integration alerts
   integration:
@@ -217,21 +217,21 @@ alerts:
           threshold: 15  # % error rate
           duration: 5m
           description: "LLM connection error rate exceeds 15% for 5 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/integration/llm-connection"
+          runbook_url: "https://docs.neuroca.dev/runbooks/integration/llm-connection"
       
       latency:
         warning:
           threshold: 2000  # ms
           duration: 10m
           description: "LLM response latency exceeds 2000ms for 10 minutes"
-          runbook_url: "https://docs.neuroca.ai/runbooks/integration/llm-latency"
+          runbook_url: "https://docs.neuroca.dev/runbooks/integration/llm-latency"
     
     api_errors:
       critical:
         threshold: 10  # % error rate
         duration: 5m
         description: "API error rate exceeds 10% for 5 minutes"
-        runbook_url: "https://docs.neuroca.ai/runbooks/integration/api-errors"
+        runbook_url: "https://docs.neuroca.dev/runbooks/integration/api-errors"
 
   # Infrastructure alerts
   infrastructure:
@@ -240,27 +240,27 @@ alerts:
         threshold: 95  # % utilization
         duration: 10m
         description: "CPU utilization exceeds 95% for 10 minutes"
-        runbook_url: "https://docs.neuroca.ai/runbooks/infrastructure/cpu"
+        runbook_url: "https://docs.neuroca.dev/runbooks/infrastructure/cpu"
     
     memory:
       critical:
         threshold: 95  # % utilization
         duration: 10m
         description: "Memory utilization exceeds 95% for 10 minutes"
-        runbook_url: "https://docs.neuroca.ai/runbooks/infrastructure/memory"
+        runbook_url: "https://docs.neuroca.dev/runbooks/infrastructure/memory"
     
     disk:
       warning:
         threshold: 85  # % utilization
         duration: 30m
         description: "Disk utilization exceeds 85% for 30 minutes"
-        runbook_url: "https://docs.neuroca.ai/runbooks/infrastructure/disk"
+        runbook_url: "https://docs.neuroca.dev/runbooks/infrastructure/disk"
       
       critical:
         threshold: 95  # % utilization
         duration: 15m
         description: "Disk utilization exceeds 95% for 15 minutes"
-        runbook_url: "https://docs.neuroca.ai/runbooks/infrastructure/disk"
+        runbook_url: "https://docs.neuroca.dev/runbooks/infrastructure/disk"
 
 # Inhibition rules to prevent alert storms
 inhibit_rules:
@@ -300,9 +300,9 @@ metadata:
   last_updated: "2023-11-01"
   owners:
     - name: "Operations Team"
-      email: "ops-team@neuroca.ai"
+      email: "ops-team@neuroca.dev"
     - name: "Platform Team"
-      email: "platform-team@neuroca.ai"
+      email: "platform-team@neuroca.dev"
   documentation:
-    runbooks_base_url: "https://docs.neuroca.ai/runbooks/"
-    wiki_url: "https://wiki.neuroca.ai/monitoring/alerts"
+    runbooks_base_url: "https://docs.neuroca.dev/runbooks/"
+    wiki_url: "https://wiki.neuroca.dev/monitoring/alerts"

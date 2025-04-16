@@ -78,7 +78,7 @@ The NCA exposes a RESTful API that allows you to interact with the system progra
 All API requests require authentication using an API key:
 
 ```bash
-curl -X POST https://api.neuroca.ai/v1/cognitive/process \
+curl -X POST https://api.neuroca.dev/v1/cognitive/process \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"input": "Your input text here"}'
@@ -282,7 +282,7 @@ Generate and manage API keys through the NCA dashboard or API:
 
 ```bash
 # Generate a new API key
-curl -X POST https://api.neuroca.ai/v1/auth/keys \
+curl -X POST https://api.neuroca.dev/v1/auth/keys \
   -H "Authorization: Bearer ADMIN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"name": "Production API Key", "permissions": ["read", "write"]}'
@@ -474,12 +474,12 @@ A: NCA implements encryption at rest and in transit, with configurable data rete
 
 For additional support:
 
-- **Documentation**: [https://docs.neuroca.ai](https://docs.neuroca.ai)
+- **Documentation**: [https://docs.neuroca.dev](https://docs.neuroca.dev)
 - **GitHub Issues**: [https://github.com/neuroca/neuroca/issues](https://github.com/neuroca/neuroca/issues)
-- **Community Forum**: [https://community.neuroca.ai](https://community.neuroca.ai)
-- **Email Support**: support@neuroca.ai
+- **Community Forum**: [https://community.neuroca.dev](https://community.neuroca.dev)
+- **Email Support**: justin@neuroca.dev
 
-For enterprise support options, please contact sales@neuroca.ai.
+For enterprise support options, please contact justin@neuroca.dev.
 
 ---
 
