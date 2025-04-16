@@ -13,7 +13,7 @@ import time
 from typing import Dict, List, Any, Optional
 import uuid
 
-from neuroca.memory.backends import BackendType
+from memory.backends import BackendType
 from neuroca.memory.manager.core import MemoryManager
 from neuroca.memory.models.memory_item import MemoryItem
 from neuroca.memory.models.search import MemorySearchOptions, MemorySearchResult # Import MemorySearchResult
