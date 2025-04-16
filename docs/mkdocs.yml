@@ -53,8 +53,8 @@ theme:
     - content.tabs.link
   icon:
     repo: fontawesome/brands/github
-  logo: assets/images/Neuroca-badge.PNG
-  favicon: assets/images/Neuroca-badge.PNG
+  logo: assets/images/Neuroca-badge.png
+  favicon: assets/images/Neuroca-badge.png
 
   language: en
 
