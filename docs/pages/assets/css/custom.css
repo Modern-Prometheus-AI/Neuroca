@@ -45,8 +45,8 @@
   --md-accent-fg-color:         #3d5afe; /* Indigo Accent A400 - Links, highlights */
 
   /* Dimmer Backgrounds - NOT pure white */
-  --md-default-bg-color:        #f0f4f8; /* Very light cool gray/blue tint (easier on eyes) */
-  --md-code-bg-color:           #e8eaf6; /* Light indigo tint for code */
+  --md-default-bg-color:        #cbe5ff; /* Very light cool gray/blue tint (easier on eyes) */
+  --md-code-bg-color:           #c6ccee; /* Light indigo tint for code */
 
   /* Standard Dark Text for Readability on light background */
   --md-typeset-color:           #212121; /* Dark gray for text */
