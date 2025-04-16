@@ -422,14 +422,14 @@ If you cannot resolve an issue using this guide:
    ```
 
 2. **Contact support**:
-   - Email: support@neuroca.ai
-   - Support portal: https://support.neuroca.ai
+   - Email: support@neuroca.dev
+   - Support portal: https://support.neuroca.dev
    - Emergency hotline: +1-555-NEUROCA
 
 3. **Community resources**:
    - GitHub Issues: https://github.com/neuroca/neuroca/issues
-   - Community forum: https://community.neuroca.ai
-   - Documentation: https://docs.neuroca.ai
+   - Community forum: https://community.neuroca.dev
+   - Documentation: https://docs.neuroca.dev
 
 ---
 

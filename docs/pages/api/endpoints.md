@@ -7,7 +7,7 @@ This document provides detailed specifications for all API endpoints in the Neur
 ## Base URL
 
 ```
-https://api.neuroca.ai/v1 // Not implemented
+https://api.neuroca.dev/v1 // Not implemented
 ```
 
 ## Authentication
@@ -694,6 +694,6 @@ X-API-Warning: This endpoint is deprecated and will be removed on YYYY-MM-DD. Pl
 ## Support
 
 For API support, please contact:
-- Email: api-support@neuroca.ai
-- Documentation: https://docs.neuroca.ai
-- Status page: https://status.neuroca.ai
+- Email: api-support@neuroca.dev
+- Documentation: https://docs.neuroca.dev
+- Status page: https://status.neuroca.dev

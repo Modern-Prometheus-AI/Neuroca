@@ -65,7 +65,7 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/neuroca/neuroca"
-Documentation = "https://docs.neuroca.ai"
+Documentation = "https://docs.neuroca.dev"
 
 [project.scripts]
 neuroca = "neuroca.cli.main:app"
