@@ -5,10 +5,10 @@ on:
     branches:
       - main 
     paths:
-      - 'Neuroca/docs/**' 
+      - 'docs/**' 
       - '.github/workflows/mkdocs-deploy.yml'
-      - 'Neuroca/scripts/setup_mkdocs.py'
-      - 'Neuroca/src/neuroca/assets/**'  
+      - 'scripts/setup_mkdocs.py'
+      - 'src/neuroca/assets/**'  
 jobs:
   deploy:
     runs-on: ubuntu-latest
