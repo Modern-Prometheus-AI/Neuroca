@@ -104,8 +104,7 @@ class MongoDBConnection:
         # Validate configuration
         self._validate_config()
         
-        logger.debug("MongoDB connection manager initialized with sanitized config: %s", 
-                    self._sanitize_config(self.config))
+        # MongoDB connection manager initialized. Configuration details are not logged to avoid exposing sensitive data.
 
     def _load_config_from_env(self) -> dict[str, Any]:
         """
