@@ -9,6 +9,10 @@ on:
       - '.github/workflows/mkdocs-deploy.yml'
       - 'scripts/setup_mkdocs.py'
       - 'src/neuroca/assets/**'  
+
+permissions:
+  contents: write  # Needed to push to gh-pages branch
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
