@@ -104,8 +104,8 @@ class MongoDBConnection:
         # Validate configuration
         self._validate_config()
         
-        logger.debug("MongoDB connection manager initialized with config: %s", 
-                    {k: v if k != 'password' else '******' for k, v in self.config.items()})
+        logger.debug("MongoDB connection manager initialized with sanitized config: %s", 
+                    self._sanitize_config(self.config))
 
     def _load_config_from_env(self) -> dict[str, Any]:
         """
@@ -172,6 +172,19 @@ class MongoDBConnection:
         # If username is provided, password should also be provided
         if self.config.get('username') and not self.config.get('password'):
             logger.warning("MongoDB username provided without password. Authentication may fail.")
+
+    def _sanitize_config(self, config: dict[str, Any]) -> dict[str, Any]:
+        """
+        Sanitize the configuration dictionary by removing sensitive keys.
+        
+        Args:
+            config (dict[str, Any]): The original configuration dictionary.
+        
+        Returns:
+            dict[str, Any]: A sanitized configuration dictionary with sensitive keys removed.
+        """
+        sensitive_keys = {'password', 'username', 'auth_source', 'auth_mechanism'}
+        return {k: v for k, v in config.items() if k not in sensitive_keys}
 
     def _build_connection_uri(self) -> str:
         """
