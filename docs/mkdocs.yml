@@ -217,6 +217,8 @@ nav:
     - Workflow: development/workflow.md
     - Scroll Fix: development/scroll_fix.md
     - HTTPS Setup: development/https_setup.md
+    - Guides:
+      - Publishing to PyPI: guides/publishing_to_pypi.md
   - Operations:
     - Deployment: operations/deployment.md
     - Monitoring: operations/monitoring.md
