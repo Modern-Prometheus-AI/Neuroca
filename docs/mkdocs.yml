@@ -214,6 +214,7 @@ nav:
     - Standards: development/standards.md
     - Workflow: development/workflow.md
     - Scroll Fix: development/scroll_fix.md
+    - HTTPS Setup: development/https_setup.md
   - Operations:
     - Deployment: operations/deployment.md
     - Monitoring: operations/monitoring.md
