@@ -27,6 +27,11 @@
     }
   });
 
+  // Update lastY on hashchange so clicking TOC links does not trigger restoration
+  window.addEventListener('hashchange', () => {
+    lastY = window.scrollY;
+  }, false);
+
   // 4) Watch for DOM mutations (e.g. Mermaid/MathJax rendering) that may shift layout
   new MutationObserver(() => {
     if (Math.abs(window.scrollY - lastY) > 50) {
