@@ -137,7 +137,8 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js
   - assets/js/mermaid-init.js
   - assets/js/mathjax.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js
+  - https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
   - assets/js/analytics.js
   - assets/js/consent.js
