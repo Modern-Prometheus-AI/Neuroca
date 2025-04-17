@@ -12,6 +12,10 @@ Thank you for your interest in contributing to the NeuroCognitive Architecture (
   - [Branching Strategy](#branching-strategy)
   - [Commit Guidelines](#commit-guidelines)
   - [Pull Request Process](#pull-request-process)
+- [Package Building and Distribution](#package-building-and-distribution)
+  - [Building the Package](#building-the-package)
+  - [Testing Installation](#testing-installation)
+  - [Publishing to PyPI](#publishing-to-pypi)
 - [Coding Standards](#coding-standards)
   - [Python Style Guide](#python-style-guide)
   - [Documentation Guidelines](#documentation-guidelines)
@@ -127,6 +131,83 @@ Closes #123
 5. **Request review**: Assign reviewers once your PR is ready.
 6. **Address feedback**: Respond to all review comments and make necessary changes.
 7. **Squash commits**: Before merging, squash commits into logical units.
+
+## Package Building and Distribution
+
+The NeuroCognitive Architecture (NCA) is distributed as a Python package. This section provides guidelines for building, testing, and publishing the package.
+
+### Building the Package
+
+We use Poetry for package management and building:
+
+```bash
+# Ensure your poetry.toml and pyproject.toml are properly configured
+# Increment version in pyproject.toml according to semantic versioning
+
+# Build the package (creates both wheel and sdist)
+poetry build
+```
+
+Alternatively, you can use the standard Python build tools:
+
+```bash
+# Install build if not already installed
+pip install build
+
+# Build the package
+python -m build
+```
+
+This will create distribution packages in the `dist/` directory.
+
+### Testing Installation
+
+Before publishing, test the installation of your package locally:
+
+```bash
+# Create a temporary virtual environment
+python -m venv .venv-test-pkg
+
+# Activate the environment
+# On Windows:
+.\.venv-test-pkg\Scripts\activate
+# On Unix/MacOS:
+source .venv-test-pkg/bin/activate
+
+# Install the package from the local build
+pip install dist/*.whl  # or dist/*.tar.gz for the source distribution
+
+# Test basic import
+python -c "import neuroca; print('Successfully imported neuroca')"
+
+# Deactivate when done
+deactivate
+```
+
+### Publishing to PyPI
+
+Only maintainers with appropriate permissions should publish to PyPI:
+
+```bash
+# Ensure you have TestPyPI and PyPI credentials configured
+# First, test with TestPyPI
+poetry config repositories.testpypi https://test.pypi.org/legacy/
+poetry publish --repository testpypi
+
+# If everything looks good on TestPyPI, publish to PyPI
+poetry publish
+
+# Alternatively, using twine
+pip install twine
+twine upload dist/*
+```
+
+Remember to create a Git tag for each published version:
+
+```bash
+git tag -a v0.1.0 -m "Release version 0.1.0"
+git push origin v0.1.0
+```
 
 ## Coding Standards
 

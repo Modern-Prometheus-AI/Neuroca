@@ -131,10 +131,42 @@ src/neuroca/
 ### Prerequisites
 
 - Python 3.9+
-- Docker and Docker Compose (for containerized deployment)
+- Docker and Docker Compose (for containerized deployment, optional)
 - Access to LLM API credentials (if using external models)
 
-### Using Poetry (Recommended)
+### Install as a Python Package
+
+#### From PyPI (Recommended)
+
+```bash
+# Install directly from PyPI
+pip install neuroca
+
+# Or in a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install neuroca
+```
+
+#### From Source
+
+```bash
+# Clone the repository
+git clone https://github.com/justinlietz93/Neuro-Cognitive-Architecture.git
+cd Neuro-Cognitive-Architecture
+
+# Install as a package (development mode)
+pip install -e .
+
+# Or build and install the package
+pip install build
+python -m build
+pip install dist/*.whl
+```
+
+### Development Setup
+
+#### Using Poetry (Recommended for Development)
 
 ```bash
 # Clone the repository
@@ -148,7 +180,7 @@ poetry install
 poetry shell
 ```
 
-### Using Pip
+#### Using Pip (Alternative for Development)
 
 ```bash
 # Clone the repository
