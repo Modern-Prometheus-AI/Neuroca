@@ -16,6 +16,8 @@
 
 **📚 Official Documentation: [https://docs.neuroca.dev/](https://docs.neuroca.dev/)**
 
+***Email justin@neuroca.dev to gain private access to the Neuroca Notebook LM knowledge base to ask questions directly to an AI who is an expert on the system.***
+
 ---
 
 <h2 align="center">Overview</h2>
