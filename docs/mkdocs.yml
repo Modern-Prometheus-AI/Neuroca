@@ -141,6 +141,7 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
   - assets/js/analytics.js
   - assets/js/consent.js
+  - assets/js/fix-scroll.js
 
 extra_css:
   - assets/css/custom.css
@@ -212,6 +213,7 @@ nav:
     - Environment Setup: development/environment.md
     - Standards: development/standards.md
     - Workflow: development/workflow.md
+    - Scroll Fix: development/scroll_fix.md
   - Operations:
     - Deployment: operations/deployment.md
     - Monitoring: operations/monitoring.md

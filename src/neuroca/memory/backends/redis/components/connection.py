@@ -8,8 +8,8 @@ import asyncio
 import logging
 from typing import Optional
 
-import aioredis
-from aioredis import Redis
+import redis
+from asyncio import Redis
 
 from neuroca.memory.exceptions import StorageBackendError, StorageInitializationError
 
@@ -62,7 +62,7 @@ class RedisConnection:
         """
         try:
             # Connect to Redis
-            self._redis = await aioredis.from_url(
+            self._redis = await redis.from_url(
                 self.redis_url,
                 db=self.db,
                 password=self.password,
