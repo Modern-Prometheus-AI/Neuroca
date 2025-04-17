@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 
+{% block head %}
+<script>
+  // Preemptive scroll restoration before content renders
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  const lastY = sessionStorage.getItem('docsLastY') || 0;
+  if (lastY > 0) {
+    window.scrollTo(0, +lastY);
+  }
+  window.addEventListener('beforeunload', () => {
+    sessionStorage.setItem('docsLastY', window.scrollY);
+  }, { once: true });
+</script>
+{{ super() }}
+{% endblock %}
+
 {% block content %}
 <div class="neuroca-badge-container">
   <img src="{{ base_url }}/assets/images/Neuroca-badge.png" alt="NeuroCognitive Architecture Badge" />
