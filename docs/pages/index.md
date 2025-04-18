@@ -1,5 +1,7 @@
 # NeuroCognitive Architecture (NCA)
 
+<p align="center"><span style="color:green"><strong>NEW:</strong> Neuroca vs Agno benchmarks results: <a href="https://github.com/justinlietz93/Neuroca-Benchmarks">here</a></span></p>
+
 Welcome to the official documentation for the NeuroCognitive Architecture (NCA) - a biologically-inspired cognitive framework that enhances Large Language Models with human-like memory systems, health dynamics, and adaptive cognitive processes.
 
 ## Overview
