@@ -4,6 +4,7 @@
 </p>
 
 <h3 align="center"><i>Persistent Memory System for LLMs (NCA)</i></h3>
+<p align="center"><span style="color:green"><strong>NEW:</strong> Neuroca vs Agno benchmarks results: <a href="https://github.com/justinlietz93/Neuroca-Benchmarks">here</a></span></p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"/></a>
@@ -366,6 +367,10 @@ The NCA project is actively evolving. Key areas for future development include:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Performance & Benchmarking
+
+For detailed performance comparisons and benchmarks demonstrating Neuroca’s permanent, reliable, accurate, and fast memory capabilities, see the standalone [Neuroca Benchmarks Repository](https://github.com/justinlietz93/Neuroca-Benchmarks).
 
 ## Acknowledgments
 
