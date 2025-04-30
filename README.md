@@ -382,7 +382,7 @@ For detailed performance comparisons and benchmarks demonstrating Neuroca’s pe
 ## Author
 
 - **Justin Lietz** - *Initial work & Lead Developer*
-- Justin's first prototype of the **Autonomous Project Generator** with **Claude 3.7 Sonnet** (who produced > 70% of the codebase in one prompt)
+- Justin's first prototype of the **Autonomous Project Generator** with **Claude 3.7 Sonnet** (who produced > 70% of the codebase in one prompt using the engine behind [Apex](https://github.com/justinlietz93/Apex-CodeGenesis) )
 
 
 ## Contact
