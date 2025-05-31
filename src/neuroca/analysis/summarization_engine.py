@@ -155,11 +155,12 @@ class CodebaseSummarizationEngine:
                 logger.warning(f"Could not read .gitignore: {e}")
         else:
             logger.info("No .gitignore file found, using default exclusion patterns")
-            
-        # Add some essential patterns if not present
+              # Add some essential patterns if not present
         essential_patterns = [
             "__pycache__", "*.pyc", "*.pyo", ".git", ".pytest_cache", 
-            "node_modules", ".mypy_cache", ".ruff_cache"
+            "node_modules", ".mypy_cache", ".ruff_cache", "nca_env",
+            "venv", ".venv", "env", ".env", "virtualenv", ".virtualenv",
+            "site-packages", "*.egg-info", "build", "dist", ".tox"
         ]
         for pattern in essential_patterns:
             if pattern not in patterns:
@@ -389,14 +390,39 @@ class CodebaseSummarizationEngine:
             for pattern in self.scope.exclude_patterns:
                 if fnmatch.fnmatch(relative_path_str, pattern) or pattern in relative_path_str:
                     return True
-            
-            # Additional size-based exclusion for very large files
+              # Additional size-based exclusion for very large files
             try:
                 if file_path.is_file() and file_path.stat().st_size > 50 * 1024 * 1024:  # 50MB
                     logger.debug(f"Excluding large file: {relative_path_str}")
                     return True
             except OSError:
                 pass  # File might not be accessible
+            
+            # Enhanced filtering for better performance
+            # Only process source code and documentation files
+            source_extensions = {
+                '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.cpp', '.c', '.h', '.hpp', 
+                '.cs', '.go', '.rs', '.php', '.rb', '.swift', '.kt', '.scala', '.r',
+                '.sql', '.sh', '.bash', '.ps1', '.yaml', '.yml', '.json', '.toml',
+                '.md', '.rst', '.txt', '.cfg', '.ini', '.conf', '.xml', '.html', '.css'
+            }
+            
+            file_ext = file_path.suffix.lower()
+            if file_ext and file_ext not in source_extensions:
+                return True  # Exclude non-source files
+            
+            # Exclude files in virtual environments or build directories
+            path_parts = relative_path.parts
+            exclude_dirs = {
+                'nca_env', 'venv', '.venv', 'env', 'virtualenv', '.virtualenv',
+                'site-packages', 'node_modules', '__pycache__', '.git', 
+                'build', 'dist', '.tox', '.mypy_cache', '.pytest_cache',
+                'coverage', '.coverage', 'htmlcov'
+            }
+            
+            for part in path_parts:
+                if part.lower() in exclude_dirs:
+                    return True
                 
             return False
             

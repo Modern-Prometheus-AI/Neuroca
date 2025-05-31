@@ -42,6 +42,7 @@ coverage.xml
 .ipynb_checkpoints
 
 # Virtual environments
+nca_env/
 venv/
 env/
 ENV/
