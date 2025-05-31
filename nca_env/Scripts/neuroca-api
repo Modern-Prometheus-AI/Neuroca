@@ -1,0 +1,6 @@
+#!C:\git\NEUROCA\Neuro-Cognitive-Agent\Neuroca\nca_env\Scripts\python.exe
+import sys
+from neuroca.api.main import start
+
+if __name__ == '__main__':
+    sys.exit(start())

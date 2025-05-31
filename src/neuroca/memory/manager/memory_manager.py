@@ -54,6 +54,18 @@ class MemoryManager(MemoryManagerInterface):
         config: Optional[Dict[str, Any]] = None,
         backend_type: Optional[BackendType] = None,
         backend_config: Optional[Dict[str, Any]] = None,
+        # Support for tier-specific storage types (new API)
+        stm_storage_type: Optional[BackendType] = None,
+        mtm_storage_type: Optional[BackendType] = None, 
+        ltm_storage_type: Optional[BackendType] = None,
+        vector_storage_type: Optional[BackendType] = None,
+        # Support for direct tier instances (test API)
+        stm: Optional[Any] = None,
+        mtm: Optional[Any] = None,
+        ltm: Optional[Any] = None,
+        # Additional config options
+        working_buffer_size: int = 20,
+        embedding_dimension: int = 768,
     ):
         """
         Initialize the Memory Manager.
@@ -64,13 +76,30 @@ class MemoryManager(MemoryManagerInterface):
             backend_config: Backend configuration
         """
         self._config = config or {}
-        self._backend_type = backend_type
         self._backend_config = backend_config or {}
+        
+        # Handle tier-specific storage types (NEW API)
+        self._stm_storage_type = stm_storage_type or backend_type or BackendType.IN_MEMORY
+        self._mtm_storage_type = mtm_storage_type or backend_type or BackendType.IN_MEMORY
+        self._ltm_storage_type = ltm_storage_type or backend_type or BackendType.IN_MEMORY
+        self._vector_storage_type = vector_storage_type or backend_type or BackendType.IN_MEMORY
+        
+        # Handle direct tier instances (TEST API)
+        self._stm_instance = stm
+        self._mtm_instance = mtm
+        self._ltm_instance = ltm
+        
+        # Additional configuration
+        self._working_buffer_size = working_buffer_size
+        self._embedding_dimension = embedding_dimension
         
         # Set default tier configurations
         self._stm_config = self._config.get("stm", {})
         self._mtm_config = self._config.get("mtm", {})
         self._ltm_config = self._config.get("ltm", {})
+        
+        # Legacy support - store for backwards compatibility
+        self._backend_type = backend_type
         
         # Initialize tiers to None
         self._stm = None
@@ -109,32 +138,47 @@ class MemoryManager(MemoryManagerInterface):
         try:
             logger.info("Initializing Memory Manager")
             
-            # Initialize STM tier
+            # Initialize STM tier (use direct instance if provided, otherwise create new)
             logger.debug("Initializing STM tier")
-            self._stm = ShortTermMemoryTier(
-                backend_type=self._backend_type,
-                backend_config=self._backend_config,
-                config=self._stm_config,
-            )
-            await self._stm.initialize()
+            if self._stm_instance:
+                self._stm = self._stm_instance
+                if hasattr(self._stm, 'initialize'):
+                    await self._stm.initialize()
+            else:
+                self._stm = ShortTermMemoryTier(
+                    backend_type=self._stm_storage_type,
+                    backend_config=self._backend_config,
+                    config=self._stm_config,
+                )
+                await self._stm.initialize()
             
-            # Initialize MTM tier
+            # Initialize MTM tier (use direct instance if provided, otherwise create new)
             logger.debug("Initializing MTM tier")
-            self._mtm = MediumTermMemoryTier(
-                backend_type=self._backend_type,
-                backend_config=self._backend_config,
-                config=self._mtm_config,
-            )
-            await self._mtm.initialize()
+            if self._mtm_instance:
+                self._mtm = self._mtm_instance
+                if hasattr(self._mtm, 'initialize'):
+                    await self._mtm.initialize()
+            else:
+                self._mtm = MediumTermMemoryTier(
+                    backend_type=self._mtm_storage_type,
+                    backend_config=self._backend_config,
+                    config=self._mtm_config,
+                )
+                await self._mtm.initialize()
             
-            # Initialize LTM tier
+            # Initialize LTM tier (use direct instance if provided, otherwise create new)
             logger.debug("Initializing LTM tier")
-            self._ltm = LongTermMemoryTier(
-                backend_type=self._backend_type,
-                backend_config=self._backend_config,
-                config=self._ltm_config,
-            )
-            await self._ltm.initialize()
+            if self._ltm_instance:
+                self._ltm = self._ltm_instance
+                if hasattr(self._ltm, 'initialize'):
+                    await self._ltm.initialize()
+            else:
+                self._ltm = LongTermMemoryTier(
+                    backend_type=self._ltm_storage_type,
+                    backend_config=self._backend_config,
+                    config=self._ltm_config,
+                )
+                await self._ltm.initialize()
             
             # Start maintenance task if interval > 0
             if self._maintenance_interval > 0:

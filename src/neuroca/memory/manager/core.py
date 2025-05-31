@@ -61,11 +61,13 @@ class MemoryManager:
         self,
         config: Optional[Dict[str, Any]] = None,
         stm_storage: Optional[STMStorage] = None,
+        # Support for tier-specific storage types (new API)
+        stm_storage_type: Optional[BackendType] = None,
         mtm_storage_type: BackendType = BackendType.REDIS,
         ltm_storage_type: BackendType = BackendType.SQL,
         vector_storage_type: BackendType = BackendType.VECTOR,
         working_buffer_size: int = 20,
-            embedding_dimension: int = 768,
+        embedding_dimension: int = 768,
         ):
         """
         Initialize the Memory Manager.
@@ -73,6 +75,7 @@ class MemoryManager:
         Args:
             config: Configuration for the memory system
             stm_storage: Optional STM storage instance (created if not provided)
+            stm_storage_type: Optional storage type for STM (new API support)
             mtm_storage_type: Storage backend type for MTM
             ltm_storage_type: Storage backend type for LTM
             vector_storage_type: Storage backend type for vector search
@@ -116,11 +119,20 @@ class MemoryManager:
         if config:
             self.config.update(config)
 
-        # Initialize storage components
-        self.stm_storage = stm_storage or StorageBackendFactory.create_storage(
-            tier=MemoryTier.STM,
-            config=self.config.get("stm", {})
-        )
+        # Handle new API: stm_storage_type parameter
+        # If stm_storage_type is provided but stm_storage is not, create STM storage from type
+        if stm_storage_type and not stm_storage:
+            self.stm_storage = StorageBackendFactory.create_storage(
+                tier=MemoryTier.STM,
+                backend_type=stm_storage_type,
+                config=self.config.get("stm", {})
+            )
+        else:
+            # Use provided stm_storage or create default
+            self.stm_storage = stm_storage or StorageBackendFactory.create_storage(
+                tier=MemoryTier.STM,
+                config=self.config.get("stm", {})
+            )
         
         self.mtm_storage = StorageBackendFactory.create_storage(
             tier=MemoryTier.MTM,
